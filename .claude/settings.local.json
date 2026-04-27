@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(powershell -Command \"Expand-Archive -Path 'ARREO Design System.zip' -DestinationPath './arreo-design-system-kit' -Force\")"
+    ]
+  }
+}

@@ -1,0 +1,929 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ARREO — App UI Kit</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+html, body, #root { height:100%; }
+body { font-family:'DM Sans',sans-serif; background:#0D150D; color:#111; overflow:hidden; }
+button, input, select, textarea { font-family:'DM Sans',sans-serif; }
+::-webkit-scrollbar { width:4px; }
+::-webkit-scrollbar-track { background:transparent; }
+::-webkit-scrollbar-thumb { background:rgba(0,0,0,.12); border-radius:2px; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState } = React;
+
+// ─── Constants ───────────────────────────────
+const BULL_PATH = "M340 1421 c-19 -36 -11 -101 20 -165 57 -117 110 -153 265 -180 78-13 93 -19 114 -44 22 -27 62 -159 91 -297 28 -134 135 -205 241 -161 73 31 105 78 119 177 6 39 14 78 19 87 5 9 11 37 15 62 7 47 38 109 62 123 8 4 14 17 14 27 0 11 3 20 8 21 4 0 16 2 27 4 11 1 47 5 81 9 75 7 141 34 174 72 89 101 123 207 84 262 -32 46 -73 19 -93 -61 -23 -96 -64 -139 -153 -162 -51 -12-76 -14 -100 -7 -18 6 -52 14 -75 17 -24 4 -46 11 -49 16 -3 5 -27 20 -52 32-37 17 -65 22 -133 22 -78 0 -92 -3 -160 -36 -99 -49 -168 -64 -222 -51 -23 6-58 14 -77 18 -39 8 -90 42 -90 61 0 7 -4 13 -8 13 -9 0 -32 59 -32 84 0 9 -7 30 -15 46 -18 35 -58 41 -75 11z";
+
+const BullIcon = ({ size=24, color='#BDD18A' }) => (
+  <svg width={size} height={size} viewBox="22 40 158 120">
+    <g transform="translate(0,200) scale(0.1,-0.1)" fill="none" stroke={color} strokeWidth="22" strokeLinejoin="round" strokeLinecap="round">
+      <path d={BULL_PATH}/>
+    </g>
+  </svg>
+);
+
+// ─── Icon ────────────────────────────────────
+const Icon = ({ name, size=15, color='currentColor' }) => {
+  const s = { width:size, height:size, stroke:color, fill:'none', strokeWidth:2, strokeLinecap:'round', strokeLinejoin:'round' };
+  const paths = {
+    search:   <><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></>,
+    trips:    <><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></>,
+    offers:   <><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></>,
+    messages: <><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></>,
+    user:     <><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></>,
+    logout:   <><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></>,
+    filter:   <><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></>,
+    calendar: <><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></>,
+    cow:      <><ellipse cx="12" cy="13" rx="6" ry="5"/><path d="M7 10c-.8-1.4-.8-3 0-4"/><path d="M17 10c.8-1.4.8-3 0-4"/><circle cx="10" cy="12" r="1"/><circle cx="14" cy="12" r="1"/></>,
+    truck:    <><rect x="1" y="3" width="15" height="13" rx="1"/><path d="M16 8h4l3 3v5h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></>,
+    weight:   <><path d="M12 3a3 3 0 1 0 0 6 3 3 0 0 0 0-6z"/><path d="M5 8h14l-1 13H6L5 8z"/></>,
+    pin:      <><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></>,
+    edit:     <><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></>,
+    plus:     <><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></>,
+    chevron:  <><polyline points="9 18 15 12 9 6"/></>,
+    users:    <><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></>,
+    check:      <><polyline points="20 6 9 17 4 12"/></>,
+    x:          <><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></>,
+    dashboard:  <><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></>,
+    star:       <><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></>,
+    arrow:      <><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></>,
+    map:        <><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></>,
+  };
+  return <svg viewBox="0 0 24 24" style={s}>{paths[name]}</svg>;
+};
+
+// ─── Chip ─────────────────────────────────────
+const Chip = ({ icon, label, color='#666', bg='rgba(0,0,0,.06)' }) => (
+  <span style={{
+    display:'inline-flex', alignItems:'center', gap:4,
+    background:bg, color, fontSize:11, fontWeight:500,
+    padding:'3px 8px', borderRadius:5, whiteSpace:'nowrap',
+  }}>
+    {icon && <Icon name={icon} size={12} color={color}/>}
+    {label}
+  </span>
+);
+
+// ─── Status Badge ─────────────────────────────
+const Badge = ({ status }) => {
+  const cfg = {
+    available: { bg:'rgba(139,175,78,.15)', color:'#5a7a2a', dot:'#8BAF4E', label:'Disponible' },
+    active:    { bg:'rgba(139,175,78,.15)', color:'#5a7a2a', dot:'#8BAF4E', label:'En camino', glow:true },
+    pending:   { bg:'rgba(224,122,52,.15)', color:'#b85e1e', dot:'#E07A34', label:'Pendiente' },
+    offers:    { bg:'rgba(139,175,78,.15)', color:'#5a7a2a', dot:'#8BAF4E', label:'Con ofertas' },
+  }[status] || { bg:'rgba(0,0,0,.06)', color:'#555', dot:'#aaa', label:status };
+  return (
+    <span style={{display:'inline-flex',alignItems:'center',gap:5,background:cfg.bg,color:cfg.color,fontSize:11,fontWeight:600,padding:'3px 9px',borderRadius:5}}>
+      <span style={{width:6,height:6,borderRadius:'50%',background:cfg.dot,boxShadow:cfg.glow?`0 0 5px ${cfg.dot}`:'none',display:'inline-block'}}/>
+      {cfg.label}
+    </span>
+  );
+};
+
+// ─── Sidebar ──────────────────────────────────
+const NAV = [
+  { id:'dashboard',  label:'Dashboard',          icon:'dashboard' },
+  { id:'viajes',     label:'Viajes disponibles', icon:'trips' },
+  { id:'mis-viajes', label:'Mis viajes',         icon:'truck' },
+  { id:'mensajes',   label:'Mensajes',           icon:'messages' },
+  { id:'perfil',     label:'Mi perfil',          icon:'user' },
+];
+
+const Sidebar = ({ active, onNav, userName='Tomas Schiro', role='Transportista' }) => {
+  const initials = userName.split(' ').map(n=>n[0]).join('').slice(0,2).toUpperCase();
+  return (
+    <div style={{background:'#1F2B1F',width:210,display:'flex',flexDirection:'column',flexShrink:0,minHeight:'100vh'}}>
+      {/* Logo */}
+      <div style={{padding:'22px 18px 18px',borderBottom:'1px solid rgba(255,255,255,.07)'}}>
+        <div style={{display:'flex',alignItems:'center',gap:9,marginBottom:4}}>
+          <BullIcon size={24}/>
+          <span style={{fontSize:15,fontWeight:700,letterSpacing:'.16em',color:'#fff'}}>ARREO</span>
+        </div>
+        <div style={{fontSize:9,color:'rgba(255,255,255,.3)',letterSpacing:'.1em',paddingLeft:33}}>TRANSPORTE GANADERO INTELIGENTE</div>
+      </div>
+
+      {/* Nav */}
+      <nav style={{flex:1,padding:'12px 10px',display:'flex',flexDirection:'column',gap:2}}>
+        {NAV.map(item => (
+          <button key={item.id} onClick={() => onNav(item.id)} style={{
+            display:'flex', alignItems:'center', gap:9,
+            padding:'9px 11px', borderRadius:7, border:'none', cursor:'pointer',
+            fontSize:13, fontWeight:500, textAlign:'left', width:'100%',
+            fontFamily:"'DM Sans',sans-serif",
+            color: active===item.id ? '#fff' : 'rgba(255,255,255,.6)',
+            background: active===item.id ? 'rgba(139,175,78,.15)' : 'transparent',
+            transition:'all .15s',
+          }}>
+            <span style={{opacity:active===item.id?1:.65}}><Icon name={item.icon} size={15}/></span>
+            {item.label}
+          </button>
+        ))}
+      </nav>
+
+      {/* Footer */}
+      <div style={{borderTop:'1px solid rgba(255,255,255,.07)',padding:'14px 16px'}}>
+        <div style={{display:'flex',alignItems:'center',gap:9,marginBottom:10}}>
+          <div style={{width:32,height:32,borderRadius:'50%',background:'#8BAF4E',display:'flex',alignItems:'center',justifyContent:'center',fontSize:12,fontWeight:700,color:'#1F2B1F',flexShrink:0}}>{initials}</div>
+          <div>
+            <div style={{fontSize:12,fontWeight:600,color:'#fff'}}>{userName}</div>
+            <div style={{fontSize:10,color:'rgba(255,255,255,.4)'}}>{role}</div>
+          </div>
+        </div>
+        <button style={{display:'flex',alignItems:'center',gap:7,background:'transparent',border:'none',color:'rgba(255,255,255,.4)',fontSize:12,cursor:'pointer',padding:'4px 2px',width:'100%',fontFamily:"'DM Sans',sans-serif"}}>
+          <Icon name="logout" size={14} color="rgba(255,255,255,.4)"/>
+          Cerrar sesión
+        </button>
+      </div>
+    </div>
+  );
+};
+
+// ─── Header ───────────────────────────────────
+const Header = ({ title, subtitle, action }) => (
+  <div style={{background:'#fff',padding:'14px 28px',borderBottom:'1px solid #F0F0F0',display:'flex',justifyContent:'space-between',alignItems:'center',flexShrink:0}}>
+    <div>
+      <div style={{fontSize:17,fontWeight:700,color:'#111'}}>{title}</div>
+      {subtitle && <div style={{fontSize:12,color:'#aaa',marginTop:2}}>{subtitle}</div>}
+    </div>
+    <div style={{display:'flex',alignItems:'center',gap:10}}>
+      {action}
+      <div style={{width:34,height:34,borderRadius:'50%',background:'#1F2B1F',display:'flex',alignItems:'center',justifyContent:'center',fontSize:12,fontWeight:700,color:'#fff'}}>TS</div>
+    </div>
+  </div>
+);
+
+// ─── Route dots inline ────────────────────────
+const RouteInline = ({ origin, destination, status='available' }) => (
+  <div style={{display:'flex',flexDirection:'column',gap:2}}>
+    <div style={{display:'flex',alignItems:'center',gap:7}}>
+      <span style={{width:9,height:9,borderRadius:'50%',background:'#8BAF4E',flexShrink:0,boxShadow:'0 0 4px rgba(139,175,78,.5)'}}/>
+      <span style={{fontSize:13,fontWeight:600,color:'#111'}}>{origin}</span>
+    </div>
+    <div style={{width:1,height:10,background:'rgba(139,175,78,.3)',marginLeft:4}}/>
+    <div style={{display:'flex',alignItems:'center',gap:7}}>
+      <span style={{width:9,height:9,borderRadius:'50%',background:'#E07A34',flexShrink:0}}/>
+      <span style={{fontSize:13,fontWeight:600,color:'#111'}}>{destination}</span>
+    </div>
+  </div>
+);
+
+// ─── Data ─────────────────────────────────────
+const MIS_VIAJES = [
+  { id:10, origin:'Municipio de Paso de los Libres', destination:'San Jaime de la Frontera', date:'jue, 23 abr', type:'Novillos', count:'100 cab.', weight:'23.000 kg', truck:'Semirremolque jaula', producer:'Tomas Productor', location:'Paso de los libres / Corrientes', status:'active', eta:'16:30', patente:'AA 121 BB', progress:55 },
+  { id:11, origin:'General Paz', destination:'Rosario', date:'vie, 24 abr', type:'Vacas', count:'60 cab.', weight:'15.000 kg', truck:'Jaula simple', producer:'Carlos Estancia', location:'General Paz / Buenos Aires', status:'confirmed', eta:null, patente:'AB 987 CD', progress:0 },
+  { id:12, origin:'Gualeguaychú', destination:'La Plata', date:'mar, 15 abr', type:'Terneros', count:'80 cab.', weight:'12.000 kg', truck:'Semirremolque jaula', producer:'Agro San Martín', location:'Gualeguaychú / Entre Ríos', status:'completed', eta:null, patente:'AC 342 EF', progress:100 },
+  { id:13, origin:'Corrientes Capital', destination:'Posadas', date:'dom, 13 abr', type:'Novillos', count:'90 cab.', weight:'21.000 kg', truck:'Jaula simple', producer:'Estancia Las Palmas', location:'Corrientes', status:'completed', eta:null, patente:'AA 121 BB', progress:100 },
+];
+
+const AVAILABLE_TRIPS = [
+  { id:1, origin:'Municipio de Paso de los Libres', destination:'San Jaime de la Frontera', date:'jue, 23 abr', type:'Novillos', count:'100 cab.', weight:'23.000 kg', truck:'Semirremolque requerida', producer:'Tomas Productor', location:'Paso de los libres / Corrientes', status:'offers' },
+  { id:2, origin:'General Paz',                     destination:'Rosario',                   date:'vie, 24 abr', type:'Vacas',   count:'60 cab.',  weight:'15.000 kg', truck:'Jaula simple',           producer:'Carlos Estancia',    location:'General Paz / Buenos Aires', status:'available' },
+  { id:3, origin:'Gualeguaychú',                    destination:'La Plata',                  date:'sáb, 26 abr', type:'Terneros',count:'80 cab.',  weight:'12.000 kg', truck:'Semirremolque requerida', producer:'Agro San Martín',    location:'Gualeguaychú / Entre Ríos', status:'available' },
+];
+
+const MY_OFFERS = [
+  { id:1, origin:'Municipio de Paso de los Libres', destination:'Buenos Aires',   date:'mar, 28 abr', truck:'Jaula simple',  interested:1, status:'available' },
+  { id:2, origin:'Municipio de Paso de los Libres', destination:'Corrientes',     date:'dom, 26 abr', truck:'Jaula simple',  interested:2, status:'available' },
+];
+
+// ─── Trip search card ─────────────────────────
+const TripSearchCard = ({ trip, onDetail }) => (
+  <div style={{background:'#fff',borderRadius:14,padding:'16px 20px',boxShadow:'0 2px 12px rgba(0,0,0,0.05)',marginBottom:10}}>
+    <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',gap:12}}>
+      <div style={{flex:1}}>
+        <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:10}}>
+          <RouteInline origin={trip.origin} destination={trip.destination}/>
+          <Badge status={trip.status}/>
+        </div>
+        <div style={{display:'flex',gap:6,flexWrap:'wrap',marginBottom:10}}>
+          <Chip icon="calendar" label={trip.date} color="#555"/>
+          <Chip icon="cow"      label={trip.type} color="#555"/>
+          <Chip             label={trip.count} color="#555"/>
+          <Chip icon="weight"  label={trip.weight} color="#555"/>
+          <Chip icon="truck"   label={trip.truck} color="#8BAF4E" bg="rgba(139,175,78,.1)"/>
+        </div>
+        <div style={{display:'flex',alignItems:'center',justifyContent:'space-between'}}>
+          <div style={{display:'flex',alignItems:'center',gap:6}}>
+            <div style={{width:22,height:22,borderRadius:'50%',background:'#1F2B1F',display:'flex',alignItems:'center',justifyContent:'center',fontSize:9,fontWeight:700,color:'#fff',flexShrink:0}}>
+              {trip.producer.split(' ').map(n=>n[0]).join('').slice(0,2).toUpperCase()}
+            </div>
+            <div>
+              <div style={{fontSize:11,fontWeight:600,color:'#333'}}>{trip.producer}</div>
+              <div style={{display:'flex',alignItems:'center',gap:3,fontSize:10,color:'#999'}}>
+                <Icon name="pin" size={10} color="#999"/>
+                {trip.location}
+              </div>
+            </div>
+          </div>
+          <button onClick={() => onDetail && onDetail(trip)} style={{
+            background:'#E07A34',color:'#fff',border:'none',borderRadius:8,
+            padding:'7px 16px',fontSize:12,fontWeight:600,cursor:'pointer',
+            display:'flex',alignItems:'center',gap:5,
+          }}>
+            Ver detalle <Icon name="chevron" size={12} color="#fff"/>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+);
+
+// ─── My offer card ────────────────────────────
+const OfferCard = ({ offer, onEdit, onInterested }) => (
+  <div style={{background:'#fff',borderRadius:14,padding:'16px 20px',boxShadow:'0 2px 12px rgba(0,0,0,0.05)',marginBottom:10}}>
+    <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:10}}>
+      <RouteInline origin={offer.origin} destination={offer.destination}/>
+      <Badge status={offer.status}/>
+    </div>
+    <div style={{display:'flex',gap:6,marginBottom:12}}>
+      <Chip icon="calendar" label={offer.date} color="#555"/>
+      <Chip icon="truck"    label={offer.truck} color="#555"/>
+    </div>
+    {offer.interested > 0 && (
+      <div style={{display:'flex',alignItems:'center',gap:5,marginBottom:12,fontSize:12,color:'#555',fontWeight:500}}>
+        <Icon name="users" size={13} color="#555"/>
+        {offer.interested} productor{offer.interested>1?'es':''} interesado{offer.interested>1?'s':''}
+      </div>
+    )}
+    <div style={{display:'flex',gap:8}}>
+      <button onClick={onEdit} style={{
+        flex:1,background:'transparent',border:'1.5px solid #E0E0E0',color:'#555',borderRadius:8,
+        padding:'8px',fontSize:12,fontWeight:600,cursor:'pointer',
+        display:'flex',alignItems:'center',justifyContent:'center',gap:5,
+      }}>
+        <Icon name="edit" size={13} color="#555"/> Editar
+      </button>
+      <button onClick={onInterested} style={{
+        flex:2,background:'#8BAF4E',border:'none',color:'#fff',borderRadius:8,
+        padding:'8px',fontSize:12,fontWeight:600,cursor:'pointer',
+        display:'flex',alignItems:'center',justifyContent:'center',gap:5,
+      }}>
+        <Icon name="users" size={13} color="#fff"/> Interesados ({offer.interested})
+      </button>
+    </div>
+  </div>
+);
+
+// ─── Publicar modal ───────────────────────────
+const PublicarModal = ({ onClose, onPublish }) => {
+  const [step, setStep] = useState(1);
+  const fieldStyle = {
+    width:'100%',background:'#fff',border:'1.5px solid #E0E0E0',
+    borderRadius:8,padding:'9px 12px',fontSize:13,color:'#111',outline:'none',
+  };
+  const labelStyle = { fontSize:12,color:'#666',fontWeight:500,display:'block',marginBottom:4 };
+
+  return (
+    <div style={{position:'fixed',inset:0,background:'rgba(0,0,0,.4)',display:'flex',alignItems:'center',justifyContent:'center',zIndex:100,padding:20}}>
+      <div style={{background:'#fff',borderRadius:18,width:'100%',maxWidth:480,boxShadow:'0 16px 64px rgba(0,0,0,.2)',overflow:'hidden'}}>
+        {/* Modal header */}
+        <div style={{background:'#1F2B1F',padding:'18px 24px',display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+          <div style={{display:'flex',alignItems:'center',gap:9}}>
+            <BullIcon size={22}/>
+            <div>
+              <div style={{fontSize:14,fontWeight:700,letterSpacing:'.1em',color:'#fff'}}>ARREO</div>
+              <div style={{fontSize:9,color:'rgba(255,255,255,.4)',letterSpacing:'.08em'}}>Publicar disponibilidad</div>
+            </div>
+          </div>
+          <button onClick={onClose} style={{background:'rgba(255,255,255,.1)',border:'none',borderRadius:6,width:28,height:28,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}}>
+            <Icon name="x" size={14} color="#fff"/>
+          </button>
+        </div>
+
+        {/* Steps indicator */}
+        <div style={{padding:'14px 24px 0',display:'flex',gap:6}}>
+          {[1,2,3].map(s => (
+            <div key={s} style={{flex:1,height:3,borderRadius:2,background:s<=step?'#8BAF4E':'#E0E0E0',transition:'background .2s'}}/>
+          ))}
+        </div>
+
+        <div style={{padding:'20px 24px 24px',display:'flex',flexDirection:'column',gap:14}}>
+          {step === 1 && <>
+            <div style={{fontSize:13,fontWeight:700,color:'#111',marginBottom:2}}>Ruta</div>
+            <div>
+              <label style={labelStyle}>Punto de origen</label>
+              <input style={fieldStyle} placeholder="Ej. Paso de los Libres, Corrientes"/>
+            </div>
+            <div>
+              <label style={labelStyle}>Punto de destino</label>
+              <input style={fieldStyle} placeholder="Ej. Buenos Aires"/>
+            </div>
+            <div>
+              <label style={labelStyle}>Fecha disponible</label>
+              <input type="date" style={fieldStyle}/>
+            </div>
+          </>}
+          {step === 2 && <>
+            <div style={{fontSize:13,fontWeight:700,color:'#111',marginBottom:2}}>Tipo de vehículo</div>
+            {['Jaula simple','Semirremolque jaula','Camión chico (hasta 30 cab.)'].map(opt => (
+              <label key={opt} style={{display:'flex',alignItems:'center',gap:10,padding:'10px 14px',border:'1.5px solid #E0E0E0',borderRadius:8,cursor:'pointer'}}>
+                <input type="radio" name="truck" style={{accentColor:'#8BAF4E'}}/>
+                <span style={{fontSize:13,color:'#333'}}>{opt}</span>
+              </label>
+            ))}
+            <div>
+              <label style={labelStyle}>Zonas que cubrís (opcional)</label>
+              <input style={fieldStyle} placeholder="Ej. Buenos Aires, Corrientes, Entre Ríos"/>
+            </div>
+          </>}
+          {step === 3 && <>
+            <div style={{fontSize:13,fontWeight:700,color:'#111',marginBottom:2}}>Confirmación</div>
+            <div style={{background:'#F2F2F0',borderRadius:12,padding:'16px'}}>
+              <div style={{display:'flex',flexDirection:'column',gap:8}}>
+                <div style={{display:'flex',justifyContent:'space-between',fontSize:12}}>
+                  <span style={{color:'#888'}}>Origen</span>
+                  <span style={{fontWeight:600}}>Paso de los Libres</span>
+                </div>
+                <div style={{display:'flex',justifyContent:'space-between',fontSize:12}}>
+                  <span style={{color:'#888'}}>Destino</span>
+                  <span style={{fontWeight:600}}>Buenos Aires</span>
+                </div>
+                <div style={{display:'flex',justifyContent:'space-between',fontSize:12}}>
+                  <span style={{color:'#888'}}>Fecha</span>
+                  <span style={{fontWeight:600}}>mar, 28 abr 2026</span>
+                </div>
+                <div style={{display:'flex',justifyContent:'space-between',fontSize:12}}>
+                  <span style={{color:'#888'}}>Vehículo</span>
+                  <span style={{fontWeight:600}}>Jaula simple</span>
+                </div>
+              </div>
+            </div>
+            <div style={{fontSize:11,color:'#aaa',textAlign:'center'}}>Al publicar, los productores en tu zona podrán ver y solicitar tu disponibilidad.</div>
+          </>}
+
+          <div style={{display:'flex',gap:8,marginTop:4}}>
+            {step > 1 && (
+              <button onClick={() => setStep(s=>s-1)} style={{flex:1,background:'transparent',border:'1.5px solid #E0E0E0',color:'#666',borderRadius:8,padding:'10px',fontSize:13,fontWeight:600,cursor:'pointer'}}>
+                Atrás
+              </button>
+            )}
+            <button
+              onClick={() => step < 3 ? setStep(s=>s+1) : onPublish()}
+              style={{flex:2,background:'#E07A34',border:'none',color:'#fff',borderRadius:8,padding:'10px',fontSize:13,fontWeight:600,cursor:'pointer'}}
+            >
+              {step < 3 ? 'Continuar' : '✓ Publicar disponibilidad'}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ─── Detail modal ─────────────────────────────
+const TripDetailModal = ({ trip, onClose }) => (
+  <div style={{position:'fixed',inset:0,background:'rgba(0,0,0,.4)',display:'flex',alignItems:'center',justifyContent:'center',zIndex:100,padding:20}}>
+    <div style={{background:'#fff',borderRadius:18,width:'100%',maxWidth:440,boxShadow:'0 16px 64px rgba(0,0,0,.2)'}}>
+      <div style={{background:'#1F2B1F',padding:'18px 24px',borderRadius:'18px 18px 0 0',display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+        <div style={{fontSize:14,fontWeight:700,color:'#fff'}}>Detalle del viaje</div>
+        <button onClick={onClose} style={{background:'rgba(255,255,255,.1)',border:'none',borderRadius:6,width:28,height:28,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}}>
+          <Icon name="x" size={14} color="#fff"/>
+        </button>
+      </div>
+      <div style={{padding:'20px 24px'}}>
+        <RouteInline origin={trip.origin} destination={trip.destination}/>
+        <div style={{height:1,background:'#F0F0F0',margin:'16px 0'}}/>
+        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:16}}>
+          {[['Fecha',trip.date],['Tipo',trip.type],['Cantidad',trip.count],['Peso',trip.weight],['Vehículo',trip.truck],['Zona',trip.location]].map(([k,v])=>(
+            <div key={k}>
+              <div style={{fontSize:10,color:'#aaa',fontWeight:500,marginBottom:2}}>{k.toUpperCase()}</div>
+              <div style={{fontSize:13,fontWeight:600,color:'#111'}}>{v}</div>
+            </div>
+          ))}
+        </div>
+        <div style={{background:'#F2F2F0',borderRadius:10,padding:'12px 14px',display:'flex',alignItems:'center',gap:10,marginBottom:16}}>
+          <div style={{width:32,height:32,borderRadius:'50%',background:'#1F2B1F',display:'flex',alignItems:'center',justifyContent:'center',fontSize:11,fontWeight:700,color:'#fff',flexShrink:0}}>
+            {trip.producer.split(' ').map(n=>n[0]).join('').slice(0,2).toUpperCase()}
+          </div>
+          <div>
+            <div style={{fontSize:12,fontWeight:600,color:'#111'}}>{trip.producer}</div>
+            <div style={{fontSize:11,color:'#888'}}>{trip.location}</div>
+          </div>
+        </div>
+        <button onClick={onClose} style={{width:'100%',background:'#E07A34',border:'none',color:'#fff',borderRadius:8,padding:'11px',fontSize:13,fontWeight:600,cursor:'pointer'}}>
+          Ofrecer mi disponibilidad
+        </button>
+      </div>
+    </div>
+  </div>
+);
+
+// ─── Screens ──────────────────────────────────
+const ViajesScreen = ({ onPublicar }) => {
+  const [filter, setFilter] = useState('all');
+  const [search, setSearch] = useState('');
+  const [detailTrip, setDetailTrip] = useState(null);
+  const tipos = ['all','Novillos','Vacas','Terneros'];
+  const filtered = AVAILABLE_TRIPS.filter(t => filter==='all' || t.type===filter);
+
+  return (
+    <div style={{flex:1,display:'flex',flexDirection:'column',overflow:'hidden'}}>
+      <Header
+        title="Viajes disponibles"
+        subtitle="Viajes disponibles y tus ofertas publicadas"
+      />
+      <div style={{flex:1,overflowY:'auto',background:'#F2F2F0',padding:'20px 28px'}}>
+        {/* Filters */}
+        <div style={{background:'#fff',borderRadius:12,padding:'12px 16px',display:'flex',gap:10,alignItems:'center',marginBottom:16,boxShadow:'0 2px 8px rgba(0,0,0,.04)'}}>
+          <div style={{display:'flex',gap:6}}>
+            {tipos.map(t => (
+              <button key={t} onClick={()=>setFilter(t)} style={{
+                fontFamily:"'DM Sans',sans-serif",padding:'5px 11px',borderRadius:6,border:'1.5px solid',cursor:'pointer',
+                fontSize:11,fontWeight:600,
+                borderColor: filter===t?'#1F2B1F':'#E0E0E0',
+                background: filter===t?'#1F2B1F':'transparent',
+                color: filter===t?'#fff':'#666',
+              }}>{t==='all'?'Todos los tipos':t}</button>
+            ))}
+          </div>
+          <div style={{display:'flex',alignItems:'center',gap:6,border:'1.5px solid #E0E0E0',borderRadius:7,padding:'5px 11px',flex:1}}>
+            <Icon name="filter" size={12} color="#E07A34"/>
+            <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Filtrar por zona..." style={{border:'none',outline:'none',fontSize:12,color:'#555',background:'transparent',width:'100%'}}/>
+          </div>
+          <input type="date" style={{border:'1.5px solid #E0E0E0',borderRadius:7,padding:'5px 10px',fontSize:12,color:'#555',outline:'none',fontFamily:"'DM Sans',sans-serif"}}/>
+        </div>
+
+        {/* Available trips */}
+        <div style={{fontSize:14,fontWeight:700,color:'#111',marginBottom:10,display:'flex',alignItems:'center',gap:6}}>
+          Viajes disponibles
+          <span style={{background:'#E07A34',color:'#fff',fontSize:10,fontWeight:700,borderRadius:'50%',width:18,height:18,display:'inline-flex',alignItems:'center',justifyContent:'center'}}>{filtered.length}</span>
+        </div>
+        {filtered.map(t => <TripSearchCard key={t.id} trip={t} onDetail={setDetailTrip}/>)}
+
+        {/* My published offers */}
+        <div style={{fontSize:14,fontWeight:700,color:'#111',marginBottom:10,marginTop:8,display:'flex',alignItems:'center',gap:6}}>
+          Mis ofertas publicadas
+          <Icon name="chevron" size={14} color="#888"/>
+        </div>
+        {MY_OFFERS.map(o => <OfferCard key={o.id} offer={o} onEdit={()=>{}} onInterested={()=>{}}/>)}
+      </div>
+
+      {/* FAB */}
+      <button onClick={onPublicar} style={{
+        position:'fixed',bottom:28,right:28,
+        background:'#E07A34',color:'#fff',border:'none',borderRadius:50,
+        padding:'13px 22px',fontSize:13,fontWeight:700,cursor:'pointer',
+        display:'flex',alignItems:'center',gap:8,
+        boxShadow:'0 6px 24px rgba(224,122,52,.5)',
+        zIndex:10,
+      }}>
+        <Icon name="plus" size={16} color="#fff"/>
+        Publicar disponibilidad
+      </button>
+
+      {detailTrip && <TripDetailModal trip={detailTrip} onClose={()=>setDetailTrip(null)}/>}
+    </div>
+  );
+};
+
+const OfertasScreen = ({ onPublicar }) => (
+  <div style={{flex:1,display:'flex',flexDirection:'column',overflow:'hidden'}}>
+    <Header title="Mis disponibilidades" subtitle="Tus camiones publicados"/>
+    <div style={{flex:1,overflowY:'auto',background:'#F2F2F0',padding:'20px 28px'}}>
+      {MY_OFFERS.map(o => <OfferCard key={o.id} offer={o} onEdit={()=>{}} onInterested={()=>{}}/>)}
+    </div>
+    <button onClick={onPublicar} style={{
+      position:'fixed',bottom:28,right:28,
+      background:'#E07A34',color:'#fff',border:'none',borderRadius:50,
+      padding:'13px 22px',fontSize:13,fontWeight:700,cursor:'pointer',
+      display:'flex',alignItems:'center',gap:8,
+      boxShadow:'0 6px 24px rgba(224,122,52,.5)',zIndex:10,
+    }}>
+      <Icon name="plus" size={16} color="#fff"/>
+      Publicar disponibilidad
+    </button>
+  </div>
+);
+
+// ─── Mis Viajes + Disponibilidades (unified) ──
+const MisViajesScreen = ({ onNav, onPublicar }) => {
+  const [mainTab, setMainTab] = useState('viajes');
+  const [tripFilter, setTripFilter] = useState('activos');
+  const [detail, setDetail] = useState(null);
+
+  const tripTabs = [
+    { id:'activos',    label:'Activos',    statuses:['active','confirmed'] },
+    { id:'completados',label:'Completados',statuses:['completed'] },
+  ];
+  const currentTripTab = tripTabs.find(t=>t.id===tripFilter);
+  const filteredTrips = MIS_VIAJES.filter(v => currentTripTab.statuses.includes(v.status));
+
+  const statusLabel = { active:'En camino', confirmed:'Confirmado', completed:'Completado' };
+  const statusColor = {
+    active:    { bg:'rgba(139,175,78,.15)', color:'#5a7a2a', dot:'#8BAF4E', glow:true },
+    confirmed: { bg:'rgba(224,122,52,.15)', color:'#b85e1e', dot:'#E07A34', glow:false },
+    completed: { bg:'rgba(0,0,0,.06)',      color:'#555',    dot:'#aaa',    glow:false },
+  };
+
+  const mainTabs = [
+    { id:'viajes',         label:'Mis viajes' },
+    { id:'disponibilidades',label:'Mis disponibilidades' },
+  ];
+
+  return (
+    <div style={{flex:1,display:'flex',flexDirection:'column',overflow:'hidden'}}>
+      <Header
+        title="Mis viajes"
+        subtitle="Tus viajes y disponibilidades publicadas"
+        action={
+          <button onClick={onPublicar} style={{background:'#E07A34',color:'#fff',border:'none',borderRadius:8,padding:'7px 14px',fontSize:12,fontWeight:600,cursor:'pointer',display:'flex',alignItems:'center',gap:5}}>
+            <Icon name="plus" size={13} color="#fff"/> Publicar disponibilidad
+          </button>
+        }
+      />
+
+      {/* Main tabs */}
+      <div style={{background:'#fff',borderBottom:'1px solid #F0F0F0',padding:'0 28px',display:'flex',gap:0,flexShrink:0}}>
+        {mainTabs.map(t => (
+          <button key={t.id} onClick={()=>setMainTab(t.id)} style={{
+            fontFamily:"'DM Sans',sans-serif", fontSize:13, fontWeight:600, cursor:'pointer',
+            padding:'11px 20px', border:'none', background:'transparent',
+            color: mainTab===t.id ? '#111' : '#aaa',
+            borderBottom: mainTab===t.id ? '2.5px solid #1F2B1F' : '2.5px solid transparent',
+            marginBottom:-1, transition:'all .15s',
+          }}>{t.label}</button>
+        ))}
+      </div>
+
+      {/* ── TAB: Mis viajes ── */}
+      {mainTab === 'viajes' && (
+        <div style={{flex:1,display:'flex',flexDirection:'column',overflow:'hidden'}}>
+          {/* Sub-tabs */}
+          <div style={{background:'#F2F2F0',padding:'12px 28px 0',display:'flex',gap:6,flexShrink:0}}>
+            {tripTabs.map(t => (
+              <button key={t.id} onClick={()=>setTripFilter(t.id)} style={{
+                fontFamily:"'DM Sans',sans-serif", padding:'6px 14px', borderRadius:7, border:'none', cursor:'pointer',
+                fontSize:12, fontWeight:600,
+                background: tripFilter===t.id ? '#1F2B1F' : '#fff',
+                color: tripFilter===t.id ? '#fff' : '#666',
+                boxShadow: tripFilter===t.id ? 'none' : '0 1px 4px rgba(0,0,0,.06)',
+              }}>{t.label}</button>
+            ))}
+          </div>
+
+          <div style={{flex:1,overflowY:'auto',background:'#F2F2F0',padding:'16px 28px'}}>
+            {filteredTrips.map(v => {
+              const sc = statusColor[v.status];
+              const isActive = v.status === 'active';
+              return (
+                <div key={v.id} style={{background:'#fff',borderRadius:16,padding:'20px',boxShadow:'0 2px 14px rgba(0,0,0,.06)',marginBottom:12}}>
+                  <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:14}}>
+                    <RouteInline origin={v.origin} destination={v.destination}/>
+                    <span style={{display:'inline-flex',alignItems:'center',gap:5,background:sc.bg,color:sc.color,fontSize:11,fontWeight:600,padding:'4px 10px',borderRadius:6}}>
+                      <span style={{width:6,height:6,borderRadius:'50%',background:sc.dot,boxShadow:sc.glow?`0 0 5px ${sc.dot}`:'none',display:'inline-block'}}/>
+                      {statusLabel[v.status]}
+                    </span>
+                  </div>
+                  {isActive && (
+                    <div style={{marginBottom:14}}>
+                      <div style={{display:'flex',justifyContent:'space-between',fontSize:11,color:'#aaa',marginBottom:5}}>
+                        <span>Progreso del viaje</span>
+                        <span style={{fontWeight:600,color:'#8BAF4E'}}>{v.progress}%</span>
+                      </div>
+                      <div style={{background:'#F0F0F0',borderRadius:4,height:5,overflow:'hidden'}}>
+                        <div style={{width:`${v.progress}%`,height:'100%',background:'linear-gradient(90deg,#8BAF4E,#BDD18A)',borderRadius:4}}/>
+                      </div>
+                    </div>
+                  )}
+                  <div style={{display:'flex',gap:6,flexWrap:'wrap',marginBottom:14}}>
+                    <Chip icon="calendar" label={v.date}   color="#555"/>
+                    <Chip icon="cow"      label={v.type}   color="#555"/>
+                    <Chip                 label={v.count}  color="#555"/>
+                    <Chip icon="weight"   label={v.weight} color="#555"/>
+                    <Chip icon="truck"    label={v.truck}  color="#8BAF4E" bg="rgba(139,175,78,.1)"/>
+                  </div>
+                  <div style={{background:'#F8F8F6',borderRadius:10,padding:'12px 14px',display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:10,marginBottom:14}}>
+                    <div><div style={{fontSize:10,color:'#aaa',marginBottom:2}}>PRODUCTOR</div><div style={{fontSize:12,fontWeight:600,color:'#111'}}>{v.producer}</div></div>
+                    <div><div style={{fontSize:10,color:'#aaa',marginBottom:2}}>PATENTE</div><div style={{fontSize:12,fontWeight:600,color:'#111',letterSpacing:'.05em'}}>{v.patente}</div></div>
+                    {isActive
+                      ? <div><div style={{fontSize:10,color:'#aaa',marginBottom:2}}>ETA</div><div style={{fontSize:16,fontWeight:700,color:'#1F2B1F'}}>{v.eta}</div></div>
+                      : <div><div style={{fontSize:10,color:'#aaa',marginBottom:2}}>ZONA</div><div style={{fontSize:12,fontWeight:600,color:'#111'}}>{v.location.split('/')[0].trim()}</div></div>
+                    }
+                  </div>
+                  <div style={{display:'flex',gap:8}}>
+                    {isActive && (
+                      <button style={{flex:2,background:'#1F2B1F',color:'#fff',border:'none',borderRadius:9,padding:'9px',fontSize:12,fontWeight:600,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:6}}>
+                        <Icon name="map" size={13} color="#fff"/> Ver seguimiento
+                      </button>
+                    )}
+                    <button onClick={()=>setDetail(v)} style={{flex:1,background:'transparent',border:'1.5px solid #E0E0E0',color:'#666',borderRadius:9,padding:'9px',fontSize:12,fontWeight:600,cursor:'pointer'}}>
+                      Ver detalle
+                    </button>
+                    {isActive && (
+                      <button style={{flex:1,background:'transparent',border:'1.5px solid rgba(200,60,60,.3)',color:'#C83C3C',borderRadius:9,padding:'9px',fontSize:12,fontWeight:600,cursor:'pointer'}}>
+                        Reportar
+                      </button>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+            {filteredTrips.length === 0 && (
+              <div style={{textAlign:'center',padding:'60px 0',color:'#ccc'}}>
+                <Icon name="truck" size={36} color="#ddd"/>
+                <div style={{marginTop:12,fontSize:13}}>No tenés viajes {tripFilter}</div>
+                <button onClick={()=>onNav('viajes')} style={{marginTop:14,background:'#E07A34',color:'#fff',border:'none',borderRadius:8,padding:'9px 20px',fontSize:12,fontWeight:600,cursor:'pointer'}}>
+                  Buscar viajes
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* ── TAB: Mis disponibilidades ── */}
+      {mainTab === 'disponibilidades' && (
+        <div style={{flex:1,overflowY:'auto',background:'#F2F2F0',padding:'20px 28px'}}>
+          {MY_OFFERS.map(o => <OfferCard key={o.id} offer={o} onEdit={()=>{}} onInterested={()=>{}}/>)}
+          {MY_OFFERS.length === 0 && (
+            <div style={{textAlign:'center',padding:'60px 0',color:'#ccc'}}>
+              <Icon name="truck" size={36} color="#ddd"/>
+              <div style={{marginTop:12,fontSize:13}}>No tenés disponibilidades publicadas</div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Detail modal */}
+      {detail && (
+        <div style={{position:'fixed',inset:0,background:'rgba(0,0,0,.4)',display:'flex',alignItems:'center',justifyContent:'center',zIndex:100,padding:20}}>
+          <div style={{background:'#fff',borderRadius:18,width:'100%',maxWidth:440,boxShadow:'0 16px 64px rgba(0,0,0,.2)'}}>
+            <div style={{background:'#1F2B1F',padding:'18px 24px',borderRadius:'18px 18px 0 0',display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+              <div style={{fontSize:14,fontWeight:700,color:'#fff'}}>Detalle del viaje</div>
+              <button onClick={()=>setDetail(null)} style={{background:'rgba(255,255,255,.1)',border:'none',borderRadius:6,width:28,height:28,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}}>
+                <Icon name="x" size={14} color="#fff"/>
+              </button>
+            </div>
+            <div style={{padding:'20px 24px'}}>
+              <RouteInline origin={detail.origin} destination={detail.destination}/>
+              <div style={{height:1,background:'#F0F0F0',margin:'16px 0'}}/>
+              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:16}}>
+                {[['Fecha',detail.date],['Tipo',detail.type],['Cantidad',detail.count],['Peso',detail.weight],['Patente',detail.patente],['Vehículo',detail.truck]].map(([k,v])=>(
+                  <div key={k}><div style={{fontSize:10,color:'#aaa',marginBottom:2}}>{k.toUpperCase()}</div><div style={{fontSize:13,fontWeight:600,color:'#111'}}>{v}</div></div>
+                ))}
+              </div>
+              <button onClick={()=>setDetail(null)} style={{width:'100%',background:'#1F2B1F',border:'none',color:'#fff',borderRadius:8,padding:'11px',fontSize:13,fontWeight:600,cursor:'pointer'}}>
+                Cerrar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+// ─── Dashboard screen ─────────────────────────
+const DashboardScreen = ({ onNav }) => {
+  const activeTrip = MIS_VIAJES.find(v => v.status === 'active');
+  const completedCount = MIS_VIAJES.filter(v => v.status === 'completed').length;
+  const pendingOffers = MY_OFFERS.reduce((s,o) => s + o.interested, 0);
+
+  const metrics = [
+    { label:'Viajes este mes',  value:'6',       sub:'+2 vs. mes anterior', color:'#8BAF4E', icon:'truck' },
+    { label:'En camino',        value:'1',       sub:'Seguimiento activo',  color:'#E07A34', icon:'map'   },
+    { label:'Completados',      value:String(completedCount), sub:'Abril 2026', color:'#1F2B1F', icon:'check' },
+    { label:'Interesados',      value:String(pendingOffers), sub:'En mis disponibilidades', color:'#8BAF4E', icon:'users' },
+  ];
+
+  return (
+    <div style={{flex:1,display:'flex',flexDirection:'column',overflow:'hidden'}}>
+      <Header
+        title="Dashboard"
+        subtitle="Bienvenido de vuelta, Tomas"
+        action={
+          <button onClick={()=>onNav('viajes')} style={{background:'#E07A34',color:'#fff',border:'none',borderRadius:8,padding:'7px 14px',fontSize:12,fontWeight:600,cursor:'pointer',display:'flex',alignItems:'center',gap:5}}>
+            <Icon name="plus" size={13} color="#fff"/> Publicar disponibilidad
+          </button>
+        }
+      />
+      <div style={{flex:1,overflowY:'auto',background:'#F2F2F0',padding:'20px 28px',display:'flex',flexDirection:'column',gap:20}}>
+
+        {/* Metrics */}
+        <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:12}}>
+          {metrics.map((m,i) => (
+            <div key={i} style={{background:'#fff',borderRadius:14,padding:'18px 20px',boxShadow:'0 2px 12px rgba(0,0,0,.05)',cursor:'pointer'}} onClick={()=>onNav(i===0||i===2?'mis-viajes':i===1?'mis-viajes':'ofertas')}>
+              <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:10}}>
+                <div style={{fontSize:10,color:'#999',fontWeight:500,letterSpacing:'.08em',textTransform:'uppercase'}}>{m.label}</div>
+                <div style={{width:28,height:28,borderRadius:7,background:`${m.color}18`,display:'flex',alignItems:'center',justifyContent:'center'}}>
+                  <Icon name={m.icon} size={14} color={m.color}/>
+                </div>
+              </div>
+              <div style={{fontSize:34,fontWeight:800,color:'#1F2B1F',lineHeight:1,marginBottom:6}}>{m.value}</div>
+              <div style={{fontSize:11,color:m.color,fontWeight:500}}>{m.sub}</div>
+            </div>
+          ))}
+        </div>
+
+        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16}}>
+
+          {/* Active trip card */}
+          <div style={{background:'#fff',borderRadius:16,padding:'20px',boxShadow:'0 2px 12px rgba(0,0,0,.05)'}}>
+            <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:14}}>
+              <div style={{fontSize:14,fontWeight:700,color:'#111'}}>Viaje activo</div>
+              <span style={{display:'inline-flex',alignItems:'center',gap:4,background:'rgba(139,175,78,.15)',color:'#5a7a2a',fontSize:11,fontWeight:600,padding:'3px 9px',borderRadius:5}}>
+                <span style={{width:6,height:6,borderRadius:'50%',background:'#8BAF4E',boxShadow:'0 0 5px #8BAF4E',display:'inline-block'}}/>
+                En camino
+              </span>
+            </div>
+            {activeTrip ? (<>
+              <RouteInline origin={activeTrip.origin} destination={activeTrip.destination}/>
+              <div style={{margin:'14px 0 6px'}}>
+                <div style={{display:'flex',justifyContent:'space-between',fontSize:11,color:'#aaa',marginBottom:5}}>
+                  <span>Progreso</span>
+                  <span style={{fontWeight:600,color:'#8BAF4E'}}>{activeTrip.progress}%</span>
+                </div>
+                <div style={{background:'#F0F0F0',borderRadius:4,height:5,overflow:'hidden'}}>
+                  <div style={{width:`${activeTrip.progress}%`,height:'100%',background:'linear-gradient(90deg,#8BAF4E,#BDD18A)',borderRadius:4}}/>
+                </div>
+              </div>
+              <div style={{display:'flex',gap:8,marginTop:14}}>
+                <Chip icon="truck" label={activeTrip.patente} color="#555"/>
+                <Chip label={`ETA ${activeTrip.eta}`} color="#E07A34" bg="rgba(224,122,52,.1)"/>
+              </div>
+              <button onClick={()=>onNav('mis-viajes')} style={{marginTop:14,width:'100%',background:'#1F2B1F',color:'#fff',border:'none',borderRadius:9,padding:'9px',fontSize:12,fontWeight:600,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:6}}>
+                <Icon name="map" size={13} color="#fff"/> Ver seguimiento
+              </button>
+            </>) : (
+              <div style={{textAlign:'center',padding:'28px 0',color:'#ccc',fontSize:12}}>Sin viajes activos</div>
+            )}
+          </div>
+
+          {/* Right column */}
+          <div style={{display:'flex',flexDirection:'column',gap:12}}>
+            {/* Available trips nearby */}
+            <div style={{background:'#fff',borderRadius:16,padding:'18px 20px',boxShadow:'0 2px 12px rgba(0,0,0,.05)'}}>
+              <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:12}}>
+                <div style={{fontSize:14,fontWeight:700,color:'#111'}}>Viajes disponibles</div>
+                <button onClick={()=>onNav('viajes')} style={{background:'transparent',border:'none',color:'#E07A34',fontSize:12,fontWeight:600,cursor:'pointer'}}>Ver todos →</button>
+              </div>
+              {AVAILABLE_TRIPS.slice(0,2).map(t => (
+                <div key={t.id} style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'10px 0',borderBottom:'1px solid #F5F5F5'}}>
+                  <div>
+                    <div style={{fontSize:12,fontWeight:600,color:'#111'}}>{t.origin.split(' ').slice(-2).join(' ')} → {t.destination}</div>
+                    <div style={{display:'flex',gap:5,marginTop:4}}>
+                      <Chip label={t.date} color="#aaa" bg="transparent"/>
+                      <Chip icon="cow" label={t.type} color="#666"/>
+                    </div>
+                  </div>
+                  <button onClick={()=>onNav('viajes')} style={{background:'#E07A34',color:'#fff',border:'none',borderRadius:7,padding:'6px 12px',fontSize:11,fontWeight:600,cursor:'pointer',flexShrink:0}}>
+                    Ver
+                  </button>
+                </div>
+              ))}
+            </div>
+
+            {/* My offers summary */}
+            <div style={{background:'#1F2B1F',borderRadius:16,padding:'18px 20px',boxShadow:'0 2px 12px rgba(0,0,0,.1)'}}>
+              <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:12}}>
+                <div style={{fontSize:14,fontWeight:700,color:'#fff'}}>Mis disponibilidades</div>
+                <button onClick={()=>onNav('ofertas')} style={{background:'transparent',border:'none',color:'rgba(189,209,138,.8)',fontSize:12,fontWeight:600,cursor:'pointer'}}>Ver →</button>
+              </div>
+              {MY_OFFERS.map(o => (
+                <div key={o.id} style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'8px 0',borderBottom:'1px solid rgba(255,255,255,.06)'}}>
+                  <div>
+                    <div style={{fontSize:12,fontWeight:600,color:'#fff'}}>{o.destination}</div>
+                    <div style={{fontSize:10,color:'rgba(255,255,255,.4)',marginTop:2}}>{o.date}</div>
+                  </div>
+                  {o.interested > 0 && (
+                    <span style={{background:'rgba(139,175,78,.2)',color:'#BDD18A',fontSize:11,fontWeight:600,padding:'3px 9px',borderRadius:5}}>
+                      {o.interested} interesado{o.interested>1?'s':''}
+                    </span>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const MensajesScreen = () => (
+  <div style={{flex:1,display:'flex',flexDirection:'column',overflow:'hidden'}}>
+    <Header title="Mensajes"/>
+    <div style={{flex:1,background:'#F2F2F0',display:'flex',alignItems:'center',justifyContent:'center'}}>
+      <div style={{textAlign:'center',color:'#bbb'}}>
+        <Icon name="messages" size={40} color="#ddd"/>
+        <div style={{marginTop:12,fontSize:13}}>Sin mensajes nuevos</div>
+      </div>
+    </div>
+  </div>
+);
+
+const PerfilScreen = () => (
+  <div style={{flex:1,display:'flex',flexDirection:'column',overflow:'hidden'}}>
+    <Header title="Mi perfil"/>
+    <div style={{flex:1,overflowY:'auto',background:'#F2F2F0',padding:'28px'}}>
+      <div style={{background:'#fff',borderRadius:16,padding:'24px',boxShadow:'0 2px 12px rgba(0,0,0,.05)',maxWidth:480}}>
+        <div style={{display:'flex',alignItems:'center',gap:16,marginBottom:24}}>
+          <div style={{width:60,height:60,borderRadius:'50%',background:'#8BAF4E',display:'flex',alignItems:'center',justifyContent:'center',fontSize:20,fontWeight:700,color:'#1F2B1F'}}>TS</div>
+          <div>
+            <div style={{fontSize:17,fontWeight:700,color:'#111'}}>Tomas Schiro</div>
+            <div style={{fontSize:12,color:'#888',marginTop:2}}>Transportista · Corrientes</div>
+            <Badge status="available"/>
+          </div>
+        </div>
+        {[['Correo','tomas@transport.com'],['Teléfono','+54 9 379 555-1234'],['CUIT','20-33456789-1'],['Zona de operación','Corrientes, Entre Ríos, Misiones']].map(([k,v])=>(
+          <div key={k} style={{padding:'12px 0',borderBottom:'1px solid #F0F0F0',display:'flex',justifyContent:'space-between'}}>
+            <span style={{fontSize:12,color:'#888'}}>{k}</span>
+            <span style={{fontSize:12,fontWeight:600,color:'#111'}}>{v}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  </div>
+);
+
+// ─── Login ────────────────────────────────────
+const LoginScreen = ({ onLogin }) => (
+  <div style={{minHeight:'100vh',background:'#1F2B1F',display:'flex',alignItems:'center',justifyContent:'center',padding:24,position:'relative',overflow:'hidden'}}>
+    <svg style={{position:'absolute',inset:0,width:'100%',height:'100%',opacity:.07,pointerEvents:'none'}} viewBox="0 0 800 600" fill="none">
+      <path d="M 700 30 C 640 130, 520 180, 440 300 C 360 420, 340 500, 200 570" stroke="#8BAF4E" strokeWidth="1.5" strokeDasharray="5 7"/>
+      <circle cx="700" cy="30" r="5" fill="#8BAF4E"/>
+      <circle cx="200" cy="570" r="5" fill="#E07A34"/>
+    </svg>
+    <div style={{background:'#fff',borderRadius:20,padding:'40px 36px',width:340,boxShadow:'0 16px 64px rgba(0,0,0,.3)',position:'relative',zIndex:1}}>
+      <div style={{display:'flex',flexDirection:'column',alignItems:'center',gap:8,marginBottom:28}}>
+        <div style={{background:'#1F2B1F',borderRadius:14,padding:12,marginBottom:2}}>
+          <BullIcon size={36} color="#BDD18A"/>
+        </div>
+        <div style={{fontSize:22,fontWeight:700,letterSpacing:'.16em',color:'#1F2B1F'}}>ARREO</div>
+        <div style={{fontSize:10,color:'#aaa',letterSpacing:'.1em'}}>TRANSPORTE GANADERO INTELIGENTE</div>
+      </div>
+      <div style={{display:'flex',flexDirection:'column',gap:12}}>
+        <div>
+          <label style={{fontSize:12,color:'#666',fontWeight:500,display:'block',marginBottom:4}}>Correo electrónico</label>
+          <input defaultValue="tomas@transport.com" style={{width:'100%',background:'#fff',border:'1.5px solid #E0E0E0',borderRadius:8,padding:'9px 12px',fontSize:13,color:'#111',outline:'none'}}/>
+        </div>
+        <div>
+          <label style={{fontSize:12,color:'#666',fontWeight:500,display:'block',marginBottom:4}}>Contraseña</label>
+          <input type="password" defaultValue="••••••••" style={{width:'100%',background:'#fff',border:'1.5px solid #E0E0E0',borderRadius:8,padding:'9px 12px',fontSize:13,color:'#111',outline:'none'}}/>
+        </div>
+        <button onClick={onLogin} style={{background:'#E07A34',color:'#fff',border:'none',borderRadius:8,padding:'11px',fontSize:14,fontWeight:600,cursor:'pointer',marginTop:4}}>
+          Ingresar
+        </button>
+        <div style={{textAlign:'center',fontSize:11,color:'#aaa'}}>
+          ¿No tenés cuenta? <span style={{color:'#E07A34',fontWeight:600,cursor:'pointer'}}>Registrate</span>
+        </div>
+      </div>
+    </div>
+  </div>
+);
+
+// ─── App ──────────────────────────────────────
+const App = () => {
+  const [screen, setScreen] = useState('login');
+  const [nav, setNav] = useState('dashboard');
+  const [showPublicar, setShowPublicar] = useState(false);
+  const [published, setPublished] = useState(false);
+
+  if (screen === 'login') return <LoginScreen onLogin={() => setScreen('app')}/>;
+
+  const renderMain = () => {
+    switch(nav) {
+      case 'dashboard':  return <DashboardScreen onNav={setNav}/>;
+      case 'viajes':     return <ViajesScreen onPublicar={() => setShowPublicar(true)}/>;
+      case 'mis-viajes': return <MisViajesScreen onNav={setNav} onPublicar={() => setShowPublicar(true)}/>;
+      case 'mensajes':   return <MensajesScreen/>;
+      case 'perfil':     return <PerfilScreen/>;
+      default:           return <DashboardScreen onNav={setNav}/>;
+    }
+  };
+
+  return (
+    <div style={{display:'flex',height:'100vh',overflow:'hidden'}}>
+      <Sidebar active={nav} onNav={setNav}/>
+      {renderMain()}
+      {showPublicar && (
+        <PublicarModal
+          onClose={() => setShowPublicar(false)}
+          onPublish={() => { setShowPublicar(false); setPublished(true); setTimeout(()=>setPublished(false),3000); }}
+        />
+      )}
+      {published && (
+        <div style={{position:'fixed',bottom:80,left:'50%',transform:'translateX(-50%)',background:'#1F2B1F',color:'#fff',borderRadius:10,padding:'12px 20px',fontSize:13,fontWeight:600,display:'flex',alignItems:'center',gap:8,boxShadow:'0 8px 32px rgba(0,0,0,.3)',zIndex:200}}>
+          <Icon name="check" size={15} color="#8BAF4E"/>
+          ¡Disponibilidad publicada con éxito!
+        </div>
+      )}
+    </div>
+  );
+};
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>
