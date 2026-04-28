@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 
 const css = `
@@ -226,13 +226,48 @@ html{scroll-behavior:smooth}
 .ft-legal a:hover{color:rgba(255,255,255,.45)}
 `;
 
+const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api';
+
 export default function LandingPage() {
   const router = useRouter();
+  const [origen, setOrigen] = useState('');
+  const [destino, setDestino] = useState('');
 
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (token) router.replace('/dashboard');
   }, [router]);
+
+  useEffect(() => {
+    async function loadStats() {
+      try {
+        const [vRes, dRes] = await Promise.all([
+          fetch(`${API}/viajes/publicos`),
+          fetch(`${API}/disponibilidades/publicas`),
+        ]);
+        if (vRes.ok) {
+          const data: { total: number } = await vRes.json();
+          const el = document.getElementById('liveCount');
+          if (el) el.textContent = String(data.total);
+        }
+        if (dRes.ok) {
+          const data: { total: number } = await dRes.json();
+          const el = document.getElementById('driversCount');
+          if (el) el.textContent = String(data.total);
+        }
+      } catch {
+        // keep hardcoded fallback values
+      }
+    }
+    loadStats();
+  }, []);
+
+  function handleBuscar() {
+    const params = new URLSearchParams();
+    if (origen.trim()) params.set('origen', origen.trim());
+    if (destino.trim()) params.set('destino', destino.trim());
+    router.push(`/viajes-disponibles?${params.toString()}`);
+  }
 
   useEffect(() => {
     const cleanup: (() => void)[] = [];
@@ -528,10 +563,10 @@ export default function LandingPage() {
             <div className="widget" id="heroWidget">
               <div className="w-label">Solicitá un viaje</div>
               <div className="w-fields">
-                <label className="w-row"><div className="w-dot w-o"></div><input type="text" placeholder="¿Desde dónde retiramos el ganado?" /></label>
-                <label className="w-row"><div className="w-dot w-d"></div><input type="text" placeholder="¿A dónde lo llevamos?" /></label>
+                <label className="w-row"><div className="w-dot w-o"></div><input type="text" placeholder="¿Desde dónde retiramos el ganado?" value={origen} onChange={e => setOrigen(e.target.value)} /></label>
+                <label className="w-row"><div className="w-dot w-d"></div><input type="text" placeholder="¿A dónde lo llevamos?" value={destino} onChange={e => setDestino(e.target.value)} /></label>
               </div>
-              <a href="/register" className="w-btn">Buscar transportistas disponibles</a>
+              <button className="w-btn" onClick={handleBuscar}>Buscar transportistas disponibles</button>
               <div className="w-note">Sin costo hasta confirmar · Cotización instantánea</div>
             </div>
             <div className="live-ticker" id="heroTicker">

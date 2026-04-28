@@ -117,6 +117,40 @@ router.post('/', authMiddleware, async (req, res) => {
   }
 });
 
+// GET /api/viajes/publicos — sin auth, campos seguros (sin datos personales del productor)
+router.get('/publicos', async (req, res) => {
+  const { origen, destino } = req.query;
+
+  const condiciones = ["v.estado != 'completo'"];
+  const valores = [];
+
+  if (origen) {
+    valores.push(`%${origen}%`);
+    condiciones.push(`v.origen ILIKE $${valores.length}`);
+  }
+  if (destino) {
+    valores.push(`%${destino}%`);
+    condiciones.push(`v.destino ILIKE $${valores.length}`);
+  }
+
+  try {
+    const { rows } = await pool.query(
+      `SELECT v.id, v.origen, v.destino, v.fecha_salida, v.tipo_hacienda,
+              v.cantidad_cabezas, v.peso_total_kg, v.tipo_jaula,
+              v.condicion_camino, v.estado, u.zona AS zona_publicante
+       FROM viajes v
+       JOIN usuarios u ON u.id = v.usuario_id
+       WHERE ${condiciones.join(' AND ')}
+       ORDER BY v.fecha_salida ASC`,
+      valores
+    );
+    res.json({ viajes: rows, total: rows.length });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Error interno del servidor' });
+  }
+});
+
 // GET /api/viajes/:id — detalle + aplicaciones con datos del camión
 router.get('/:id', async (req, res) => {
   try {

@@ -61,6 +61,21 @@ router.get('/', async (req, res) => {
   }
 });
 
+// GET /api/disponibilidades/publicas — sin auth, solo count de disponibilidades activas
+router.get('/publicas', async (req, res) => {
+  try {
+    const { rows } = await pool.query(
+      `SELECT COUNT(*)::int AS total
+       FROM disponibilidades
+       WHERE estado = 'disponible' AND fecha >= CURRENT_DATE`
+    );
+    res.json({ total: rows[0].total });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Error interno del servidor' });
+  }
+});
+
 // PUT /api/disponibilidades/:id — editar
 router.put('/:id', authMiddleware, async (req, res) => {
   if (req.user.rol !== 'transportista') {
