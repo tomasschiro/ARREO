@@ -4,220 +4,233 @@ import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
 const css = `
-/* ── TOKENS ───────────────────────────────────────────────── */
-:root {
-  --verde-bosque: #1F2B1F;
-  --verde-bosque-mid: #2D3E2D;
-  --verde-arreo: #8BAF4E;
-  --verde-light: #BDD18A;
-  --tierra: #E07A34;
-  --niebla: #F2F2F0;
-  --carbon: #111111;
-  --blanco: #FFFFFF;
-  --font: 'DM Sans', system-ui, sans-serif;
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --v:#8BAF4E;--vl:#BDD18A;--b:#1F2B1F;--bm:#2D3E2D;--bd:#0D150D;
+  --t:#E07A34;--td:#C96B2A;--n:#F2F2F0;--c:#111111;--w:#FFFFFF;
 }
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-html { scroll-behavior: smooth; }
-.landing-root {
-  font-family: var(--font);
-  color: var(--carbon);
-  background: var(--blanco);
-  -webkit-font-smoothing: antialiased;
-  overflow-x: hidden;
-}
+html{scroll-behavior:smooth}
+.lp{font-family:'DM Sans',sans-serif;background:var(--w);color:var(--c);overflow-x:hidden}
 
-/* ── NAV ──────────────────────────────────────────────────── */
-nav {
-  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
-  padding: 0 48px;
-  height: 64px;
-  display: flex; align-items: center; justify-content: space-between;
-  background: rgba(31,43,31,.92);
-  backdrop-filter: blur(12px);
-  border-bottom: 1px solid rgba(255,255,255,.06);
-}
-.nav-logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
-.nav-logo-name { color: #fff; font-size: 17px; font-weight: 700; letter-spacing: .16em; }
-.nav-links { display: flex; gap: 32px; align-items: center; }
-.nav-links a { color: rgba(255,255,255,.6); font-size: 14px; font-weight: 500; text-decoration: none; transition: color .15s; }
-.nav-links a:hover { color: #fff; }
-.nav-login { color: rgba(255,255,255,.6); font-size: 14px; font-weight: 500; text-decoration: none; transition: color .15s; }
-.nav-login:hover { color: #fff; }
-.nav-cta { background: var(--tierra); color: #fff; padding: 8px 20px; border-radius: 8px; font-size: 13px; font-weight: 600; text-decoration: none; letter-spacing: .04em; transition: background .15s; }
-.nav-cta:hover { background: #C86928; }
+/* ─ NAV ─ */
+.lp nav{position:fixed;top:0;left:0;right:0;z-index:200;display:flex;align-items:center;justify-content:space-between;padding:0 60px;height:72px;transition:background .5s,backdrop-filter .5s}
+.lp nav.scrolled{background:rgba(13,21,13,.94);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px)}
+.nav-logo img{height:36px;display:block}
+.nav-links{display:flex;gap:36px;list-style:none}
+.nav-links a{font-size:14px;font-weight:500;color:rgba(255,255,255,.65);text-decoration:none;letter-spacing:.02em;transition:color .2s}
+.nav-links a:hover{color:#fff}
+.nav-actions{display:flex;gap:10px;align-items:center}
+.btn-ghost{padding:9px 22px;border-radius:9999px;border:1.5px solid rgba(255,255,255,.22);background:transparent;color:#fff;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:500;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;transition:all .2s}
+.btn-ghost:hover{border-color:rgba(255,255,255,.55);background:rgba(255,255,255,.08)}
+.btn-t{padding:10px 24px;border-radius:9999px;border:none;background:var(--t);color:#fff;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:700;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:8px;transition:background .2s,transform .1s,box-shadow .2s;box-shadow:0 4px 18px rgba(224,122,52,.35)}
+.btn-t:hover{background:var(--td);transform:translateY(-1px);box-shadow:0 8px 28px rgba(224,122,52,.45)}
 
-/* ── HERO ─────────────────────────────────────────────────── */
-.hero {
-  min-height: 100vh;
-  background: var(--verde-bosque);
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  align-items: center;
-  padding: 80px 48px 48px;
-  gap: 48px;
-  position: relative;
-  overflow: hidden;
-}
-.hero::before {
-  content: '';
-  position: absolute; inset: 0;
-  background: radial-gradient(ellipse 60% 60% at 70% 40%, rgba(139,175,78,.08) 0%, transparent 60%);
-  pointer-events: none;
-}
-.hero-left { position: relative; z-index: 1; }
-.hero-badge {
-  display: inline-flex; align-items: center; gap: 6px;
-  background: rgba(139,175,78,.15); border: 1px solid rgba(139,175,78,.3);
-  color: var(--verde-light); padding: 5px 12px; border-radius: 999px;
-  font-size: 11px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase;
-  margin-bottom: 24px;
-}
-.hero-badge-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--verde-arreo); animation: pulse-dot 2s infinite; }
-@keyframes pulse-dot { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.5;transform:scale(.8)} }
-.hero-h1 { font-size: clamp(38px,4vw,58px); font-weight: 800; line-height: 1.05; letter-spacing: -.02em; color: #fff; }
-.hero-h1 .accent { color: var(--verde-light); }
-.hero-sub { color: rgba(255,255,255,.55); font-size: 18px; line-height: 1.6; margin-top: 20px; max-width: 440px; }
-.hero-actions { display: flex; gap: 12px; margin-top: 36px; flex-wrap: wrap; }
-.btn-hero-primary { background: var(--tierra); color: #fff; padding: 14px 28px; border-radius: 8px; font-size: 15px; font-weight: 700; text-decoration: none; transition: background .15s, transform .1s; display: inline-block; }
-.btn-hero-primary:hover { background: #C86928; transform: translateY(-1px); }
-.btn-hero-ghost { border: 1.5px solid rgba(255,255,255,.25); color: rgba(255,255,255,.8); padding: 14px 28px; border-radius: 8px; font-size: 15px; font-weight: 600; text-decoration: none; transition: border-color .15s, color .15s; display: inline-block; }
-.btn-hero-ghost:hover { border-color: rgba(255,255,255,.5); color: #fff; }
-.hero-trust { display: flex; gap: 24px; margin-top: 48px; flex-wrap: wrap; }
-.trust-item { display: flex; align-items: center; gap: 8px; color: rgba(255,255,255,.45); font-size: 13px; }
-.trust-item svg { opacity: .6; }
+/* ─ HERO ─ */
+#hero{min-height:100vh;background:var(--bd);position:relative;display:flex;align-items:center;overflow:hidden}
+#heroCanvas{position:absolute;inset:0;width:100%;height:100%;z-index:1}
+.hero-vignette{position:absolute;inset:0;z-index:2;pointer-events:none;background:radial-gradient(ellipse 60% 100% at 18% 50%,rgba(13,21,13,.96) 0%,rgba(13,21,13,.55) 55%,transparent 100%),linear-gradient(to bottom,rgba(13,21,13,.4) 0%,transparent 30%,transparent 70%,rgba(13,21,13,.8) 100%)}
+.hero-grain{position:absolute;inset:0;z-index:3;pointer-events:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='.032'/%3E%3C/svg%3E");animation:grain 7s steps(1) infinite}
+@keyframes grain{0%{background-position:0 0}14%{background-position:-10% -5%}28%{background-position:5% -20%}42%{background-position:-20% 10%}57%{background-position:10% 25%}71%{background-position:-5% -15%}85%{background-position:20% 5%}}
+.hero-horizon{position:absolute;bottom:0;left:0;right:0;height:180px;z-index:4;pointer-events:none}
+.hero-content{position:relative;z-index:5;width:100%;max-width:1280px;margin:0 auto;padding:140px 80px 100px;display:grid;grid-template-columns:1fr 1fr;align-items:center;gap:60px}
+.hero-left{max-width:560px}
+.eyebrow{display:inline-flex;align-items:center;gap:8px;border:1px solid rgba(139,175,78,.28);background:rgba(139,175,78,.1);border-radius:9999px;padding:5px 14px;margin-bottom:28px;width:fit-content}
+.eyebrow span{font-size:11px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--vl)}
+.edot{width:6px;height:6px;border-radius:50%;background:var(--v);animation:ep 2.4s ease-in-out infinite}
+@keyframes ep{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.35;transform:scale(.7)}}
+.hero-h1{font-size:clamp(56px,5.2vw,92px);font-weight:800;line-height:.95;letter-spacing:-.03em;text-transform:uppercase;color:#fff;margin-bottom:26px}
+.hero-h1 .word{display:inline-block;overflow:hidden;vertical-align:bottom}
+.hero-h1 .word span{display:inline-block;transform:translateY(110%);transition:transform .7s cubic-bezier(.16,1,.3,1)}
+.hero-h1 .word span.in{transform:none}
+.hero-h1 em{font-style:normal;color:var(--t)}
+.hero-sub{font-size:17px;line-height:1.65;color:rgba(255,255,255,.5);margin-bottom:40px;max-width:400px;opacity:0;transform:translateY(18px);transition:opacity .8s .6s,transform .8s .6s cubic-bezier(.16,1,.3,1)}
+.hero-sub.in{opacity:1;transform:none}
+.widget{background:rgba(255,255,255,.97);border-radius:20px;padding:22px;box-shadow:0 32px 80px rgba(0,0,0,.6),0 0 0 1px rgba(255,255,255,.06),inset 0 1px 0 rgba(255,255,255,.8);opacity:0;transform:translateY(22px);transition:opacity .8s .8s,transform .8s .8s cubic-bezier(.16,1,.3,1)}
+.widget.in{opacity:1;transform:none}
+.w-label{font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#bbb;margin-bottom:14px}
+.w-fields{background:var(--n);border-radius:12px;overflow:hidden;margin-bottom:12px}
+.w-row{display:flex;align-items:center;gap:12px;padding:13px 16px;border:none;width:100%;background:transparent;cursor:text;transition:background .15s}
+.w-row:hover{background:rgba(0,0,0,.03)}
+.w-row+.w-row{border-top:1px solid rgba(0,0,0,.07)}
+.w-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.w-o{background:var(--v)}.w-d{background:var(--t)}
+.w-row input{flex:1;border:none;background:transparent;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:500;color:var(--c);outline:none}
+.w-row input::placeholder{color:#bbb;font-weight:400}
+.w-btn{display:block;width:100%;padding:15px;border-radius:12px;border:none;background:var(--t);color:#fff;font-family:'DM Sans',sans-serif;font-size:15px;font-weight:700;cursor:pointer;letter-spacing:.02em;transition:background .2s,transform .1s;box-shadow:0 4px 18px rgba(224,122,52,.3);text-decoration:none;text-align:center}
+.w-btn:hover{background:var(--td);transform:translateY(-1px)}
+.w-note{text-align:center;font-size:11px;color:#ccc;margin-top:10px;font-weight:500}
+.live-ticker{margin-top:16px;display:flex;align-items:center;gap:10px;opacity:0;transform:translateY(12px);transition:opacity .8s 1s,transform .8s 1s cubic-bezier(.16,1,.3,1)}
+.live-ticker.in{opacity:1;transform:none}
+.ticker-dot{width:7px;height:7px;border-radius:50%;background:var(--v);animation:ep 1.5s infinite;flex-shrink:0}
+.ticker-text{font-size:13px;color:rgba(255,255,255,.55);font-weight:500}
+.ticker-text strong{color:rgba(255,255,255,.85);font-weight:600}
+.hero-right{display:flex;flex-direction:column;gap:16px;align-items:flex-end;opacity:0;transform:translateX(30px);transition:opacity .9s .5s,transform .9s .5s cubic-bezier(.16,1,.3,1)}
+.hero-right.in{opacity:1;transform:none}
+.stat-card{background:rgba(13,21,13,.75);border:1px solid rgba(189,209,138,.14);border-radius:18px;padding:20px 24px;backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);min-width:200px}
+.sc-label{font-size:9px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,.3);margin-bottom:8px}
+.sc-val{font-size:36px;font-weight:800;color:#fff;letter-spacing:-.04em;line-height:1}
+.sc-val span{color:var(--vl)}
+.sc-sub{font-size:11px;color:rgba(255,255,255,.35);margin-top:4px}
+.live-badge{display:inline-flex;align-items:center;gap:5px;background:rgba(139,175,78,.13);border-radius:6px;padding:4px 10px;margin-bottom:10px}
+.lb-dot{width:5px;height:5px;border-radius:50%;background:var(--v);animation:ep 1.4s infinite}
+.lb-txt{font-size:9px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--vl)}
+.route-pill{display:flex;align-items:center;gap:6px;margin-top:10px}
+.rp-dot{width:7px;height:7px;border-radius:50%}
+.rp-line{flex:1;height:1px;background:repeating-linear-gradient(to right,rgba(139,175,78,.4) 0,rgba(139,175,78,.4) 4px,transparent 4px,transparent 8px)}
+.rp-txt{font-size:11px;color:rgba(255,255,255,.5);font-weight:500}
+.rp-tag{font-size:10px;font-weight:600;color:var(--vl);background:rgba(139,175,78,.12);padding:3px 8px;border-radius:5px}
 
-/* ── MAP ─────────────────────────────────────────────────── */
-.hero-map { position: relative; width: 100%; aspect-ratio: .85; z-index: 1; }
-#map-svg { width: 100%; height: 100%; }
+/* ─ STATS BAR ─ */
+.stats-bar{background:var(--b);padding:30px 0;border-top:1px solid rgba(255,255,255,.04)}
+.stats-inner{max-width:1280px;margin:0 auto;padding:0 80px;display:flex;align-items:center;justify-content:space-between}
+.stat-item{display:flex;flex-direction:column;align-items:center;gap:5px}
+.stat-val{font-size:32px;font-weight:800;color:#fff;letter-spacing:-.035em}
+.stat-val span{color:var(--v)}
+.stat-lbl{font-size:10px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.32)}
+.stat-div{width:1px;height:40px;background:rgba(255,255,255,.08)}
 
-.arg-outline { fill: none; stroke: rgba(139,175,78,.15); stroke-width: 1.5; }
-.arg-prov { fill: rgba(139,175,78,.04); stroke: rgba(139,175,78,.08); stroke-width: .5; }
-.route-path { fill: none; stroke-linecap: round; }
-.route-active { stroke: var(--verde-arreo); stroke-width: 1.5; stroke-dasharray: 6 5; opacity: .7; }
-.route-completed { stroke: rgba(139,175,78,.25); stroke-width: 1; stroke-dasharray: 4 6; }
-.city-node-outer { fill: rgba(139,175,78,.12); }
-.city-node-inner { fill: var(--verde-arreo); }
-.city-node-dest  { fill: var(--tierra); }
-.city-label { fill: rgba(255,255,255,.5); font-size: 9px; font-family: var(--font); font-weight: 500; letter-spacing: .06em; }
-.truck-dot { fill: var(--verde-light); filter: drop-shadow(0 0 6px #8BAF4E); }
-.truck-dot-2 { fill: var(--tierra); filter: drop-shadow(0 0 6px #E07A34); }
-@keyframes ring-pulse {
-  0%   { r: 6; opacity: .6; }
-  100% { r: 18; opacity: 0; }
-}
-.pulse-ring { animation: ring-pulse 2.4s ease-out infinite; fill: none; stroke: var(--verde-arreo); stroke-width: 1; }
-.pulse-ring-2 { animation: ring-pulse 2.4s ease-out 1.2s infinite; fill: none; stroke: var(--verde-arreo); stroke-width: 1; }
+/* ─ GENERAL SECTIONS ─ */
+.lp section{padding:120px 0}
+.inner{max-width:1280px;margin:0 auto;padding:0 80px}
+.s-eye{font-size:11px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--v);margin-bottom:14px;display:block}
+.s-h2{font-size:clamp(36px,3vw,58px);font-weight:800;line-height:.97;letter-spacing:-.03em;text-transform:uppercase;color:var(--c);margin-bottom:18px;text-wrap:balance}
+.s-h2 em{font-style:normal;color:var(--t)}
+.s-sub{font-size:16px;line-height:1.65;color:#777;max-width:500px}
+.reveal{opacity:0;transform:translateY(28px);transition:opacity .7s ease,transform .7s ease}
+.reveal.in{opacity:1;transform:none}
+.reveal-delay-1{transition-delay:.12s}
+.reveal-delay-2{transition-delay:.22s}
+.reveal-delay-3{transition-delay:.32s}
+.reveal-delay-4{transition-delay:.42s}
+.reveal-scale{opacity:0;transform:scale(.96) translateY(20px);transition:opacity .8s ease,transform .8s ease}
+.reveal-scale.in{opacity:1;transform:none}
 
-@keyframes draw-route { from { stroke-dashoffset: 500; } to { stroke-dashoffset: 0; } }
-.route-draw { stroke-dasharray: 500; animation: draw-route 2.5s ease forwards; }
-.route-draw-2 { stroke-dasharray: 500; animation: draw-route 3s 0.4s ease forwards; stroke-dashoffset: 500; }
-.route-draw-3 { stroke-dasharray: 500; animation: draw-route 2.8s 0.8s ease forwards; stroke-dashoffset: 500; }
+/* ─ STEPS ─ */
+#steps{background:var(--n)}
+.steps-head{text-align:center;margin-bottom:70px}
+.steps-head .s-sub{margin:0 auto;text-align:center}
+.steps-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:2px}
+.step-card{background:#fff;padding:40px 28px;position:relative}
+.step-card:first-child{border-radius:20px 0 0 20px}
+.step-card:last-child{border-radius:0 20px 20px 0}
+.step-num{font-size:72px;font-weight:800;color:#f0efed;line-height:1;margin-bottom:20px;letter-spacing:-.06em;user-select:none}
+.step-ico{width:46px;height:46px;border-radius:12px;background:var(--bd);display:flex;align-items:center;justify-content:center;margin-bottom:18px}
+.step-title{font-size:17px;font-weight:700;color:var(--c);margin-bottom:10px}
+.step-desc{font-size:14px;line-height:1.6;color:#888}
+.step-arr{position:absolute;top:40px;right:-13px;width:26px;height:26px;background:var(--t);border-radius:50%;display:flex;align-items:center;justify-content:center;z-index:2;box-shadow:0 4px 12px rgba(224,122,52,.4)}
 
-/* ── STATS ────────────────────────────────────────────────── */
-.stats { background: var(--niebla); padding: 64px 48px; }
-.stats-grid { max-width: 1100px; margin: 0 auto; display: grid; grid-template-columns: repeat(4,1fr); gap: 24px; }
-.stat-card { background: var(--blanco); border-radius: 16px; padding: 28px 24px; box-shadow: 0 2px 12px rgba(0,0,0,.06); }
-.stat-n { font-size: 42px; font-weight: 800; color: var(--verde-bosque); line-height: 1; }
-.stat-l { font-size: 13px; color: #888; margin-top: 6px; font-weight: 500; }
-.stat-accent { color: var(--verde-arreo); }
+/* ─ GANADERO ─ */
+#ganadero{background:#fff}
+.split{display:grid;grid-template-columns:1fr 1fr;gap:96px;align-items:center}
+.split-vis{border-radius:24px;overflow:hidden;aspect-ratio:4/3;background:var(--bd);position:relative}
+.app-card{background:var(--b);border-radius:16px;position:absolute;padding:18px;box-shadow:0 24px 64px rgba(0,0,0,.6)}
+.ac-a{top:28px;left:28px;width:210px}
+.ac-b{bottom:28px;right:28px;width:210px}
+.ac-lbl{font-size:9px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.32);margin-bottom:7px}
+.ac-title{font-size:15px;font-weight:700;color:#fff;margin-bottom:3px}
+.ac-sub{font-size:11px;color:rgba(255,255,255,.42);margin-bottom:13px}
+.ac-badge{display:inline-flex;align-items:center;gap:5px;background:rgba(139,175,78,.18);border-radius:6px;padding:4px 10px;font-size:11px;font-weight:600;color:var(--vl)}
+.acd{width:5px;height:5px;border-radius:50%;background:var(--v);animation:ep 2s infinite}
+.ac-row{display:flex;align-items:center;gap:8px;padding:7px 0}
+.ac-row+.ac-row{border-top:1px solid rgba(255,255,255,.07)}
+.ac-rdot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.ac-rtxt{font-size:11px;color:rgba(255,255,255,.6);font-weight:500}
+.ac-map{width:100%;height:80px;border-radius:9px;background:var(--bm);overflow:hidden;margin-bottom:11px}
+.ac-drv{display:flex;align-items:center;gap:9px}
+.ac-avt{width:30px;height:30px;border-radius:50%;background:var(--bm);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;flex-shrink:0}
+.ac-dn{font-size:12px;font-weight:600;color:#fff}
+.ac-dr{font-size:10px;color:rgba(255,255,255,.35)}
+.ac-stars{color:var(--t)}
+.feat-list{list-style:none;display:flex;flex-direction:column;gap:22px;margin-top:36px}
+.feat-item{display:flex;gap:16px;align-items:flex-start}
+.feat-ico{width:42px;height:42px;border-radius:11px;background:var(--n);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.feat-title{font-size:15px;font-weight:700;color:var(--c);margin-bottom:4px}
+.feat-desc{font-size:13px;line-height:1.6;color:#888}
 
-/* ── HOW IT WORKS ─────────────────────────────────────────── */
-.how { background: var(--blanco); padding: 96px 48px; }
-.section-label { font-size: 11px; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; color: var(--verde-arreo); margin-bottom: 12px; }
-.section-title { font-size: clamp(28px,3vw,42px); font-weight: 800; color: var(--verde-bosque); line-height: 1.15; letter-spacing: -.02em; }
-.section-sub { font-size: 17px; color: #666; margin-top: 12px; max-width: 500px; line-height: 1.6; }
-.how-inner { max-width: 1100px; margin: 0 auto; }
-.how-header { margin-bottom: 64px; }
-.steps { display: grid; grid-template-columns: repeat(3,1fr); gap: 40px; position: relative; }
-.steps::before {
-  content: '';
-  position: absolute;
-  top: 28px; left: calc(16.67% + 24px); right: calc(16.67% + 24px);
-  height: 1px;
-  background: repeating-linear-gradient(to right, var(--verde-arreo) 0, var(--verde-arreo) 4px, transparent 4px, transparent 10px);
-  opacity: .4;
-}
-.step { display: flex; flex-direction: column; gap: 16px; }
-.step-num {
-  width: 56px; height: 56px; border-radius: 50%;
-  background: var(--verde-bosque); color: var(--verde-light);
-  display: flex; align-items: center; justify-content: center;
-  font-size: 20px; font-weight: 800; letter-spacing: -.01em;
-  flex-shrink: 0;
-}
-.step-title { font-size: 18px; font-weight: 700; color: var(--verde-bosque); }
-.step-desc { font-size: 15px; color: #666; line-height: 1.6; }
+/* ─ TRANSPORTISTA ─ */
+#transp{background:var(--bd);position:relative;overflow:hidden}
+#transp::before{content:'';position:absolute;inset:0;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='.035'/%3E%3C/svg%3E");animation:grain 7s steps(1) infinite;pointer-events:none}
+#transp::after{content:'';position:absolute;top:-200px;right:-200px;width:700px;height:700px;background:radial-gradient(ellipse at center,rgba(139,175,78,.07) 0%,transparent 65%);pointer-events:none;z-index:0}
+.tr-inner{position:relative;z-index:1;display:grid;grid-template-columns:1fr 1fr;gap:96px;align-items:center}
+.tr-left .s-h2{color:#fff}
+.tr-left .s-eye{color:var(--vl)}
+.tr-left .s-sub{color:rgba(255,255,255,.45);margin-top:14px;margin-bottom:34px}
+.earn-card{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:20px;padding:30px}
+.earn-lbl{font-size:10px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.3);margin-bottom:14px}
+.earn-amt{font-size:52px;font-weight:800;color:#fff;letter-spacing:-.045em}
+.earn-per{font-size:12px;color:rgba(255,255,255,.3);margin-top:4px;margin-bottom:30px}
+.earn-bars{display:flex;gap:6px;align-items:flex-end;height:72px;margin-bottom:10px}
+.ebar{flex:1;border-radius:4px 4px 0 0;background:rgba(139,175,78,.15)}
+.ebar.on{background:var(--v);box-shadow:0 -4px 14px rgba(139,175,78,.35)}
+.earn-days{display:flex;justify-content:space-between;font-size:9px;color:rgba(255,255,255,.22);letter-spacing:.06em}
+.btn-t-lg{display:inline-flex;align-items:center;gap:10px;padding:16px 32px;border-radius:9999px;background:var(--t);color:#fff;font-family:'DM Sans',sans-serif;font-size:15px;font-weight:700;border:none;cursor:pointer;transition:all .2s;text-decoration:none;box-shadow:0 6px 24px rgba(224,122,52,.4)}
+.btn-t-lg:hover{background:var(--td);transform:translateY(-2px);box-shadow:0 10px 32px rgba(224,122,52,.5)}
+.perks{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:36px}
+.perk{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:14px;padding:18px;transition:border-color .2s,background .2s}
+.perk:hover{background:rgba(255,255,255,.07);border-color:rgba(189,209,138,.18)}
+.perk-ico{width:34px;height:34px;border-radius:8px;background:rgba(139,175,78,.12);display:flex;align-items:center;justify-content:center;margin-bottom:11px}
+.perk-title{font-size:14px;font-weight:700;color:#fff;margin-bottom:5px}
+.perk-desc{font-size:12px;line-height:1.5;color:rgba(255,255,255,.36)}
 
-/* ── FEATURES ─────────────────────────────────────────────── */
-.features { background: var(--verde-bosque); padding: 96px 48px; }
-.features-inner { max-width: 1100px; margin: 0 auto; }
-.features-header { margin-bottom: 56px; }
-.features-header .section-title { color: #fff; }
-.features-header .section-sub { color: rgba(255,255,255,.5); }
-.features-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 20px; }
-.feature-card {
-  background: rgba(255,255,255,.04);
-  border: 1px solid rgba(255,255,255,.07);
-  border-radius: 16px; padding: 28px;
-  transition: background .2s, border-color .2s;
-}
-.feature-card:hover { background: rgba(255,255,255,.07); border-color: rgba(139,175,78,.2); }
-.feature-icon {
-  width: 44px; height: 44px; border-radius: 10px;
-  background: rgba(139,175,78,.15);
-  display: flex; align-items: center; justify-content: center;
-  margin-bottom: 16px;
-}
-.feature-icon svg { color: var(--verde-light); }
-.feature-title { font-size: 16px; font-weight: 700; color: #fff; margin-bottom: 8px; }
-.feature-desc { font-size: 14px; color: rgba(255,255,255,.45); line-height: 1.6; }
+/* ─ TESTIMONIOS ─ */
+#testi{background:var(--n)}
+.testi-head{text-align:center;margin-bottom:60px}
+.testi-head .s-sub{margin:0 auto}
+.testi-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+.tcard{background:#fff;border-radius:20px;padding:32px;display:flex;flex-direction:column;gap:18px;box-shadow:0 2px 20px rgba(0,0,0,.05);transition:transform .3s,box-shadow .3s}
+.tcard:hover{transform:translateY(-4px);box-shadow:0 12px 40px rgba(0,0,0,.1)}
+.tcard.feat{background:var(--b);box-shadow:0 10px 50px rgba(0,0,0,.2)}
+.tcard.feat:hover{box-shadow:0 20px 60px rgba(0,0,0,.3)}
+.t-stars{font-size:13px;letter-spacing:2px;color:var(--t)}
+.t-txt{font-size:15px;line-height:1.65;color:var(--c);flex:1}
+.tcard.feat .t-txt{color:rgba(255,255,255,.72)}
+.t-auth{display:flex;align-items:center;gap:12px}
+.t-avt{width:40px;height:40px;border-radius:50%;background:var(--n);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:var(--b);flex-shrink:0}
+.tcard.feat .t-avt{background:rgba(255,255,255,.1);color:#fff}
+.t-name{font-size:14px;font-weight:700;color:var(--c)}
+.tcard.feat .t-name{color:#fff}
+.t-role{font-size:12px;color:#bbb}
+.tcard.feat .t-role{color:rgba(255,255,255,.32)}
 
-/* ── TRACKING DEMO ────────────────────────────────────────── */
-.tracking-demo { background: var(--niebla); padding: 96px 48px; }
-.tracking-inner { max-width: 1100px; margin: 0 auto; display: grid; grid-template-columns: 1fr 1fr; gap: 64px; align-items: center; }
-.tracking-ui {
-  background: #0d180d;
-  border-radius: 20px;
-  overflow: hidden;
-  box-shadow: 0 20px 60px rgba(0,0,0,.25);
-}
-.tracking-ui-header { padding: 16px 20px; border-bottom: 1px solid rgba(255,255,255,.06); }
-.tracking-ui-status { display: flex; align-items: center; gap: 8px; }
-.live-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--verde-arreo); animation: pulse-dot 1.5s infinite; box-shadow: 0 0 8px var(--verde-arreo); }
-.tracking-ui-map { height: 220px; position: relative; overflow: hidden; background: #0a1408; }
-.tracking-ui-info { padding: 16px 20px; display: flex; gap: 16px; justify-content: space-between; }
-.tracking-kv { display: flex; flex-direction: column; gap: 3px; }
-.tracking-k { font-size: 10px; color: rgba(255,255,255,.3); text-transform: uppercase; letter-spacing: .1em; }
-.tracking-v { font-size: 16px; font-weight: 700; color: #fff; }
+/* ─ DESCARGA ─ */
+#descarga{background:var(--b)}
+.dl-inner{display:grid;grid-template-columns:1fr auto;gap:80px;align-items:center}
+.dl-left .s-h2{color:#fff}
+.dl-left .s-eye{color:var(--vl)}
+.dl-left .s-sub{color:rgba(255,255,255,.45);margin-top:14px;margin-bottom:34px}
+.app-btns{display:flex;gap:12px;flex-wrap:wrap}
+.app-btn{display:flex;align-items:center;gap:12px;padding:14px 24px;background:rgba(255,255,255,.07);border:1.5px solid rgba(255,255,255,.1);border-radius:12px;text-decoration:none;transition:all .2s}
+.app-btn:hover{background:rgba(255,255,255,.12);border-color:rgba(255,255,255,.25);transform:translateY(-2px)}
+.app-pre{font-size:10px;color:rgba(255,255,255,.42);font-weight:500;letter-spacing:.06em}
+.app-name{font-size:16px;font-weight:700;color:#fff}
+.phone{width:248px;height:460px;background:var(--bd);border-radius:38px;border:5px solid rgba(255,255,255,.09);position:relative;overflow:hidden;box-shadow:0 40px 100px rgba(0,0,0,.6)}
+.ph-screen{position:absolute;inset:0;padding:30px 18px 18px;display:flex;flex-direction:column;gap:10px}
+.ph-greet{font-size:16px;font-weight:700;color:#fff;margin-bottom:4px}
+.ph-greet span{color:var(--vl)}
+.ph-card{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.07);border-radius:13px;padding:14px}
+.ph-clbl{font-size:9px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.28);margin-bottom:6px}
+.ph-ctitle{font-size:14px;font-weight:700;color:#fff;margin-bottom:10px}
+.ph-status{display:flex;align-items:center;justify-content:space-between;margin-top:8px}
+.ph-badge{font-size:10px;font-weight:600;color:var(--vl);background:rgba(139,175,78,.13);padding:4px 9px;border-radius:6px}
+.ph-eta{font-size:10px;color:rgba(255,255,255,.28)}
+.ph-cta{display:block;background:var(--t);border-radius:11px;padding:13px;text-align:center;font-size:13px;font-weight:700;color:#fff;margin-top:auto;box-shadow:0 6px 18px rgba(224,122,52,.4);text-decoration:none}
 
-/* ── CTA ──────────────────────────────────────────────────── */
-.cta-section { background: var(--tierra); padding: 80px 48px; text-align: center; }
-.cta-title { font-size: clamp(28px,3vw,48px); font-weight: 800; color: #fff; line-height: 1.1; letter-spacing: -.02em; margin-bottom: 16px; }
-.cta-sub { font-size: 18px; color: rgba(255,255,255,.75); margin-bottom: 36px; }
-.cta-actions { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; }
-.btn-cta-white { background: #fff; color: var(--tierra); padding: 14px 32px; border-radius: 8px; font-size: 15px; font-weight: 700; text-decoration: none; transition: transform .1s; display: inline-block; }
-.btn-cta-white:hover { transform: translateY(-2px); }
-.btn-cta-outline { border: 2px solid rgba(255,255,255,.5); color: #fff; padding: 14px 32px; border-radius: 8px; font-size: 15px; font-weight: 600; text-decoration: none; transition: border-color .15s; display: inline-block; }
-.btn-cta-outline:hover { border-color: #fff; }
-
-/* ── FOOTER ──────────────────────────────────────────────── */
-footer { background: #0d150d; padding: 40px 48px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px; }
-.footer-brand { display: flex; align-items: center; gap: 10px; }
-.footer-name { color: #fff; font-size: 15px; font-weight: 700; letter-spacing: .14em; }
-.footer-copy { font-size: 13px; color: rgba(255,255,255,.25); }
-
-/* ── RESPONSIVE ──────────────────────────────────────────── */
-@media (max-width: 900px) {
-  .hero { grid-template-columns: 1fr; padding: 100px 24px 48px; }
-  .hero-map { display: none; }
-  .stats-grid { grid-template-columns: repeat(2,1fr); }
-  .steps { grid-template-columns: 1fr; }
-  .steps::before { display: none; }
-  .features-grid { grid-template-columns: 1fr 1fr; }
-  .tracking-inner { grid-template-columns: 1fr; }
-  nav { padding: 0 24px; }
-  .nav-links { display: none; }
-}
+/* ─ FOOTER ─ */
+.lp footer{background:var(--bd);border-top:1px solid rgba(255,255,255,.05);padding:64px 0 40px}
+.ft-inner{max-width:1280px;margin:0 auto;padding:0 80px}
+.ft-top{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:48px;margin-bottom:52px}
+.ft-logo{margin-bottom:14px}
+.ft-logo img{height:32px}
+.ft-tag{font-size:13px;line-height:1.65;color:rgba(255,255,255,.32);max-width:240px}
+.ft-col-title{font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,.28);margin-bottom:18px}
+.ft-links{list-style:none;display:flex;flex-direction:column;gap:11px}
+.ft-links a{font-size:14px;color:rgba(255,255,255,.45);text-decoration:none;transition:color .2s}
+.ft-links a:hover{color:#fff}
+.ft-bottom{display:flex;align-items:center;justify-content:space-between;padding-top:28px;border-top:1px solid rgba(255,255,255,.05)}
+.ft-copy{font-size:12px;color:rgba(255,255,255,.2)}
+.ft-legal{display:flex;gap:22px}
+.ft-legal a{font-size:12px;color:rgba(255,255,255,.2);text-decoration:none}
+.ft-legal a:hover{color:rgba(255,255,255,.45)}
 `;
 
 export default function LandingPage() {
@@ -229,448 +242,554 @@ export default function LandingPage() {
   }, [router]);
 
   useEffect(() => {
-    let cancelled = false;
-    const timeouts: ReturnType<typeof setTimeout>[] = [];
+    const cleanup: (() => void)[] = [];
 
-    // Moving trucks on hero map
-    const truckConfigs = [
-      { truckId: 'truck1', routeId: 'route1', delay: 0 },
-      { truckId: 'truck2', routeId: 'route2', delay: 600 },
-      { truckId: 'truck3', routeId: 'route3', delay: 1200 },
-    ];
+    // ─ NAV SCROLL ─
+    const navEl = document.getElementById('nav');
+    const onScroll = () => navEl?.classList.toggle('scrolled', window.scrollY > 40);
+    window.addEventListener('scroll', onScroll);
+    cleanup.push(() => window.removeEventListener('scroll', onScroll));
 
-    truckConfigs.forEach(({ truckId, routeId, delay }, i) => {
-      const truck = document.getElementById(truckId) as SVGCircleElement | null;
-      const path = document.getElementById(routeId) as SVGPathElement | null;
-      if (!truck || !path) return;
-      const len = path.getTotalLength();
-      let progress = (i * 0.3) % 1;
-
-      function step() {
-        if (cancelled) return;
-        progress = (progress + 0.0008) % 1;
-        const pt = path!.getPointAtLength(progress * len);
-        truck!.setAttribute('cx', String(pt.x));
-        truck!.setAttribute('cy', String(pt.y));
-        requestAnimationFrame(step);
-      }
-
-      const tid = setTimeout(() => requestAnimationFrame(step), delay);
-      timeouts.push(tid);
+    // ─ HERO ENTRANCE ─
+    const wordTimers: ReturnType<typeof setTimeout>[] = [];
+    document.querySelectorAll('.hero-h1 .word span').forEach((w, i) => {
+      wordTimers.push(setTimeout(() => w.classList.add('in'), i * 120 + 100));
     });
+    const entranceTid = setTimeout(() => {
+      ['heroSub','heroWidget','heroTicker','heroRight'].forEach(id =>
+        document.getElementById(id)?.classList.add('in')
+      );
+    }, 200);
+    cleanup.push(() => { wordTimers.forEach(clearTimeout); clearTimeout(entranceTid); });
 
-    // Moving truck on tracking UI
-    const trackRoute = document.getElementById('track-route') as SVGPathElement | null;
-    const trackTruck = document.getElementById('track-truck') as SVGCircleElement | null;
-    const trackRing  = document.getElementById('track-truck-ring') as SVGCircleElement | null;
-    const trackDone  = document.getElementById('track-done') as SVGPathElement | null;
+    // ─ SCROLL REVEAL ─
+    const ro = new IntersectionObserver(entries => {
+      entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); ro.unobserve(e.target); } });
+    }, { threshold: .1 });
+    document.querySelectorAll('.reveal,.reveal-scale').forEach(el => ro.observe(el));
+    cleanup.push(() => ro.disconnect());
 
-    if (trackRoute && trackTruck) {
-      const tLen = trackRoute.getTotalLength();
-      let tProgress = 0.42;
-      if (trackDone) trackDone.style.strokeDasharray = String(tLen);
+    // ─ COUNTERS ─
+    const counterTimers: ReturnType<typeof setInterval>[] = [];
+    const co = new IntersectionObserver(entries => {
+      entries.forEach(e => {
+        if (!e.isIntersecting) return;
+        const el = e.target as HTMLElement;
+        const target = +(el.dataset.target || 0);
+        const prefix = el.dataset.prefix || '';
+        const suffix = el.dataset.suffix || '';
+        const fmt = el.dataset.format === 'ar';
+        let v = 0; const step = target / 60;
+        const ti = setInterval(() => {
+          v = Math.min(v + step, target);
+          const n = fmt ? Math.floor(v).toLocaleString('es-AR').replace(/,/g, '.') : Math.floor(v);
+          el.innerHTML = `<span>${prefix}</span>${n}<span>${suffix}</span>`;
+          if (v >= target) clearInterval(ti);
+        }, 16);
+        counterTimers.push(ti);
+        co.unobserve(el);
+      });
+    }, { threshold: .5 });
+    document.querySelectorAll('.stat-val[data-target]').forEach(el => co.observe(el));
+    cleanup.push(() => { co.disconnect(); counterTimers.forEach(clearInterval); });
 
-      function trackStep() {
-        if (cancelled) return;
-        tProgress = (tProgress + 0.0005) % 1;
-        const pt = trackRoute!.getPointAtLength(tProgress * tLen);
-        trackTruck!.setAttribute('cx', String(pt.x));
-        trackTruck!.setAttribute('cy', String(pt.y));
-        if (trackRing) {
-          trackRing.setAttribute('cx', String(pt.x));
-          trackRing.setAttribute('cy', String(pt.y));
+    // ─ TICKER ─
+    const TICKERS: [string, string, string][] = [
+      ['Juan M.','Salta','solicitó un viaje hace 2 minutos'],
+      ['Roberto D.','Corrientes','completó una entrega hace 4 minutos'],
+      ['María G.','Córdoba','recibió 4 ofertas en menos de 1 minuto'],
+      ['Carlos P.','Entre Ríos','aceptó un transportista hace 6 minutos'],
+      ['Andrés R.','Buenos Aires','calificó su viaje con 5 estrellas'],
+    ];
+    let ti = 0;
+    const tickerEl = document.getElementById('tickerMsg') as HTMLElement | null;
+    let tickerInterval: ReturnType<typeof setInterval> | null = null;
+    if (tickerEl) {
+      tickerEl.style.transition = 'opacity .3s,transform .3s';
+      tickerInterval = setInterval(() => {
+        ti = (ti + 1) % TICKERS.length;
+        const [name, city, msg] = TICKERS[ti];
+        tickerEl.style.opacity = '0'; tickerEl.style.transform = 'translateY(6px)';
+        setTimeout(() => {
+          tickerEl.innerHTML = `<strong>${name}</strong> de ${city} ${msg}`;
+          tickerEl.style.opacity = '1'; tickerEl.style.transform = 'none';
+        }, 300);
+      }, 3500);
+    }
+    cleanup.push(() => { if (tickerInterval) clearInterval(tickerInterval); });
+
+    // ─ CANVAS: CAMPO GANADERO ─
+    const canvas = document.getElementById('heroCanvas') as HTMLCanvasElement | null;
+    if (canvas) {
+      const ctx = canvas.getContext('2d') as CanvasRenderingContext2D;
+      if (ctx) {
+        let W = 0, H = 0, t = 0, cancelled = false, rafId = 0;
+
+        function rnd(a: number, b: number) { return a + Math.random() * (b - a); }
+
+        const stars = Array.from({length:80}, () => ({x:Math.random(),y:Math.random()*.35,r:rnd(.2,1.4),a:rnd(.2,.8)}));
+        const clouds = Array.from({length:6}, () => ({x:Math.random(),y:rnd(.04,.2),w:rnd(.15,.28),spd:rnd(.00004,.00009),a:rnd(.08,.18)}));
+        const birds = Array.from({length:18}, () => ({x:Math.random(),y:rnd(.12,.32),spd:rnd(.0003,.0007),wp:rnd(0,Math.PI*2),sz:rnd(.7,1.4)}));
+        const dust = Array.from({length:18}, () => ({x:Math.random(),y:rnd(.72,.92),r:rnd(12,40),a:rnd(.02,.07),spd:rnd(.0001,.0004)}));
+        const posts = Array.from({length:16}, (_,i) => ({x:i/15,lean:rnd(-.04,.04)}));
+        const cattle = Array.from({length:38}, (_,i) => {
+          const row = Math.floor(i/8);
+          return { x:rnd(.08,.92), y:.68+row*.07+rnd(-.02,.02), spd:rnd(.00005,.00015),
+            dir:Math.random()>.5?1:-1, phase:rnd(0,Math.PI*2), sz:rnd(.7,1.6)+row*.3,
+            type:Math.random()>.2?'cow':'bull', pause:false, pauseTimer:rnd(0,200) };
+        });
+        const horses = Array.from({length:4}, () => ({
+          x:rnd(.05,.35), y:rnd(.72,.8), dir:1,
+          spd:rnd(.0001,.0003), phase:rnd(0,Math.PI*2), sz:rnd(1.2,1.8),
+        }));
+
+        function drawCow(x:number,y:number,sc:number,flip:boolean,type:string,wp:number){
+          ctx.save(); ctx.translate(x,y); if(flip)ctx.scale(-1,1); ctx.scale(sc,sc);
+          const walk=Math.sin(wp)*4, moving=Math.abs(walk)>.5;
+          ctx.fillStyle='rgba(0,0,0,.18)';
+          ctx.beginPath();ctx.ellipse(2,16,18*sc*.6,4,0,0,Math.PI*2);ctx.fill();
+          ctx.fillStyle=type==='bull'?'rgba(18,28,12,.9)':'rgba(22,36,14,.88)';
+          ctx.beginPath();ctx.ellipse(0,0,18,10,.1,0,Math.PI*2);ctx.fill();
+          ctx.fillStyle='rgba(40,65,22,.4)';
+          ctx.beginPath();ctx.ellipse(0,3,12,5,.1,0,Math.PI*2);ctx.fill();
+          ctx.fillStyle=type==='bull'?'rgba(16,26,10,.92)':'rgba(20,34,12,.9)';
+          ctx.beginPath();ctx.moveTo(14,-4);ctx.lineTo(22,-2);ctx.lineTo(26,-10);ctx.lineTo(20,-14);ctx.lineTo(14,-8);ctx.closePath();ctx.fill();
+          ctx.beginPath();ctx.ellipse(26,-12,8,6,-.4,0,Math.PI*2);ctx.fill();
+          if(type==='bull'){
+            ctx.strokeStyle='rgba(80,60,20,.8)';ctx.lineWidth=2;
+            ctx.beginPath();ctx.moveTo(22,-16);ctx.quadraticCurveTo(26,-22,30,-18);ctx.stroke();
+            ctx.beginPath();ctx.moveTo(30,-16);ctx.quadraticCurveTo(34,-22,38,-18);ctx.stroke();
+          }
+          ctx.fillStyle='rgba(30,50,16,.7)';
+          ctx.beginPath();ctx.ellipse(22,-16,3,5,.5,0,Math.PI*2);ctx.fill();
+          ctx.strokeStyle='rgba(14,24,8,.75)';ctx.lineWidth=2;
+          ctx.beginPath();ctx.moveTo(-18,-2);ctx.quadraticCurveTo(-26,-12+Math.sin(wp*.7)*5,-22,-18);ctx.stroke();
+          ctx.strokeStyle='rgba(16,28,10,.85)';ctx.lineWidth=3.5;
+          ([[-10,10],[-4,10],[6,10],[12,10]] as [number,number][]).forEach(([lx,ly],i)=>{
+            const sw=moving?(i%2===0?walk:-walk)*.8:0;
+            ctx.beginPath();ctx.moveTo(lx,ly);ctx.lineTo(lx+sw,ly+14);ctx.lineTo(lx+sw+(i<2?-2:2),ly+20);ctx.stroke();
+            ctx.fillStyle='rgba(10,18,6,.9)';
+            ctx.beginPath();ctx.ellipse(lx+sw+(i<2?-2:2),ly+21,3,2,0,0,Math.PI*2);ctx.fill();
+          });
+          ctx.restore();
         }
-        if (trackDone) {
-          trackDone.style.strokeDashoffset = String(tLen - tProgress * tLen);
+
+        function drawHorse(x:number,y:number,sc:number,flip:boolean,wp:number){
+          ctx.save();ctx.translate(x,y);if(flip)ctx.scale(-1,1);ctx.scale(sc,sc);
+          const walk=Math.sin(wp)*5;
+          ctx.fillStyle='rgba(0,0,0,.15)';ctx.beginPath();ctx.ellipse(2,22,22,4,0,0,Math.PI*2);ctx.fill();
+          ctx.fillStyle='rgba(16,24,10,.92)';ctx.beginPath();ctx.ellipse(0,0,22,12,-.1,0,Math.PI*2);ctx.fill();
+          ctx.beginPath();ctx.moveTo(16,-5);ctx.lineTo(22,0);ctx.lineTo(28,-18);ctx.lineTo(22,-22);ctx.lineTo(16,-10);ctx.closePath();ctx.fill();
+          ctx.beginPath();ctx.ellipse(30,-22,9,6,-.6,0,Math.PI*2);ctx.fill();
+          ctx.strokeStyle='rgba(8,16,4,.7)';ctx.lineWidth=2;
+          for(let mi=0;mi<5;mi++){
+            ctx.beginPath();ctx.moveTo(18+mi*2,-8-mi);ctx.quadraticCurveTo(16+mi*2,-16,14+mi*3,-20+Math.sin(t+mi)*.5);ctx.stroke();
+          }
+          ctx.strokeStyle='rgba(10,18,6,.75)';ctx.lineWidth=3;
+          ctx.beginPath();ctx.moveTo(-22,-2);ctx.quadraticCurveTo(-34,-10+Math.sin(wp*.5)*6,-30,-22);ctx.stroke();
+          ctx.strokeStyle='rgba(12,20,8,.85)';ctx.lineWidth=3;
+          ([[-12,12],[-4,12],[6,12],[14,12]] as [number,number][]).forEach(([lx,ly],i)=>{
+            const sw=(i%2===0?walk:-walk)*.8;
+            ctx.beginPath();ctx.moveTo(lx,ly);ctx.lineTo(lx+sw,ly+16);ctx.lineTo(lx+sw,ly+24);ctx.stroke();
+          });
+          ctx.restore();
         }
-        requestAnimationFrame(trackStep);
+
+        function resize(){ W=canvas!.width=canvas!.offsetWidth; H=canvas!.height=canvas!.offsetHeight; }
+
+        function draw(){
+          if(cancelled)return;
+          t+=.007; ctx.clearRect(0,0,W,H);
+          const sky=ctx.createLinearGradient(0,0,0,H*.62);
+          sky.addColorStop(0,'#060e06');sky.addColorStop(.3,'#0f2010');sky.addColorStop(.65,'#1e3c14');sky.addColorStop(1,'#3a6a20');
+          ctx.fillStyle=sky;ctx.fillRect(0,0,W,H*.62);
+          const mx=W*.82,my=H*.1;
+          const mg=ctx.createRadialGradient(mx,my,0,mx,my,H*.1);
+          mg.addColorStop(0,'rgba(224,122,52,.22)');mg.addColorStop(1,'rgba(224,122,52,0)');
+          ctx.fillStyle=mg;ctx.fillRect(mx-H*.1,my-H*.1,H*.2,H*.2);
+          ctx.beginPath();ctx.arc(mx,my,12,0,Math.PI*2);ctx.fillStyle='rgba(255,220,160,.55)';ctx.fill();
+          stars.forEach(s=>{
+            const tw=Math.sin(t*1.8+s.x*15)*.3+.7;
+            ctx.beginPath();ctx.arc(s.x*W,s.y*H,s.r,0,Math.PI*2);ctx.fillStyle=`rgba(255,255,255,${s.a*tw*.55})`;ctx.fill();
+          });
+          const hg=ctx.createRadialGradient(W*.5,H*.6,0,W*.5,H*.6,W*.6);
+          hg.addColorStop(0,'rgba(139,175,78,.14)');hg.addColorStop(.4,'rgba(224,122,52,.07)');hg.addColorStop(1,'rgba(0,0,0,0)');
+          ctx.fillStyle=hg;ctx.fillRect(0,H*.3,W,H*.5);
+          clouds.forEach(cl=>{
+            cl.x=(cl.x+cl.spd)%1.25;
+            const cg=ctx.createRadialGradient(cl.x*W,cl.y*H,0,cl.x*W,cl.y*H,cl.w*W*.45);
+            cg.addColorStop(0,`rgba(180,210,140,${cl.a})`);cg.addColorStop(1,'rgba(180,210,140,0)');
+            ctx.fillStyle=cg;ctx.beginPath();ctx.ellipse(cl.x*W,cl.y*H,cl.w*W*.45,cl.w*H*.12,0,0,Math.PI*2);ctx.fill();
+          });
+          const layers=[{y:.58,c:[22,44,10]},{y:.63,c:[18,38,8]},{y:.68,c:[14,32,6]},{y:.74,c:[11,26,5]},{y:.82,c:[8,20,3]},{y:.90,c:[5,14,2]}];
+          layers.forEach((layer,li)=>{
+            const y0=layer.y*H,amp=H*.018*(li+1)*.5,freq=.005-li*.0004,spd=.1+li*.07;
+            ctx.beginPath();ctx.moveTo(0,y0);
+            for(let x=0;x<=W;x+=4){ctx.lineTo(x,y0+Math.sin(x*freq+t*spd)*amp+Math.sin(x*freq*2.1-t*spd*.6)*amp*.35);}
+            ctx.lineTo(W,H);ctx.lineTo(0,H);ctx.closePath();
+            const [r,g,b]=layer.c as [number,number,number];
+            const lg=ctx.createLinearGradient(0,y0,0,H);
+            lg.addColorStop(0,`rgb(${r},${g},${b})`);lg.addColorStop(1,`rgb(${Math.max(0,r-6)},${Math.max(0,g-10)},${Math.max(0,b-2)})`);
+            ctx.fillStyle=lg;ctx.fill();
+          });
+          for(let i=0;i<8;i++){
+            const gx=((t*60*(i*.7+1))%(W*1.4))-W*.2,gy=H*(.75+i*.025);
+            const gg=ctx.createLinearGradient(gx-80,gy,gx+80,gy);
+            gg.addColorStop(0,'rgba(139,175,78,0)');gg.addColorStop(.5,`rgba(139,175,78,${.03+i*.005})`);gg.addColorStop(1,'rgba(139,175,78,0)');
+            ctx.fillStyle=gg;ctx.beginPath();ctx.ellipse(gx,gy,90,H*.025,0,0,Math.PI*2);ctx.fill();
+          }
+          const fy=H*.705;
+          ctx.strokeStyle='rgba(30,50,14,.7)';ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(0,fy);ctx.lineTo(W,fy);ctx.stroke();
+          ctx.strokeStyle='rgba(30,50,14,.45)';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(0,fy+8);ctx.lineTo(W,fy+8);ctx.stroke();
+          posts.forEach(p=>{
+            const px=p.x*W;ctx.strokeStyle='rgba(35,55,16,.85)';ctx.lineWidth=3;
+            ctx.beginPath();ctx.moveTo(px+p.lean*H*.02,fy-22);ctx.lineTo(px-p.lean*H*.02,fy+12);ctx.stroke();
+          });
+          horses.forEach(h=>{
+            h.phase+=.08;h.x=(h.x+h.spd*h.dir+1)%1.1;
+            drawHorse(h.x*W,h.y*H,h.sz*(0.55+(h.y-.72)*4),h.dir<0,h.phase);
+          });
+          [...cattle].sort((a,b)=>a.y-b.y).forEach(cow=>{
+            cow.pauseTimer--;
+            if(cow.pauseTimer<=0){cow.pause=!cow.pause;cow.pauseTimer=rnd(60,300);if(!cow.pause)cow.dir=Math.random()>.5?1:-1;}
+            if(!cow.pause){cow.x=(cow.x+cow.spd*cow.dir+1.1)%1.1;cow.phase+=.09;}
+            drawCow(cow.x*W,cow.y*H,cow.sz*(0.55+(cow.y-.68)*3.5),cow.dir<0,cow.type,cow.phase);
+          });
+          dust.forEach(d=>{
+            d.x=(d.x+d.spd)%1;
+            const dg=ctx.createRadialGradient(d.x*W,d.y*H,0,d.x*W,d.y*H,d.r);
+            dg.addColorStop(0,`rgba(160,190,100,${d.a})`);dg.addColorStop(1,'rgba(160,190,100,0)');
+            ctx.fillStyle=dg;ctx.beginPath();ctx.arc(d.x*W,d.y*H,d.r,0,Math.PI*2);ctx.fill();
+          });
+          birds.forEach(b=>{
+            b.x=(b.x+b.spd)%1.1;b.wp+=.1;
+            const bx=b.x*W,by=b.y*H,wing=Math.sin(b.wp)*5*b.sz;
+            ctx.strokeStyle='rgba(189,209,138,.28)';ctx.lineWidth=1.2;
+            ctx.beginPath();ctx.moveTo(bx-6*b.sz,by+wing);ctx.quadraticCurveTo(bx,by,bx+6*b.sz,by+wing);ctx.stroke();
+          });
+          rafId=requestAnimationFrame(draw);
+        }
+
+        const resizeH = () => resize();
+        window.addEventListener('resize', resizeH);
+        resize();
+        rafId = requestAnimationFrame(draw);
+        cleanup.push(() => { cancelled=true; cancelAnimationFrame(rafId); window.removeEventListener('resize',resizeH); });
       }
-      requestAnimationFrame(trackStep);
     }
 
-    // Scroll fade-in
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach(e => {
-        if (e.isIntersecting) {
-          (e.target as HTMLElement).style.opacity = '1';
-          (e.target as HTMLElement).style.transform = 'translateY(0)';
-        }
-      });
-    }, { threshold: 0.1 });
-
-    document.querySelectorAll('.step, .feature-card, .stat-card').forEach(el => {
-      (el as HTMLElement).style.opacity = '0';
-      (el as HTMLElement).style.transform = 'translateY(20px)';
-      (el as HTMLElement).style.transition = 'opacity .5s ease, transform .5s ease';
-      observer.observe(el);
-    });
-
-    return () => {
-      cancelled = true;
-      timeouts.forEach(clearTimeout);
-      observer.disconnect();
-    };
+    return () => cleanup.forEach(fn => fn());
   }, []);
 
   return (
-    <div className="landing-root">
+    <div className="lp">
       <style>{css}</style>
 
       {/* NAV */}
-      <nav>
-        <a href="#" className="nav-logo">
-          <svg width="28" height="26" viewBox="22 40 158 120" fill="none">
-            <g transform="translate(0,200) scale(0.1,-0.1)" stroke="#BDD18A" strokeWidth="20" strokeLinejoin="round" strokeLinecap="round" fill="none">
-              <path d="M340 1421 c-19 -36 -11 -101 20 -165 57 -117 110 -153 265 -180 78-13 93 -19 114 -44 22 -27 62 -159 91 -297 28 -134 135 -205 241 -161 73 31 105 78 119 177 6 39 14 78 19 87 5 9 11 37 15 62 7 47 38 109 62 123 8 4 14 17 14 27 0 11 3 20 8 21 4 0 16 2 27 4 11 1 47 5 81 9 75 7 141 34 174 72 89 101 123 207 84 262 -32 46 -73 19 -93 -61 -23 -96 -64 -139 -153 -162 -51 -12-76 -14 -100 -7 -18 6 -52 14 -75 17 -24 4 -46 11 -49 16 -3 5 -27 20 -52 32-37 17 -65 22 -133 22 -78 0 -92 -3 -160 -36 -99 -49 -168 -64 -222 -51 -23 6-58 14 -77 18 -39 8 -90 42 -90 61 0 7 -4 13 -8 13 -9 0 -32 59 -32 84 0 9 -7 30 -15 46 -18 35 -58 41 -75 11z"/>
-            </g>
-          </svg>
-          <span className="nav-logo-name">ARREO</span>
+      <nav id="nav">
+        <a href="#" style={{textDecoration:'none'}}>
+          <img src="/assets/logo-dark.svg" alt="ARREO" style={{height:36}} />
         </a>
-        <div className="nav-links">
-          <a href="#como-funciona">Cómo funciona</a>
-          <a href="#features">Características</a>
-          <a href="#seguridad">Seguridad</a>
-          <a href="/login" className="nav-login">Iniciar sesión</a>
+        <ul className="nav-links">
+          <li><a href="#steps">Cómo funciona</a></li>
+          <li><a href="#ganadero">Para ganaderos</a></li>
+          <li><a href="#transp">Para transportistas</a></li>
+          <li><a href="#testi">Testimonios</a></li>
+        </ul>
+        <div className="nav-actions">
+          <a href="/login" className="btn-ghost">Iniciar sesión</a>
+          <a href="/register" className="btn-t">
+            Registrarse gratis
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </a>
         </div>
-        <a href="/register" className="nav-cta">Registrarse</a>
       </nav>
 
       {/* HERO */}
-      <section className="hero">
-        <div className="hero-left">
-          <div className="hero-badge">
-            <span className="hero-badge-dot"></span>
-            Seguimiento en tiempo real
-          </div>
-          <h1 className="hero-h1">
-            LA APP QUE<br/>
-            CONECTA TU<br/>
-            GANADO CON<br/>
-            <span className="accent">EL CAMINO.</span>
-          </h1>
-          <p className="hero-sub">Transporte seguro, rápido y sin complicaciones. Conectamos productores con los mejores transportistas de Argentina.</p>
-          <div className="hero-actions">
-            <a href="/register" className="btn-hero-primary">Registrarse</a>
-            <a href="#como-funciona" className="btn-hero-ghost">Ver cómo funciona</a>
-          </div>
-          <div className="hero-trust">
-            <div className="trust-item">
-              <svg width="16" height="16" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="8" stroke="currentColor" strokeWidth="1.5"/><path d="M6.5 10l2.5 2.5 4.5-5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
-              Sin viajes falsos
+      <section id="hero">
+        <canvas id="heroCanvas"></canvas>
+        <div className="hero-vignette"></div>
+        <div className="hero-grain"></div>
+
+        <svg className="hero-horizon" viewBox="0 0 1440 180" preserveAspectRatio="none">
+          <path d="M0,110 C200,96 400,88 640,98 C880,108 1080,82 1280,88 L1440,90 L1440,180 L0,180Z" fill="rgba(31,43,31,.4)"/>
+          <path d="M0,148 C180,140 360,136 580,144 C800,152 1040,136 1280,140 L1440,142 L1440,180 L0,180Z" fill="rgba(13,21,13,.97)"/>
+          <rect x="360" y="98" width="3" height="16" fill="rgba(139,175,78,.2)"/>
+          <polygon points="358,98 362,98 360,86" fill="rgba(139,175,78,.16)"/>
+          <rect x="680" y="82" width="5" height="20" fill="rgba(189,209,138,.1)"/>
+          <rect x="920" y="76" width="9" height="12" rx="1" fill="rgba(255,255,255,.04)"/>
+          <rect x="1150" y="86" width="3" height="14" fill="rgba(139,175,78,.13)"/>
+          <polygon points="1148,86 1152,86 1150,74" fill="rgba(139,175,78,.1)"/>
+        </svg>
+
+        <div className="hero-content">
+          <div className="hero-left">
+            <div className="eyebrow"><div className="edot"></div><span>Transporte Ganadero Inteligente</span></div>
+            <h1 className="hero-h1" id="heroH1">
+              <span className="word"><span>Movemos</span></span><br/>
+              <span className="word"><span>tu</span></span> <span className="word"><span>ganado.</span></span><br/>
+              <span className="word"><span><em>Conectamos</em></span></span><br/>
+              <span className="word"><span>destinos.</span></span>
+            </h1>
+            <p className="hero-sub" id="heroSub">La plataforma que une ganaderos con transportistas de confianza. Simple, seguro y con seguimiento en tiempo real.</p>
+            <div className="widget" id="heroWidget">
+              <div className="w-label">Solicitá un viaje</div>
+              <div className="w-fields">
+                <label className="w-row"><div className="w-dot w-o"></div><input type="text" placeholder="¿Desde dónde retiramos el ganado?" /></label>
+                <label className="w-row"><div className="w-dot w-d"></div><input type="text" placeholder="¿A dónde lo llevamos?" /></label>
+              </div>
+              <a href="/register" className="w-btn">Buscar transportistas disponibles</a>
+              <div className="w-note">Sin costo hasta confirmar · Cotización instantánea</div>
             </div>
-            <div className="trust-item">
-              <svg width="16" height="16" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="8" stroke="currentColor" strokeWidth="1.5"/><path d="M6.5 10l2.5 2.5 4.5-5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
-              Trazabilidad completa
-            </div>
-            <div className="trust-item">
-              <svg width="16" height="16" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="8" stroke="currentColor" strokeWidth="1.5"/><path d="M6.5 10l2.5 2.5 4.5-5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
-              24/7 soporte
+            <div className="live-ticker" id="heroTicker">
+              <div className="ticker-dot"></div>
+              <div className="ticker-text" id="tickerMsg"><strong>Juan M.</strong> de Salta solicitó un viaje hace 2 minutos</div>
             </div>
           </div>
-        </div>
 
-        {/* INTERACTIVE MAP */}
-        <div className="hero-map">
-          <svg id="map-svg" viewBox="0 0 420 500" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path className="arg-outline" d="
-              M 200 20
-              C 230 18, 270 22, 290 30
-              C 320 40, 340 55, 350 75
-              C 365 100, 368 125, 360 150
-              C 375 165, 390 180, 388 200
-              C 386 220, 370 235, 358 250
-              C 370 265, 378 280, 372 298
-              C 365 318, 348 330, 335 345
-              C 345 360, 350 378, 342 395
-              C 332 415, 312 428, 295 440
-              C 278 455, 255 462, 238 470
-              C 225 476, 210 478, 198 475
-              C 182 470, 165 458, 155 445
-              C 142 428, 138 408, 130 390
-              C 120 368, 108 352, 102 332
-              C 95 310, 96 286, 90 264
-              C 84 242, 74 222, 72 200
-              C 70 178, 78 156, 72 136
-              C 66 116, 50 100, 52 80
-              C 55 58, 80 38, 108 28
-              C 140 18, 170 22, 200 20 Z
-            "/>
-
-            <defs>
-              <pattern id="grid" width="30" height="30" patternUnits="userSpaceOnUse">
-                <path d="M 30 0 L 0 0 0 30" fill="none" stroke="rgba(139,175,78,.05)" strokeWidth=".5"/>
-              </pattern>
-            </defs>
-            <rect width="420" height="500" fill="url(#grid)"/>
-
-            {/* Routes */}
-            <path id="route1" className="route-path route-active route-draw"
-              d="M 158 95 C 170 150, 185 200, 200 260 C 215 320, 230 370, 258 415"/>
-            <path id="route2" className="route-path route-active route-draw-2"
-              d="M 108 230 C 145 220, 200 218, 240 222 C 280 226, 308 240, 335 260"/>
-            <path id="route3" className="route-path route-active route-draw-3"
-              d="M 168 130 C 195 155, 220 180, 258 200 C 290 218, 315 228, 335 240"/>
-            <path className="route-path route-completed"
-              d="M 200 260 C 220 250, 255 245, 285 250 C 315 255, 335 260, 340 262"/>
-            <path className="route-path route-completed"
-              d="M 158 95 C 148 120, 128 155, 110 180 C 92 205, 85 215, 84 220"/>
-
-            {/* City nodes */}
-            <circle className="pulse-ring" cx="158" cy="95" r="6"/>
-            <circle className="pulse-ring-2" cx="158" cy="95" r="6"/>
-            <circle className="city-node-outer" cx="158" cy="95" r="8" opacity=".3"/>
-            <circle className="city-node-inner" cx="158" cy="95" r="5"/>
-            <text className="city-label" x="168" y="92">SALTA</text>
-
-            <circle className="city-node-outer" cx="170" cy="128" r="7" opacity=".2"/>
-            <circle className="city-node-inner" cx="170" cy="128" r="4"/>
-            <text className="city-label" x="180" y="125">TUCUMÁN</text>
-
-            <circle className="pulse-ring" cx="212" cy="258" r="6" style={{animationDelay:'.8s'}}/>
-            <circle className="city-node-outer" cx="212" cy="258" r="9" opacity=".3"/>
-            <circle className="city-node-inner" cx="212" cy="258" r="5"/>
-            <text className="city-label" x="222" y="255">CÓRDOBA</text>
-
-            <circle className="city-node-outer" cx="270" cy="222" r="7" opacity=".2"/>
-            <circle className="city-node-inner" cx="270" cy="222" r="4"/>
-            <text className="city-label" x="278" y="219">ROSARIO</text>
-
-            <circle className="city-node-outer" cx="335" cy="260" r="7" opacity=".2"/>
-            <circle className="city-node-inner" cx="335" cy="260" r="4"/>
-            <text className="city-label" x="342" y="257">E. RÍOS</text>
-
-            <circle className="city-node-outer" cx="108" cy="230" r="7" opacity=".2"/>
-            <circle className="city-node-inner" cx="108" cy="230" r="4"/>
-            <text className="city-label" x="62" y="227">MENDOZA</text>
-
-            <circle className="pulse-ring" cx="258" cy="415" r="6" style={{animationDelay:'1.2s', stroke:'#E07A34'}}/>
-            <circle className="pulse-ring-2" cx="258" cy="415" r="6" style={{animationDelay:'2.4s', stroke:'#E07A34'}}/>
-            <circle cx="258" cy="415" r="10" fill="rgba(224,122,52,.15)"/>
-            <circle className="city-node-dest" cx="258" cy="415" r="6"/>
-            <text className="city-label" x="270" y="412">BUENOS AIRES</text>
-
-            {/* Moving trucks */}
-            <circle id="truck1" className="truck-dot" cx="158" cy="95" r="5"/>
-            <circle id="truck2" className="truck-dot-2" cx="108" cy="230" r="5"/>
-            <circle id="truck3" className="truck-dot" cx="168" cy="130" r="4"/>
-
-            {/* Info cards */}
-            <g transform="translate(30, 330)">
-              <rect width="110" height="52" rx="8" fill="rgba(31,43,31,.85)" stroke="rgba(139,175,78,.2)" strokeWidth="1"/>
-              <text x="10" y="18" fill="rgba(255,255,255,.4)" fontSize="8" fontFamily="DM Sans" letterSpacing=".08em">EN RUTA AHORA</text>
-              <text x="10" y="36" fill="#fff" fontSize="20" fontFamily="DM Sans" fontWeight="700">47</text>
-              <text x="36" y="36" fill="rgba(255,255,255,.4)" fontSize="10" fontFamily="DM Sans">viajes</text>
-            </g>
-            <g transform="translate(30, 390)">
-              <rect width="110" height="52" rx="8" fill="rgba(31,43,31,.85)" stroke="rgba(224,122,52,.2)" strokeWidth="1"/>
-              <text x="10" y="18" fill="rgba(255,255,255,.4)" fontSize="8" fontFamily="DM Sans" letterSpacing=".08em">HOY COMPLETADOS</text>
-              <text x="10" y="36" fill="#E07A34" fontSize="20" fontFamily="DM Sans" fontWeight="700">128</text>
-              <text x="46" y="36" fill="rgba(255,255,255,.4)" fontSize="10" fontFamily="DM Sans">viajes</text>
-            </g>
-          </svg>
-        </div>
-      </section>
-
-      {/* STATS */}
-      <section className="stats">
-        <div className="stats-grid">
-          <div className="stat-card">
-            <div className="stat-n">+2.500</div>
-            <div className="stat-l">Viajes realizados</div>
-          </div>
-          <div className="stat-card">
-            <div className="stat-n stat-accent">98%</div>
-            <div className="stat-l">Entrega a tiempo</div>
-          </div>
-          <div className="stat-card">
-            <div className="stat-n">+1.200</div>
-            <div className="stat-l">Transportistas verificados</div>
-          </div>
-          <div className="stat-card">
-            <div className="stat-n">24/7</div>
-            <div className="stat-l">Soporte activo</div>
+          <div className="hero-right" id="heroRight">
+            <div className="stat-card">
+              <div className="live-badge"><div className="lb-dot"></div><span className="lb-txt">En vivo</span></div>
+              <div className="sc-label">Viajes activos ahora</div>
+              <div className="sc-val"><span id="liveCount">34</span></div>
+              <div className="sc-sub">en toda Argentina</div>
+            </div>
+            <div className="stat-card">
+              <div className="sc-label">Último viaje completado</div>
+              <div className="route-pill">
+                <div className="rp-dot" style={{background:'var(--v)'}}></div>
+                <div className="rp-line"></div>
+                <div className="rp-dot" style={{background:'var(--t)'}}></div>
+              </div>
+              <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginTop:8}}>
+                <span className="rp-txt" id="lastRoute">Salta → Rosario</span>
+                <span className="rp-tag">Hace 8 min</span>
+              </div>
+            </div>
+            <div className="stat-card">
+              <div className="sc-label">Transportistas disponibles</div>
+              <div className="sc-val"><span id="driversCount">18</span></div>
+              <div className="sc-sub">cerca de tu zona</div>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* HOW IT WORKS */}
-      <section className="how" id="como-funciona">
-        <div className="how-inner">
-          <div className="how-header">
-            <div className="section-label">Cómo funciona</div>
-            <h2 className="section-title">Simple como pedir<br/>un taxi, pero para<br/>tu ganado.</h2>
-            <p className="section-sub">Tres pasos y tu carga está en camino, con seguimiento en tiempo real.</p>
+      {/* STATS BAR */}
+      <div className="stats-bar">
+        <div className="stats-inner">
+          <div className="stat-item"><div className="stat-val" data-target="2500" data-prefix="+" data-format="ar">+0</div><div className="stat-lbl">Viajes completados</div></div>
+          <div className="stat-div"></div>
+          <div className="stat-item"><div className="stat-val" data-target="98" data-suffix="%">0%</div><div className="stat-lbl">Entrega a tiempo</div></div>
+          <div className="stat-div"></div>
+          <div className="stat-item"><div className="stat-val" data-target="1200" data-prefix="+" data-format="ar">+0</div><div className="stat-lbl">Transportistas activos</div></div>
+          <div className="stat-div"></div>
+          <div className="stat-item"><div className="stat-val" data-target="12">0</div><div className="stat-lbl">Provincias cubiertas</div></div>
+        </div>
+      </div>
+
+      {/* STEPS */}
+      <section id="steps">
+        <div className="inner">
+          <div className="steps-head reveal">
+            <span className="s-eye">Proceso simple</span>
+            <h2 className="s-h2">¿Cómo <em>funciona</em>?</h2>
+            <p className="s-sub">En cuatro pasos tenés tu ganado en camino con un transportista verificado.</p>
           </div>
-          <div className="steps">
-            <div className="step">
+          <div className="steps-grid">
+            <div className="step-card reveal reveal-delay-1">
               <div className="step-num">01</div>
-              <div className="step-title">Cargá tu viaje</div>
-              <p className="step-desc">Ingresá origen, destino, cantidad de animales y fecha. Recibís presupuestos de transportistas verificados al instante.</p>
+              <div className="step-ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#8BAF4E" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg></div>
+              <div className="step-title">Publicás tu solicitud</div>
+              <div className="step-desc">Ingresá origen, destino, cabezas y fecha. Tu pedido llega a transportistas al instante.</div>
+              <div className="step-arr"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg></div>
             </div>
-            <div className="step">
+            <div className="step-card reveal reveal-delay-2">
               <div className="step-num">02</div>
-              <div className="step-title">Elegí tu transportista</div>
-              <p className="step-desc">Comparé precios, calificaciones y vehículos. Todos están verificados con documentación y habilitaciones al día.</p>
+              <div className="step-ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#8BAF4E" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+              <div className="step-title">Recibís ofertas</div>
+              <div className="step-desc">Transportistas verificados cotizan con precio, camión y calificación. Vos elegís.</div>
+              <div className="step-arr"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg></div>
             </div>
-            <div className="step">
+            <div className="step-card reveal reveal-delay-3">
               <div className="step-num">03</div>
+              <div className="step-ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#8BAF4E" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></div>
+              <div className="step-title">Confirmás y pagás</div>
+              <div className="step-desc">El pago queda en escrow hasta completar el viaje. Sin riesgo, sin sorpresas.</div>
+              <div className="step-arr"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg></div>
+            </div>
+            <div className="step-card reveal reveal-delay-4">
+              <div className="step-num">04</div>
+              <div className="step-ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#8BAF4E" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg></div>
               <div className="step-title">Seguimiento en vivo</div>
-              <p className="step-desc">Seguí tu ganado en tiempo real desde la app. Notificaciones en cada etapa, hasta la entrega confirmada.</p>
+              <div className="step-desc">Rastreás el viaje en tiempo real. El ganado llega, vos lo sabés antes que nadie.</div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* FEATURES */}
-      <section className="features" id="features">
-        <div className="features-inner">
-          <div className="features-header">
-            <div className="section-label">Características</div>
-            <h2 className="section-title">Todo lo que necesitás,<br/>en una sola app.</h2>
-            <p className="section-sub">Diseñada para productores y transportistas del campo argentino.</p>
-          </div>
-          <div className="features-grid">
-            <div className="feature-card">
-              <div className="feature-icon">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+      {/* GANADERO */}
+      <section id="ganadero">
+        <div className="inner">
+          <div className="split">
+            <div className="split-vis reveal-scale">
+              <div style={{width:'100%',height:'100%',background:'var(--bd)',position:'relative'}}>
+                <div className="app-card ac-a">
+                  <div className="ac-lbl">Tu viaje activo</div>
+                  <div className="ac-title">Corrientes → Rosario</div>
+                  <div className="ac-sub">120 cabezas · Hacienda vacuna</div>
+                  <div className="ac-badge"><div className="acd"></div>En tránsito</div>
+                  <div style={{marginTop:12}}>
+                    <div className="ac-row"><div className="ac-rdot" style={{background:'var(--v)'}}></div><span className="ac-rtxt">Est. La Pampa, Ctes.</span></div>
+                    <div className="ac-row"><div className="ac-rdot" style={{background:'var(--t)'}}></div><span className="ac-rtxt">Frigorífico Norte, Rosario</span></div>
+                  </div>
+                </div>
+                <div className="app-card ac-b">
+                  <div className="ac-lbl">Transportista asignado</div>
+                  <div className="ac-map">
+                    <svg viewBox="0 0 210 80" fill="none" style={{width:'100%',height:'100%'}}>
+                      <path d="M15 65 C55 45,115 28,195 18" stroke="#8BAF4E" strokeWidth="1.5" strokeDasharray="5 7" opacity=".5"/>
+                      <circle cx="15" cy="65" r="4" fill="#8BAF4E" opacity=".8"/>
+                      <circle cx="195" cy="18" r="4" fill="#E07A34" opacity=".8"/>
+                      <rect x="88" y="28" width="30" height="20" rx="4" fill="#2D3E2D"/>
+                      <text x="103" y="43" textAnchor="middle" fontSize="11">🚛</text>
+                    </svg>
+                  </div>
+                  <div className="ac-drv">
+                    <div className="ac-avt">R</div>
+                    <div><div className="ac-dn">Roberto Díaz</div><div className="ac-dr"><span className="ac-stars">★★★★★</span> 4.9 · 342 viajes</div></div>
+                  </div>
+                </div>
               </div>
-              <div className="feature-title">Sin viajes falsos</div>
-              <p className="feature-desc">Sistema de verificación que elimina el problema histórico del sector: transportistas que confirman y no aparecen.</p>
             </div>
-            <div className="feature-card">
-              <div className="feature-icon">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-              </div>
-              <div className="feature-title">Trazabilidad completa</div>
-              <p className="feature-desc">Registro digital de cada viaje, con documentación, tiempos y estados. Historial permanente accesible desde la app.</p>
-            </div>
-            <div className="feature-card">
-              <div className="feature-icon">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s-8-4.5-8-11.8A8 8 0 0112 2a8 8 0 018 8.2c0 7.3-8 11.8-8 11.8z"/><circle cx="12" cy="10" r="3"/></svg>
-              </div>
-              <div className="feature-title">GPS en tiempo real</div>
-              <p className="feature-desc">Sabés dónde está tu carga en todo momento. Rutas, paradas y tiempos estimados actualizados al minuto.</p>
-            </div>
-            <div className="feature-card">
-              <div className="feature-icon">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-              </div>
-              <div className="feature-title">Transportistas verificados</div>
-              <p className="feature-desc">Todos los transportistas pasan por un proceso de validación: habilitaciones, vehículos y antecedentes.</p>
-            </div>
-            <div className="feature-card">
-              <div className="feature-icon">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
-              </div>
-              <div className="feature-title">Bienestar animal</div>
-              <p className="feature-desc">Monitoreo de condiciones del viaje, tiempos máximos de carga y protocolos de bienestar animal integrados.</p>
-            </div>
-            <div className="feature-card">
-              <div className="feature-icon">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-              </div>
-              <div className="feature-title">Seguro y confiable</div>
-              <p className="feature-desc">Pagos protegidos, cobertura de seguro integrada y soporte 24/7 para cualquier incidente en ruta.</p>
+            <div className="reveal reveal-delay-2">
+              <span className="s-eye">Para ganaderos</span>
+              <h2 className="s-h2">Tu ganado,<br/>bajo <em>control</em><br/>siempre.</h2>
+              <p className="s-sub">Encontrás transportistas verificados, cotizás al instante y seguís cada viaje desde la app.</p>
+              <ul className="feat-list">
+                <li className="feat-item"><div className="feat-ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#8BAF4E" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg></div><div><div className="feat-title">Tracking GPS en tiempo real</div><div className="feat-desc">Actualizaciones cada 2 minutos durante el trayecto completo.</div></div></li>
+                <li className="feat-item"><div className="feat-ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#8BAF4E" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div><div><div className="feat-title">Transportistas verificados</div><div className="feat-desc">Habilitaciones, seguro y antecedentes verificados antes de operar.</div></div></li>
+                <li className="feat-item"><div className="feat-ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#8BAF4E" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg></div><div><div className="feat-title">Pago seguro con escrow</div><div className="feat-desc">El pago se libera solo cuando el ganado llega. Si algo falla, te cubrimos.</div></div></li>
+              </ul>
             </div>
           </div>
         </div>
       </section>
 
-      {/* TRACKING DEMO */}
-      <section className="tracking-demo" id="seguridad">
-        <div className="tracking-inner">
-          <div>
-            <div className="section-label">Seguimiento en vivo</div>
-            <h2 className="section-title">Tu ganado,<br/>siempre a la vista.</h2>
-            <p className="section-sub">La app muestra la posición exacta del camión, el estado del viaje y la hora estimada de llegada. Todo en tiempo real.</p>
-            <div style={{marginTop:32, display:'flex', flexDirection:'column', gap:16}}>
-              <div style={{display:'flex', alignItems:'center', gap:12}}>
-                <div style={{width:8, height:8, borderRadius:'50%', background:'var(--verde-arreo)', flexShrink:0}}></div>
-                <span style={{fontSize:15, color:'#444'}}>Notificaciones automáticas en cada etapa</span>
-              </div>
-              <div style={{display:'flex', alignItems:'center', gap:12}}>
-                <div style={{width:8, height:8, borderRadius:'50%', background:'var(--verde-arreo)', flexShrink:0}}></div>
-                <span style={{fontSize:15, color:'#444'}}>Contacto directo con el transportista</span>
-              </div>
-              <div style={{display:'flex', alignItems:'center', gap:12}}>
-                <div style={{width:8, height:8, borderRadius:'50%', background:'var(--verde-arreo)', flexShrink:0}}></div>
-                <span style={{fontSize:15, color:'#444'}}>Historial completo de cada viaje</span>
+      {/* TRANSPORTISTA */}
+      <section id="transp">
+        <div className="inner">
+          <div className="tr-inner">
+            <div className="tr-left reveal">
+              <span className="s-eye">Para transportistas</span>
+              <h2 className="s-h2">Llenás tus<br/>viajes.<br/><em>Ganás más.</em></h2>
+              <p className="s-sub">Conectate con ganaderos de toda Argentina. Elegís los viajes que te convengan y cobrás seguro al finalizar.</p>
+              <a href="/register" className="btn-t-lg">
+                Registrá tu camión
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+              </a>
+              <div className="perks">
+                <div className="perk"><div className="perk-ico"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#8BAF4E" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div><div className="perk-title">Cobro garantizado</div><div className="perk-desc">Terminás el viaje y cobrás. Sin demoras ni excusas.</div></div>
+                <div className="perk"><div className="perk-ico"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#8BAF4E" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div><div className="perk-title">A tu medida</div><div className="perk-desc">Elegís cuándo y dónde. Tu negocio, tus reglas.</div></div>
+                <div className="perk"><div className="perk-ico"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#8BAF4E" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></div><div className="perk-title">Red de ganaderos</div><div className="perk-desc">Miles de clientes en todo el país sin salir a buscarlos.</div></div>
+                <div className="perk"><div className="perk-ico"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#8BAF4E" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></div><div className="perk-title">Reputación verificada</div><div className="perk-desc">Más viajes, mejor rating, más solicitudes entrantes.</div></div>
               </div>
             </div>
-          </div>
-          <div className="tracking-ui">
-            <div className="tracking-ui-header">
-              <div className="tracking-ui-status">
-                <div className="live-dot"></div>
-                <span style={{color:'#fff', fontSize:13, fontWeight:600}}>Seguimiento en vivo</span>
-              </div>
-              <div style={{fontSize:12, color:'rgba(255,255,255,.35)', marginTop:4}}>Ganadería del Sur S.A. · AA 121 BB</div>
-            </div>
-            <div className="tracking-ui-map" id="tracking-map">
-              <svg id="track-svg" width="100%" height="100%" viewBox="0 0 380 220">
-                <defs>
-                  <pattern id="tgrid" width="20" height="20" patternUnits="userSpaceOnUse">
-                    <path d="M 20 0 L 0 0 0 20" fill="none" stroke="rgba(139,175,78,.06)" strokeWidth=".5"/>
-                  </pattern>
-                  <filter id="glow">
-                    <feGaussianBlur stdDeviation="2" result="blur"/>
-                    <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
-                  </filter>
-                </defs>
-                <rect width="380" height="220" fill="url(#tgrid)"/>
-                <path id="track-route" d="M 40 160 C 80 140, 120 130, 160 120 C 200 110, 240 100, 280 90 C 320 80, 350 70, 360 60"
-                  fill="none" stroke="rgba(139,175,78,.3)" strokeWidth="2" strokeDasharray="6 5"/>
-                <path id="track-done" d="M 40 160 C 80 140, 120 130, 160 120"
-                  fill="none" stroke="var(--verde-arreo)" strokeWidth="2.5"/>
-                <circle cx="40" cy="160" r="5" fill="var(--verde-arreo)"/>
-                <circle cx="40" cy="160" r="10" fill="rgba(139,175,78,.15)"/>
-                <circle cx="360" cy="60" r="5" fill="var(--tierra)"/>
-                <circle cx="360" cy="60" r="10" fill="rgba(224,122,52,.15)"/>
-                <circle id="track-truck" cx="165" cy="119" r="7" fill="var(--verde-light)" filter="url(#glow)"/>
-                <circle id="track-truck-ring" cx="165" cy="119" r="12" fill="none" stroke="var(--verde-light)" strokeWidth="1" opacity=".4"/>
-                <text x="30" y="178" fill="rgba(255,255,255,.35)" fontSize="8" fontFamily="DM Sans">ORIGEN</text>
-                <text x="340" y="78" fill="rgba(224,122,52,.7)" fontSize="8" fontFamily="DM Sans">DESTINO</text>
-              </svg>
-            </div>
-            <div className="tracking-ui-info">
-              <div className="tracking-kv">
-                <span className="tracking-k">En ruta</span>
-                <span className="tracking-v">Córdoba → B.Aires</span>
-              </div>
-              <div className="tracking-kv">
-                <span className="tracking-k">Llegada est.</span>
-                <span className="tracking-v">14:30 hs</span>
-              </div>
-              <div className="tracking-kv">
-                <span className="tracking-k">Estado</span>
-                <span className="tracking-v" style={{color:'var(--verde-arreo)'}}>En camino</span>
+            <div className="reveal reveal-delay-2">
+              <div className="earn-card">
+                <div className="earn-lbl">Ganancias estimadas</div>
+                <div className="earn-amt">$480.000</div>
+                <div className="earn-per">promedio mensual por camión activo</div>
+                <div className="earn-bars">
+                  <div className="ebar" style={{height:'42%'}}></div>
+                  <div className="ebar" style={{height:'58%'}}></div>
+                  <div className="ebar" style={{height:'72%'}}></div>
+                  <div className="ebar" style={{height:'62%'}}></div>
+                  <div className="ebar" style={{height:'82%'}}></div>
+                  <div className="ebar on" style={{height:'96%'}}></div>
+                  <div className="ebar" style={{height:'86%'}}></div>
+                </div>
+                <div className="earn-days"><span>L</span><span>M</span><span>X</span><span>J</span><span>V</span><span>S</span><span>D</span></div>
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* CTA */}
-      <section className="cta-section" id="download">
-        <h2 className="cta-title">Movemos tu ganado.<br/>Conectamos destinos.</h2>
-        <p className="cta-sub">Registrate y hacé tu primer viaje hoy.</p>
-        <div className="cta-actions">
-          <a href="/register" className="btn-cta-white">Registrarse</a>
-          <a href="/register" className="btn-cta-outline">Buscar transporte</a>
+      {/* TESTIMONIOS */}
+      <section id="testi">
+        <div className="inner">
+          <div className="testi-head reveal">
+            <span className="s-eye">Lo que dicen</span>
+            <h2 className="s-h2">Ganaderos y transportistas<br/>que <em>confían</em> en ARREO</h2>
+          </div>
+          <div className="testi-grid">
+            <div className="tcard reveal reveal-delay-1"><div className="t-stars">★★★★★</div><p className="t-txt">&ldquo;Antes perdía horas llamando para conseguir un camión. Ahora en diez minutos tengo tres ofertas. Un antes y un después para el campo.&rdquo;</p><div className="t-auth"><div className="t-avt">JM</div><div><div className="t-name">José Manuel Pereyra</div><div className="t-role">Ganadero · Entre Ríos</div></div></div></div>
+            <div className="tcard feat reveal reveal-delay-2"><div className="t-stars">★★★★★</div><p className="t-txt">&ldquo;El seguimiento en tiempo real es una tranquilidad que no tiene precio. Mis clientes pueden ver dónde está el camión sin llamarme.&rdquo;</p><div className="t-auth"><div className="t-avt">CR</div><div><div className="t-name">Carlos Rodríguez</div><div className="t-role">Transportista · Buenos Aires</div></div></div></div>
+            <div className="tcard reveal reveal-delay-3"><div className="t-stars">★★★★★</div><p className="t-txt">&ldquo;Desde que estoy en ARREO duplicé mis viajes mensuales. Me conecta con ganaderos que de otra forma nunca hubiera conocido.&rdquo;</p><div className="t-auth"><div className="t-avt">AG</div><div><div className="t-name">Andrés Gutiérrez</div><div className="t-role">Transportista · Córdoba</div></div></div></div>
+          </div>
+        </div>
+      </section>
+
+      {/* DESCARGA */}
+      <section id="descarga">
+        <div className="inner">
+          <div className="dl-inner">
+            <div className="dl-left reveal">
+              <span className="s-eye">Descargá la app</span>
+              <h2 className="s-h2">El campo en tu<br/><em>bolsillo.</em></h2>
+              <p className="s-sub">iOS y Android. Gestionás viajes, seguís el ganado y coordinás desde donde estés.</p>
+              <div className="app-btns">
+                <a href="#" className="app-btn"><svg width="26" height="26" viewBox="0 0 24 24" fill="white"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg><div><div className="app-pre">Descargar en</div><div className="app-name">App Store</div></div></a>
+                <a href="#" className="app-btn"><svg width="26" height="26" viewBox="0 0 24 24" fill="white"><path d="M3.18 23.76c.31.17.66.21 1.01.12l11.67-6.73-2.51-2.51-10.17 9.12zm17.48-8.34-2.19-2.2L4.83 22.5l13.28-7.66-.45-.42zm.68-6.99-.68-.4-14.19-8.2c-.5-.29-1.07-.24-1.55.05l11.28 11.28 5.14-2.73zM2.17 1.35C2.07 1.56 2 1.8 2 2.07v19.86c0 .4.16.76.43 1.03l.1.1 11.12-11.12v-.25L2.17 1.35z"/></svg><div><div className="app-pre">Descargar en</div><div className="app-name">Google Play</div></div></a>
+              </div>
+            </div>
+            <div className="phone reveal reveal-delay-1">
+              <div className="ph-screen">
+                <div className="ph-greet">Hola, <span>Martín</span></div>
+                <div className="ph-card">
+                  <div className="ph-clbl">Viaje activo</div>
+                  <div className="ph-ctitle">Salta → Tucumán</div>
+                  <svg viewBox="0 0 200 36" fill="none" style={{width:'100%',height:36}}>
+                    <path d="M8 28 C60 10,140 10,190 18" stroke="#8BAF4E" strokeWidth="1.5" strokeDasharray="5 7" opacity=".6"/>
+                    <circle cx="8" cy="28" r="4" fill="#8BAF4E"/>
+                    <circle cx="190" cy="18" r="4" fill="#E07A34"/>
+                    <rect x="82" y="8" width="26" height="16" rx="4" fill="#2D3E2D"/>
+                    <text x="95" y="20" textAnchor="middle" fontSize="9" fill="white">🚛</text>
+                  </svg>
+                  <div className="ph-status"><div className="ph-badge">En tránsito</div><div className="ph-eta">ETA: 2h 15min</div></div>
+                </div>
+                <div className="ph-card">
+                  <div className="ph-clbl">Disponibles</div>
+                  <div style={{display:'flex',flexDirection:'column',gap:7,marginTop:3}}>
+                    <div style={{display:'flex',alignItems:'center',justifyContent:'space-between'}}><span style={{fontSize:11,color:'rgba(255,255,255,.6)',fontWeight:500}}>Córdoba → Mendoza</span><span style={{fontSize:10,color:'var(--vl)',fontWeight:700}}>$85.000</span></div>
+                    <div style={{display:'flex',alignItems:'center',justifyContent:'space-between'}}><span style={{fontSize:11,color:'rgba(255,255,255,.6)',fontWeight:500}}>Chaco → Bs. As.</span><span style={{fontSize:10,color:'var(--vl)',fontWeight:700}}>$120.000</span></div>
+                  </div>
+                </div>
+                <a href="/register" className="ph-cta">Solicitá un viaje</a>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
       {/* FOOTER */}
       <footer>
-        <div className="footer-brand">
-          <svg width="24" height="22" viewBox="22 40 158 120" fill="none">
-            <g transform="translate(0,200) scale(0.1,-0.1)" stroke="#BDD18A" strokeWidth="20" strokeLinejoin="round" strokeLinecap="round" fill="none">
-              <path d="M340 1421 c-19 -36 -11 -101 20 -165 57 -117 110 -153 265 -180 78-13 93 -19 114 -44 22 -27 62 -159 91 -297 28 -134 135 -205 241 -161 73 31 105 78 119 177 6 39 14 78 19 87 5 9 11 37 15 62 7 47 38 109 62 123 8 4 14 17 14 27 0 11 3 20 8 21 4 0 16 2 27 4 11 1 47 5 81 9 75 7 141 34 174 72 89 101 123 207 84 262 -32 46 -73 19 -93 -61 -23 -96 -64 -139 -153 -162 -51 -12-76 -14 -100 -7 -18 6 -52 14 -75 17 -24 4 -46 11 -49 16 -3 5 -27 20 -52 32-37 17 -65 22 -133 22 -78 0 -92 -3 -160 -36 -99 -49 -168 -64 -222 -51 -23 6-58 14 -77 18 -39 8 -90 42 -90 61 0 7 -4 13 -8 13 -9 0 -32 59 -32 84 0 9 -7 30 -15 46 -18 35 -58 41 -75 11z"/>
-            </g>
-          </svg>
-          <span className="footer-name">ARREO</span>
+        <div className="ft-inner">
+          <div className="ft-top">
+            <div>
+              <div className="ft-logo"><img src="/assets/logo-dark.svg" alt="ARREO" /></div>
+              <p className="ft-tag">Conectamos ganaderos con transportistas en toda Argentina. Simple, seguro, en tiempo real.</p>
+            </div>
+            <div><div className="ft-col-title">Producto</div><ul className="ft-links"><li><a href="#ganadero">Para ganaderos</a></li><li><a href="#transp">Para transportistas</a></li><li><a href="#">Precios</a></li><li><a href="#">GPS en vivo</a></li></ul></div>
+            <div><div className="ft-col-title">Empresa</div><ul className="ft-links"><li><a href="#">Sobre ARREO</a></li><li><a href="#">Blog</a></li><li><a href="#">Prensa</a></li><li><a href="#">Contacto</a></li></ul></div>
+            <div><div className="ft-col-title">Legal</div><ul className="ft-links"><li><a href="#">Términos</a></li><li><a href="#">Privacidad</a></li><li><a href="#">Cookies</a></li></ul></div>
+          </div>
+          <div className="ft-bottom">
+            <div className="ft-copy">© 2025 ARREO. Todos los derechos reservados.</div>
+            <div className="ft-legal"><a href="#">Términos</a><a href="#">Privacidad</a></div>
+          </div>
         </div>
-        <span className="footer-copy">© 2025 ARREO. Transporte Ganadero Inteligente.</span>
       </footer>
     </div>
   );
