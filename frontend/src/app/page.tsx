@@ -155,14 +155,7 @@ html{scroll-behavior:smooth}
 .tr-left .s-h2{color:#fff}
 .tr-left .s-eye{color:var(--vl)}
 .tr-left .s-sub{color:rgba(255,255,255,.45);margin-top:14px;margin-bottom:34px}
-.earn-card{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:20px;padding:30px}
-.earn-lbl{font-size:10px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.3);margin-bottom:14px}
-.earn-amt{font-size:52px;font-weight:800;color:#fff;letter-spacing:-.045em}
-.earn-per{font-size:12px;color:rgba(255,255,255,.3);margin-top:4px;margin-bottom:30px}
-.earn-bars{display:flex;gap:6px;align-items:flex-end;height:72px;margin-bottom:10px}
-.ebar{flex:1;border-radius:4px 4px 0 0;background:rgba(139,175,78,.15)}
-.ebar.on{background:var(--v);box-shadow:0 -4px 14px rgba(139,175,78,.35)}
-.earn-days{display:flex;justify-content:space-between;font-size:9px;color:rgba(255,255,255,.22);letter-spacing:.06em}
+
 .btn-t-lg{display:inline-flex;align-items:center;gap:10px;padding:16px 32px;border-radius:9999px;background:var(--t);color:#fff;font-family:'DM Sans',sans-serif;font-size:15px;font-weight:700;border:none;cursor:pointer;transition:all .2s;text-decoration:none;box-shadow:0 6px 24px rgba(224,122,52,.4)}
 .btn-t-lg:hover{background:var(--td);transform:translateY(-2px);box-shadow:0 10px 32px rgba(224,122,52,.5)}
 .perks{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:36px}
@@ -693,23 +686,6 @@ export default function LandingPage() {
                 <div className="perk"><div className="perk-ico"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#8BAF4E" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div><div className="perk-title">A tu medida</div><div className="perk-desc">Elegís cuándo y dónde. Tu negocio, tus reglas.</div></div>
                 <div className="perk"><div className="perk-ico"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#8BAF4E" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></div><div className="perk-title">Red de ganaderos</div><div className="perk-desc">Miles de clientes en todo el país sin salir a buscarlos.</div></div>
                 <div className="perk"><div className="perk-ico"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#8BAF4E" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></div><div className="perk-title">Reputación verificada</div><div className="perk-desc">Más viajes, mejor rating, más solicitudes entrantes.</div></div>
-              </div>
-            </div>
-            <div className="reveal reveal-delay-2">
-              <div className="earn-card">
-                <div className="earn-lbl">Ganancias estimadas</div>
-                <div className="earn-amt">$480.000</div>
-                <div className="earn-per">promedio mensual por camión activo</div>
-                <div className="earn-bars">
-                  <div className="ebar" style={{height:'42%'}}></div>
-                  <div className="ebar" style={{height:'58%'}}></div>
-                  <div className="ebar" style={{height:'72%'}}></div>
-                  <div className="ebar" style={{height:'62%'}}></div>
-                  <div className="ebar" style={{height:'82%'}}></div>
-                  <div className="ebar on" style={{height:'96%'}}></div>
-                  <div className="ebar" style={{height:'86%'}}></div>
-                </div>
-                <div className="earn-days"><span>L</span><span>M</span><span>X</span><span>J</span><span>V</span><span>S</span><span>D</span></div>
               </div>
             </div>
           </div>
