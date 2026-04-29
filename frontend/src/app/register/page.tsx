@@ -40,7 +40,7 @@ function TipoRemolqueCards({ selected, onChange }: { selected: string[]; onChang
     onChange(selected.includes(val) ? selected.filter(t => t !== val) : [...selected, val]);
   }
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
+    <div className="reg-truck-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
       {TIPOS_REMOLQUE_OPTS.map(({ value, cap }) => {
         const on = selected.includes(value);
         return (
@@ -295,6 +295,13 @@ export default function RegisterPage() {
   if (phase === 'role') {
     return (
       <main className="auth-page">
+        <style>{`
+          @media (max-width: 480px) {
+            .reg-2col { grid-template-columns: 1fr !important; }
+            .reg-truck-grid { grid-template-columns: 1fr 1fr !important; }
+            .reg-photo-grid { grid-template-columns: 1fr 1fr !important; }
+          }
+        `}</style>
         <div style={{ width: '100%', maxWidth: 500 }}>
           <div className="auth-card">
             <div className="auth-logo"><ToroBull/><div className="auth-logo-name">ARREO</div><div className="auth-logo-tag">Transporte Ganadero Inteligente</div></div>
@@ -376,6 +383,13 @@ export default function RegisterPage() {
 
   return (
     <main className="auth-page">
+      <style>{`
+        @media (max-width: 480px) {
+          .reg-2col { grid-template-columns: 1fr !important; }
+          .reg-truck-grid { grid-template-columns: 1fr 1fr !important; }
+          .reg-photo-grid { grid-template-columns: 1fr 1fr !important; }
+        }
+      `}</style>
       <div style={{ width: '100%', maxWidth: 520 }}>
         <div className="auth-card">
 
@@ -397,7 +411,7 @@ export default function RegisterPage() {
               <div style={GRP}><label style={LBL}>Nombre completo *</label><input style={INP} type="text" value={s1.nombre} onChange={e => setF1('nombre', e.target.value)} placeholder="Juan Pérez"/></div>
               <div style={GRP}><label style={LBL}>Email *</label><input style={INP} type="email" value={s1.email} onChange={e => setF1('email', e.target.value)} placeholder="tu@email.com"/></div>
               <div style={GRP}><label style={LBL}>Contraseña * (mín. 6 caracteres)</label><input style={INP} type="password" value={s1.password} onChange={e => setF1('password', e.target.value)} placeholder="••••••••"/></div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+              <div className="reg-2col" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                 <div style={GRP}><label style={LBL}>Teléfono *</label><input style={INP} type="tel" value={s1.telefono} onChange={e => setF1('telefono', e.target.value)} placeholder="351 4567890"/></div>
                 <div style={GRP}>
                   <label style={LBL}>CUIT/CUIL * (XX-XXXXXXXX-X)</label>
@@ -412,11 +426,11 @@ export default function RegisterPage() {
           {step === 2 && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div style={GRP}><label style={LBL}>Patente *</label><input style={{ ...INP, textTransform: 'uppercase' }} type="text" value={s2.patente} onChange={e => setF2('patente', e.target.value.toUpperCase())} placeholder="AA 123 BB"/></div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+              <div className="reg-2col" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                 <div style={GRP}><label style={LBL}>Marca *</label><input style={INP} type="text" value={s2.marca_camion} onChange={e => setF2('marca_camion', e.target.value)} placeholder="Mercedes, Iveco…"/></div>
                 <div style={GRP}><label style={LBL}>Modelo *</label><input style={INP} type="text" value={s2.modelo_camion} onChange={e => setF2('modelo_camion', e.target.value)} placeholder="Atego, Stralis…"/></div>
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+              <div className="reg-2col" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                 <div style={GRP}><label style={LBL}>Año *</label><input style={INP} type="number" value={s2.año_camion} onChange={e => setF2('año_camion', e.target.value)} placeholder={String(new Date().getFullYear())} min="1980" max={new Date().getFullYear()}/></div>
                 <div style={GRP}><label style={LBL}>Capacidad (kg) *</label><input style={INP} type="number" value={s2.capacidad_kg} onChange={e => setF2('capacidad_kg', e.target.value)} placeholder="25000"/></div>
               </div>
@@ -433,7 +447,7 @@ export default function RegisterPage() {
               <p style={{ fontSize: 13, color: '#666', marginBottom: 16, lineHeight: 1.5 }}>
                 Subí las fotos requeridas para verificar tu identidad y habilitación. Cada foto debe ser legible.
               </p>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 14 }}>
+              <div className="reg-photo-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 14 }}>
                 <FotoBox label="DNI frente" preview={fotos.foto_dni_frente} onChange={v => setFotos(p => ({ ...p, foto_dni_frente: v }))}/>
                 <FotoBox label="DNI dorso"  preview={fotos.foto_dni_dorso}  onChange={v => setFotos(p => ({ ...p, foto_dni_dorso: v }))}/>
                 <FotoBox label="Licencia de conducir" preview={fotos.foto_licencia} onChange={v => setFotos(p => ({ ...p, foto_licencia: v }))}/>

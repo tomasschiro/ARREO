@@ -227,27 +227,27 @@ function TransportistaDashboard({ userName, patente }: { userName: string; paten
   const ini = initials(userName);
 
   return (
-    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden', marginLeft: 'var(--sidebar-width)' }}>
+    <div className="app-panel" style={{ height: '100vh', overflow: 'hidden' }}>
 
       {/* Header */}
-      <div style={{ background: '#fff', padding: '14px 28px', borderBottom: '1px solid #F0F0F0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
+      <div className="dash-header" style={{ background: '#fff', padding: '14px 28px', borderBottom: '1px solid #F0F0F0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
         <div>
           <div style={{ fontSize: 17, fontWeight: 700, color: '#111' }}>Dashboard</div>
           <div style={{ fontSize: 12, color: '#aaa', marginTop: 2 }}>Bienvenido de vuelta, {userName.split(' ')[0]}</div>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <Link href="/disponibilidad" style={{ background: '#E07A34', color: '#fff', borderRadius: 8, padding: '7px 14px', fontSize: 12, fontWeight: 600, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 5 }}>
-            <Icon name="plus" size={13} color="#fff"/> Publicar disponibilidad
+            <Icon name="plus" size={13} color="#fff"/><span className="dash-btn-label"> Publicar disponibilidad</span>
           </Link>
           <div style={{ width: 34, height: 34, borderRadius: '50%', background: '#1F2B1F', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700, color: '#fff' }}>{ini}</div>
         </div>
       </div>
 
       {/* Scrollable body */}
-      <div style={{ flex: 1, overflowY: 'auto', background: '#F2F2F0', padding: '20px 28px', display: 'flex', flexDirection: 'column', gap: 20 }}>
+      <div className="dash-scroll" style={{ flex: 1, overflowY: 'auto', background: '#F2F2F0', padding: '20px 28px', display: 'flex', flexDirection: 'column', gap: 20 }}>
 
         {/* Metrics grid */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12 }}>
+        <div className="dash-metrics-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12 }}>
           {metrics.map((m, i) => (
             <div key={i} style={{ background: '#fff', borderRadius: 14, padding: '18px 20px', boxShadow: '0 2px 12px rgba(0,0,0,.05)', cursor: 'pointer' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 10 }}>
@@ -263,7 +263,7 @@ function TransportistaDashboard({ userName, patente }: { userName: string; paten
         </div>
 
         {/* 2-column grid */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+        <div className="dash-2col" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
 
           {/* Active trip card */}
           <div style={{ background: '#fff', borderRadius: 16, padding: '20px', boxShadow: '0 2px 12px rgba(0,0,0,.05)', display: 'flex', flexDirection: 'column' }}>
@@ -416,23 +416,23 @@ function ProductorDashboard({ userId, userName }: { userId: number; userName: st
   }
 
   return (
-    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden', marginLeft: 'var(--sidebar-width)' }}>
+    <div className="app-panel" style={{ height: '100vh', overflow: 'hidden' }}>
 
       {/* Header */}
-      <div style={{ background: '#fff', padding: '14px 28px', borderBottom: '1px solid #F0F0F0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
+      <div className="dash-header" style={{ background: '#fff', padding: '14px 28px', borderBottom: '1px solid #F0F0F0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
         <div>
           <div style={{ fontSize: 17, fontWeight: 700, color: '#111' }}>Dashboard</div>
           <div style={{ fontSize: 12, color: '#aaa', marginTop: 2 }}>Bienvenido de vuelta, {userName.split(' ')[0]}</div>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <Link href="/publicar" style={{ background: '#E07A34', color: '#fff', borderRadius: 8, padding: '7px 14px', fontSize: 12, fontWeight: 600, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 5 }}>
-            <Icon name="plus" size={13} color="#fff"/> Publicar nuevo viaje
+            <Icon name="plus" size={13} color="#fff"/><span className="dash-btn-label"> Publicar nuevo viaje</span>
           </Link>
           <div style={{ width: 34, height: 34, borderRadius: '50%', background: '#1F2B1F', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700, color: '#fff' }}>{ini}</div>
         </div>
       </div>
 
-      <div style={{ flex: 1, overflowY: 'auto', background: '#F2F2F0', padding: '20px 28px', display: 'flex', flexDirection: 'column', gap: 24 }}>
+      <div className="dash-scroll" style={{ flex: 1, overflowY: 'auto', background: '#F2F2F0', padding: '20px 28px', display: 'flex', flexDirection: 'column', gap: 24 }}>
 
         {/* Mis viajes publicados */}
         <section>
@@ -597,6 +597,18 @@ export default function DashboardPage() {
 
   return (
     <div className="app-layout">
+      <style>{`
+        @media (max-width: 768px) {
+          .dash-header { padding: 10px 12px !important; }
+          .dash-btn-label { display: none; }
+          .dash-metrics-grid { grid-template-columns: 1fr 1fr !important; gap: 8px !important; }
+          .dash-2col { grid-template-columns: 1fr !important; }
+          .dash-scroll { padding: 12px !important; gap: 12px !important; }
+        }
+        @media (max-width: 480px) {
+          .dash-metrics-grid { grid-template-columns: 1fr 1fr !important; }
+        }
+      `}</style>
       <AppSidebar/>
       {user.rol === 'transportista'
         ? <TransportistaDashboard userName={user.nombre ?? user.name ?? ''} patente={user.patente}/>

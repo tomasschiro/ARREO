@@ -80,6 +80,13 @@ export default function DisponibilidadPage() {
 
   return (
     <div className="app-layout">
+      <style>{`
+        @media (max-width: 640px) {
+          .disp-grid { grid-template-columns: 1fr !important; }
+          .disp-actions { flex-direction: column !important; }
+          .disp-actions a, .disp-actions button { width: 100% !important; flex: none !important; min-height: 48px; }
+        }
+      `}</style>
       <AppSidebar />
 
       <div className="app-content">
@@ -121,7 +128,7 @@ export default function DisponibilidadPage() {
 
               <section className="card">
                 <h3 style={{ fontWeight: 700, marginBottom: 20 }}>Detalles del camión</h3>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
+                <div className="disp-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
 
                   <div className="form-group">
                     <label className="form-label">
@@ -155,7 +162,7 @@ export default function DisponibilidadPage() {
                 </div>
               )}
 
-              <div style={{ display: 'flex', gap: 12, paddingBottom: 32 }}>
+              <div className="disp-actions" style={{ display: 'flex', gap: 12, paddingBottom: 32 }}>
                 <Link href="/dashboard" className="btn btn-secondary" style={{ flex: 1, textAlign: 'center' }}>
                   Cancelar
                 </Link>

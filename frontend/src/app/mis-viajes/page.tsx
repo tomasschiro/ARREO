@@ -171,7 +171,7 @@ function TripCard({ aplic, patente, onDetail }: {
       </div>
 
       {/* Info grid */}
-      <div style={{ background: '#F8F8F6', borderRadius: 10, padding: '12px 14px', display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10, marginBottom: 14 }}>
+      <div className="mv-infogrid" style={{ background: '#F8F8F6', borderRadius: 10, padding: '12px 14px', display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10, marginBottom: 14 }}>
         <div>
           <div style={{ fontSize: 10, color: '#aaa', marginBottom: 2 }}>PRODUCTOR</div>
           <div style={{ fontSize: 12, fontWeight: 600, color: '#111' }}>{aplic.publicado_por}</div>
@@ -375,25 +375,35 @@ export default function MisViajesPage() {
 
   return (
     <div className="app-layout">
+      <style>{`
+        @media (max-width: 768px) {
+          .mv-header { padding: 10px 12px !important; }
+          .mv-btn-label { display: none; }
+          .mv-tabs { padding: 0 12px !important; }
+          .mv-subtabs { padding: 10px 12px 0 !important; }
+          .mv-content { padding: 12px !important; }
+          .mv-infogrid { grid-template-columns: 1fr 1fr !important; }
+        }
+      `}</style>
       <AppSidebar/>
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden', marginLeft: 'var(--sidebar-width)' }}>
+      <div className="app-panel" style={{ height: '100vh', overflow: 'hidden' }}>
 
         {/* Header */}
-        <div style={{ background: '#fff', padding: '14px 28px', borderBottom: '1px solid #F0F0F0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
+        <div className="mv-header" style={{ background: '#fff', padding: '14px 28px', borderBottom: '1px solid #F0F0F0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
           <div>
             <div style={{ fontSize: 17, fontWeight: 700, color: '#111' }}>Mis viajes</div>
             <div style={{ fontSize: 12, color: '#aaa', marginTop: 2 }}>Tus viajes y disponibilidades publicadas</div>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <Link href="/disponibilidad" style={{ background: '#E07A34', color: '#fff', borderRadius: 8, padding: '7px 14px', fontSize: 12, fontWeight: 600, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 5 }}>
-              <Icon name="plus" size={13} color="#fff"/> Publicar disponibilidad
+              <Icon name="plus" size={13} color="#fff"/><span className="mv-btn-label"> Publicar disponibilidad</span>
             </Link>
             <div style={{ width: 34, height: 34, borderRadius: '50%', background: '#1F2B1F', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700, color: '#fff' }}>{ini}</div>
           </div>
         </div>
 
         {/* Main tabs */}
-        <div style={{ background: '#fff', borderBottom: '1px solid #F0F0F0', padding: '0 28px', display: 'flex', gap: 0, flexShrink: 0 }}>
+        <div className="mv-tabs" style={{ background: '#fff', borderBottom: '1px solid #F0F0F0', padding: '0 28px', display: 'flex', gap: 0, flexShrink: 0 }}>
           {TAB_BTN('viajes', 'Mis viajes')}
           {TAB_BTN('disponibilidades', 'Mis disponibilidades')}
         </div>
@@ -402,13 +412,13 @@ export default function MisViajesPage() {
         {mainTab === 'viajes' && (
           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
             {/* Sub-tabs */}
-            <div style={{ background: '#F2F2F0', padding: '12px 28px 0', display: 'flex', gap: 6, flexShrink: 0 }}>
+            <div className="mv-subtabs" style={{ background: '#F2F2F0', padding: '12px 28px 0', display: 'flex', gap: 6, flexShrink: 0 }}>
               {SUB_BTN('activos',    'Activos')}
               {SUB_BTN('completados','Completados')}
             </div>
 
             {/* Trip list */}
-            <div style={{ flex: 1, overflowY: 'auto', background: '#F2F2F0', padding: '16px 28px', display: 'flex', flexDirection: 'column' }}>
+            <div className="mv-content" style={{ flex: 1, overflowY: 'auto', background: '#F2F2F0', padding: '16px 28px', display: 'flex', flexDirection: 'column' }}>
               {current.length === 0 ? (
                 <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: 280, textAlign: 'center' }}>
                   <div style={{ width: 54, height: 54, borderRadius: '50%', background: '#EAEAE8', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 14 }}>
@@ -431,7 +441,7 @@ export default function MisViajesPage() {
 
         {/* ── TAB: Mis disponibilidades ── */}
         {mainTab === 'disponibilidades' && (
-          <div style={{ flex: 1, overflowY: 'auto', background: '#F2F2F0', padding: '20px 28px' }}>
+          <div className="mv-content" style={{ flex: 1, overflowY: 'auto', background: '#F2F2F0', padding: '20px 28px' }}>
             {misDisps.length === 0 ? (
               <div style={{ textAlign: 'center', padding: '60px 0', color: '#ccc' }}>
                 <Icon name="truck" size={36} color="#ddd"/>

@@ -84,6 +84,15 @@ function ShieldIcon() {
     </svg>
   );
 }
+function HamburgerIcon() {
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
+      <line x1="3" y1="6" x2="21" y2="6"/>
+      <line x1="3" y1="12" x2="21" y2="12"/>
+      <line x1="3" y1="18" x2="21" y2="18"/>
+    </svg>
+  );
+}
 
 function menuFor(rol: string, noLeidos: number): MenuItem[] {
   if (rol === 'superadmin') return [
@@ -110,7 +119,8 @@ export default function AppSidebar() {
   const { user, logout } = useAuth();
   const pathname  = usePathname();
   const router    = useRouter();
-  const [noLeidos, setNoLeidos] = useState(0);
+  const [noLeidos,   setNoLeidos]   = useState(0);
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   useEffect(() => {
     if (!user) return;
@@ -119,6 +129,9 @@ export default function AppSidebar() {
       .catch(() => {});
   }, [user, pathname]);
 
+  // Close drawer on navigation
+  useEffect(() => { setMobileOpen(false); }, [pathname]);
+
   const items = menuFor(user?.rol ?? 'productor', noLeidos);
 
   function handleLogout() {
@@ -126,71 +139,109 @@ export default function AppSidebar() {
     router.push('/login');
   }
 
+  const ini = user ? (user.nombre ?? user.name ?? '?')[0] : '?';
+
   return (
-    <aside className="sidebar">
-
-      {/* Logo */}
-      <Link href="/dashboard" style={{ textDecoration: 'none' }}>
-        <div className="sidebar-logo">
+    <>
+      {/* ── Mobile topbar ── */}
+      <div className="mobile-topbar">
+        <Link href="/dashboard" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 10 }}>
           <ToroBull />
-          <div>
-            <div className="sidebar-logo-name">ARREO</div>
-            <div className="sidebar-logo-tag">Transporte Ganadero Inteligente</div>
-          </div>
+          <span style={{ color: '#fff', fontWeight: 700, fontSize: 16, letterSpacing: '0.14em' }}>ARREO</span>
+        </Link>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          {user && (
+            <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'rgba(139,175,78,.3)', color: '#8BAF4E', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 13 }}>
+              {ini}
+            </div>
+          )}
+          <button
+            onClick={() => setMobileOpen(true)}
+            style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#fff', padding: 6, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+            aria-label="Abrir menú"
+          >
+            <HamburgerIcon />
+          </button>
         </div>
-      </Link>
-
-      {/* Nav */}
-      <div className="sidebar-section" style={{ flex: 1 }}>
-        {items.map((item, idx) => {
-          const isActive = pathname === item.href && (idx === 0 || pathname !== '/dashboard');
-          return (
-            <Link
-              key={`${item.label}-${idx}`}
-              href={item.href}
-              className={`sidebar-item${isActive ? ' active' : ''}`}
-            >
-              <span className="sidebar-item-icon">{item.icon}</span>
-              <span style={{ flex: 1 }}>{item.label}</span>
-              {item.badge != null && item.badge > 0 && (
-                <span style={{
-                  minWidth: 20, height: 20, padding: '0 4px', borderRadius: 9999,
-                  backgroundColor: '#E24B4A', color: 'white', fontSize: 11,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700,
-                }}>
-                  {item.badge > 9 ? '9+' : item.badge}
-                </span>
-              )}
-            </Link>
-          );
-        })}
       </div>
 
-      {/* User + Logout */}
-      <div style={{ padding: '16px 12px 20px', borderTop: '1px solid rgba(255,255,255,0.1)', display: 'flex', flexDirection: 'column', gap: 8 }}>
-        {user && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '8px 12px', borderRadius: 8, backgroundColor: 'rgba(255,255,255,0.06)' }}>
-            <div style={{ width: 32, height: 32, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 12, textTransform: 'uppercase', flexShrink: 0, backgroundColor: 'rgba(139,175,78,0.3)', color: '#8BAF4E' }}>
-              {(user.nombre ?? user.name ?? '?')[0]}
-            </div>
-            <div style={{ minWidth: 0, flex: 1 }}>
-              <p style={{ color: 'white', fontSize: 12, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user.nombre ?? user.name}</p>
-              {user.rol === 'superadmin'
-                ? <span style={{ fontSize: 10, fontWeight: 700, color: '#fff', backgroundColor: '#E07B39', padding: '1px 6px', borderRadius: 4, letterSpacing: '0.05em' }}>SUPERADMIN</span>
-                : <p style={{ color: '#8BAF4E', fontSize: 12, textTransform: 'capitalize' }}>{user.rol}</p>
-              }
+      {/* ── Overlay ── */}
+      <div
+        className={`sidebar-overlay${mobileOpen ? ' visible' : ''}`}
+        onClick={() => setMobileOpen(false)}
+      />
+
+      {/* ── Sidebar ── */}
+      <aside className={`sidebar${mobileOpen ? ' open' : ''}`}>
+
+        {/* Close button (mobile only) */}
+        <button className="sidebar-close" onClick={() => setMobileOpen(false)} aria-label="Cerrar menú">
+          ✕
+        </button>
+
+        {/* Logo */}
+        <Link href="/dashboard" style={{ textDecoration: 'none' }}>
+          <div className="sidebar-logo">
+            <ToroBull />
+            <div>
+              <div className="sidebar-logo-name">ARREO</div>
+              <div className="sidebar-logo-tag">Transporte Ganadero Inteligente</div>
             </div>
           </div>
-        )}
-        <button
-          onClick={handleLogout}
-          className="sidebar-item"
-          style={{ border: 'none', background: 'transparent', cursor: 'pointer', width: '100%', textAlign: 'left' }}
-        >
-          <span className="sidebar-item-icon"><LogoutIcon /></span>
-          Cerrar sesión
-        </button>
-      </div>
-    </aside>
+        </Link>
+
+        {/* Nav */}
+        <div className="sidebar-section" style={{ flex: 1 }}>
+          {items.map((item, idx) => {
+            const isActive = pathname === item.href && (idx === 0 || pathname !== '/dashboard');
+            return (
+              <Link
+                key={`${item.label}-${idx}`}
+                href={item.href}
+                className={`sidebar-item${isActive ? ' active' : ''}`}
+              >
+                <span className="sidebar-item-icon">{item.icon}</span>
+                <span style={{ flex: 1 }}>{item.label}</span>
+                {item.badge != null && item.badge > 0 && (
+                  <span style={{
+                    minWidth: 20, height: 20, padding: '0 4px', borderRadius: 9999,
+                    backgroundColor: '#E24B4A', color: 'white', fontSize: 11,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700,
+                  }}>
+                    {item.badge > 9 ? '9+' : item.badge}
+                  </span>
+                )}
+              </Link>
+            );
+          })}
+        </div>
+
+        {/* User + Logout */}
+        <div style={{ padding: '16px 12px 20px', borderTop: '1px solid rgba(255,255,255,0.1)', display: 'flex', flexDirection: 'column', gap: 8 }}>
+          {user && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '8px 12px', borderRadius: 8, backgroundColor: 'rgba(255,255,255,0.06)' }}>
+              <div style={{ width: 32, height: 32, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 12, textTransform: 'uppercase', flexShrink: 0, backgroundColor: 'rgba(139,175,78,0.3)', color: '#8BAF4E' }}>
+                {ini}
+              </div>
+              <div style={{ minWidth: 0, flex: 1 }}>
+                <p style={{ color: 'white', fontSize: 12, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user.nombre ?? user.name}</p>
+                {user.rol === 'superadmin'
+                  ? <span style={{ fontSize: 10, fontWeight: 700, color: '#fff', backgroundColor: '#E07B39', padding: '1px 6px', borderRadius: 4, letterSpacing: '0.05em' }}>SUPERADMIN</span>
+                  : <p style={{ color: '#8BAF4E', fontSize: 12, textTransform: 'capitalize' }}>{user.rol}</p>
+                }
+              </div>
+            </div>
+          )}
+          <button
+            onClick={handleLogout}
+            className="sidebar-item"
+            style={{ border: 'none', background: 'transparent', cursor: 'pointer', width: '100%', textAlign: 'left' }}
+          >
+            <span className="sidebar-item-icon"><LogoutIcon /></span>
+            Cerrar sesión
+          </button>
+        </div>
+      </aside>
+    </>
   );
 }

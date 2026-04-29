@@ -199,10 +199,24 @@ function ViajesContent() {
 
   return (
     <div style={{ minHeight: '100vh', background: '#F6F8F5', fontFamily: "'DM Sans', system-ui, sans-serif" }}>
+      <style>{`
+        .vd-search input { color: #fff !important; }
+        .vd-search input::placeholder { color: rgba(255,255,255,.38) !important; }
+        @media (max-width: 640px) {
+          .vd-hero { padding: 24px 16px 20px !important; }
+          .vd-hero h1 { font-size: 22px !important; }
+          .vd-search { flex-direction: column !important; }
+          .vd-body { padding: 16px 14px 60px !important; }
+          .vd-cta { flex-direction: column !important; gap: 10px !important; }
+          .vd-cta a { width: 100% !important; text-align: center !important; }
+          .vd-grid { grid-template-columns: 1fr !important; }
+          .vd-header-inner { padding: 0 14px !important; height: 54px !important; }
+        }
+      `}</style>
       <Header hasToken={hasToken} />
 
       {/* Hero + filtros */}
-      <div style={{ background: '#0D150D', padding: '40px 32px 32px' }}>
+      <div className="vd-hero" style={{ background: '#0D150D', padding: '40px 32px 32px' }}>
         <div style={{ maxWidth: 900, margin: '0 auto' }}>
           <h1 style={{ color: '#fff', fontSize: 28, fontWeight: 800, marginBottom: 6, letterSpacing: '-.02em' }}>
             Viajes disponibles
@@ -210,7 +224,7 @@ function ViajesContent() {
           <p style={{ color: 'rgba(255,255,255,.45)', fontSize: 15, marginBottom: 28 }}>
             Encontrá viajes de hacienda y aplicá con tu camión.
           </p>
-          <form onSubmit={handleBuscar} style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+          <form onSubmit={handleBuscar} className="vd-search" style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
             <input
               type="text"
               placeholder="Origen..."
@@ -254,9 +268,9 @@ function ViajesContent() {
       </div>
 
       {/* Contenido */}
-      <div style={{ maxWidth: 900, margin: '0 auto', padding: '32px 32px 80px' }}>
+      <div className="vd-body" style={{ maxWidth: 900, margin: '0 auto', padding: '32px 32px 80px' }}>
         {/* CTA publicar */}
-        <div style={{
+        <div className="vd-cta" style={{
           background: '#fff', border: '1px solid rgba(139,175,78,.25)', borderRadius: 14,
           padding: '20px 24px', marginBottom: 28,
           display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16,
@@ -298,7 +312,7 @@ function ViajesContent() {
             <div style={{ fontSize: 13, color: '#888', marginBottom: 16, fontWeight: 500 }}>
               {viajes.length} viaje{viajes.length !== 1 ? 's' : ''} encontrado{viajes.length !== 1 ? 's' : ''}
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: 16 }}>
+            <div className="vd-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: 16 }}>
               {viajes.map(v => <ViajeCard key={v.id} v={v} />)}
             </div>
           </>

@@ -393,11 +393,100 @@
   margin-top: var(--space-1);
 }
 
+/* ---- MOBILE TOPBAR --------------------------------------- */
+.mobile-topbar {
+  display: none;
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  height: 56px;
+  background: var(--color-verde-bosque);
+  z-index: 200;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+  border-bottom: 1px solid rgba(255,255,255,.08);
+}
+
+/* ---- SIDEBAR OVERLAY ------------------------------------- */
+.sidebar-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.5);
+  z-index: 150;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .25s;
+}
+.sidebar-overlay.visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* ---- SIDEBAR CLOSE BUTTON (mobile only) ------------------ */
+.sidebar-close {
+  display: none;
+  background: rgba(255,255,255,.1);
+  border: none;
+  color: rgba(255,255,255,.7);
+  cursor: pointer;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  font-size: 18px;
+  align-items: center;
+  justify-content: center;
+  align-self: flex-end;
+  margin: 0 16px 12px;
+  flex-shrink: 0;
+}
+
+/* ---- APP PANEL (inner full-height div for dashboard pages) */
+.app-panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  margin-left: var(--sidebar-width);
+}
+
 /* ---- RESPONSIVE ------------------------------------------ */
 @media (max-width: 768px) {
   :root { --sidebar-width: 0px; }
-  .sidebar { transform: translateX(-100%); transition: transform .25s; }
-  .sidebar.open { transform: translateX(0); }
-  .app-content { margin-left: 0; }
-  .page-content { padding: var(--space-5); }
+
+  /* Sidebar drawer */
+  .sidebar {
+    transform: translateX(-100%);
+    transition: transform .25s ease;
+    z-index: 160;
+  }
+  .sidebar.open {
+    transform: translateX(0);
+    box-shadow: 4px 0 40px rgba(0,0,0,.35);
+  }
+  .sidebar-close { display: inline-flex; }
+
+  /* Mobile topbar visible */
+  .mobile-topbar { display: flex; }
+
+  /* App content offset for mobile topbar */
+  .app-content { margin-left: 0; padding-top: 56px; }
+  .app-panel   { margin-left: 0; padding-top: 56px; }
+
+  /* Sticky header shifts down below mobile topbar */
+  .app-header { top: 56px; padding: 0 12px; height: 52px; }
+  .header-title { font-size: 14px; }
+
+  /* Reduce page content padding */
+  .page-content { padding: 12px; }
+  .card { padding: 14px; }
+  .card-lg { padding: 16px; }
+
+  /* Auth pages */
+  .auth-card { padding: 28px 20px; }
+  .auth-title { font-size: 20px; }
+}
+
+@media (max-width: 480px) {
+  .page-content { padding: 10px; }
+  .card { padding: 12px; }
 }

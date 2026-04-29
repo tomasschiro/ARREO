@@ -134,6 +134,14 @@ export default function PerfilPage() {
 
   return (
     <div className="app-layout">
+      <style>{`
+        @media (max-width: 640px) {
+          .prf-2col { grid-template-columns: 1fr !important; }
+          .prf-3col { grid-template-columns: 1fr !important; }
+          .prf-truck-grid { grid-template-columns: 1fr 1fr !important; }
+          .prf-header-name { display: none; }
+        }
+      `}</style>
       <AppSidebar />
 
       <div className="app-content">
@@ -187,7 +195,7 @@ export default function PerfilPage() {
                     <input type="text" value={nombre}
                       onChange={e => { setNombre(e.target.value); setError(''); }} className="form-input" />
                   </div>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                  <div className="prf-2col" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
                     <div className="form-group">
                       <label className="form-label">Zona / Provincia</label>
                       <input type="text" value={zona} placeholder="Ej: Entre Ríos"
@@ -207,7 +215,7 @@ export default function PerfilPage() {
                   <h3 style={{ fontSize: 11, fontWeight: 700, color: 'var(--color-text-muted)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 20 }}>Datos del camión</h3>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
 
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                    <div className="prf-2col" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                       <div className="form-group">
                         <label className="form-label">Patente</label>
                         <input type="text" value={patente} placeholder="ABC 123" maxLength={10}
@@ -224,7 +232,7 @@ export default function PerfilPage() {
                       <label className="form-label">
                         Tipo de remolque <span style={{ fontSize: 11, color: 'var(--color-text-muted)', fontWeight: 400 }}>(podés elegir varios)</span>
                       </label>
-                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
+                      <div className="prf-truck-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
                         {TIPOS_REMOLQUE_OPTS.map(({ value, cap }) => {
                           const on = tipoRemolque.includes(value);
                           return (
@@ -253,7 +261,7 @@ export default function PerfilPage() {
                       </div>
                     </div>
 
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12 }}>
+                    <div className="prf-3col" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12 }}>
                       <div className="form-group">
                         <label className="form-label">Marca</label>
                         <input type="text" value={marca} placeholder="Mercedes"

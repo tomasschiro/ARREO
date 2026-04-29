@@ -169,6 +169,15 @@ export default function PublicarPage() {
 
   return (
     <div className="app-layout">
+      <style>{`
+        @media (max-width: 640px) {
+          .pub-header-name { display: none; }
+          .pub-detail-grid { grid-template-columns: 1fr !important; }
+          .pub-weight-grid { grid-template-columns: 1fr !important; }
+          .pub-actions { flex-direction: column !important; }
+          .pub-actions a, .pub-actions button { width: 100% !important; flex: none !important; min-height: 48px; font-size: 15px !important; }
+        }
+      `}</style>
       <AppSidebar />
 
       <div className="app-content">
@@ -210,7 +219,7 @@ export default function PublicarPage() {
 
               <section className="card">
                 <h3 style={{ fontWeight: 700, marginBottom: 16 }}>Detalles del viaje</h3>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 20 }}>
+                <div className="pub-detail-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 20 }}>
                   <Field label="Fecha de salida" required error={errors.fecha_salida}>
                     <input type="date" min={hoy} value={fecha}
                       onChange={e => { setFecha(e.target.value); setErrors(p => ({ ...p, fecha_salida: undefined })); }}
@@ -242,7 +251,7 @@ export default function PublicarPage() {
 
               <section className="card">
                 <h3 style={{ fontWeight: 700, marginBottom: 16 }}>Carga y peso</h3>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
+                <div className="pub-weight-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
                   <Field label="Cantidad de cabezas" required error={errors.cantidad_cabezas}>
                     <div style={{ position: 'relative' }}>
                       <input type="number" min={1} value={cabezas} placeholder="Ej: 120"
@@ -310,7 +319,7 @@ export default function PublicarPage() {
                 </div>
               )}
 
-              <div style={{ display: 'flex', gap: 12, paddingBottom: 32 }}>
+              <div className="pub-actions" style={{ display: 'flex', gap: 12, paddingBottom: 32 }}>
                 <Link href="/dashboard" className="btn btn-secondary" style={{ flex: 1, textAlign: 'center' }}>
                   Cancelar
                 </Link>

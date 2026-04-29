@@ -285,11 +285,21 @@ export default function ViajesPage() {
 
   return (
     <div className="app-layout">
+      <style>{`
+        @media (max-width: 768px) {
+          .vj-header { padding: 10px 12px !important; }
+          .vj-scroll { padding: 12px !important; }
+          .vj-filterbar { padding: 10px !important; gap: 8px !important; }
+          .vj-type-chips { overflow-x: auto; flex-wrap: nowrap !important; padding-bottom: 2px; }
+          .vj-type-chips::-webkit-scrollbar { display: none; }
+          .vj-filterrow { flex-wrap: wrap !important; }
+        }
+      `}</style>
       <AppSidebar/>
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden', marginLeft: 'var(--sidebar-width)' }}>
+      <div className="app-panel" style={{ height: '100vh', overflow: 'hidden' }}>
 
         {/* Header */}
-        <div style={{ background: '#fff', padding: '14px 28px', borderBottom: '1px solid #F0F0F0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
+        <div className="vj-header" style={{ background: '#fff', padding: '14px 28px', borderBottom: '1px solid #F0F0F0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
           <div>
             <div style={{ fontSize: 17, fontWeight: 700, color: '#111' }}>Viajes disponibles</div>
             <div style={{ fontSize: 12, color: '#aaa', marginTop: 2 }}>Viajes disponibles y tus ofertas publicadas</div>
@@ -298,25 +308,27 @@ export default function ViajesPage() {
         </div>
 
         {/* Content */}
-        <div style={{ flex: 1, overflowY: 'auto', background: '#F2F2F0', padding: '20px 28px' }}>
+        <div className="vj-scroll" style={{ flex: 1, overflowY: 'auto', background: '#F2F2F0', padding: '20px 28px' }}>
 
           {/* Filter bar */}
-          <div style={{ background: '#fff', borderRadius: 12, padding: '12px 16px', display: 'flex', gap: 10, alignItems: 'center', marginBottom: 16, boxShadow: '0 2px 8px rgba(0,0,0,.04)', flexWrap: 'wrap' }}>
-            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+          <div className="vj-filterbar" style={{ background: '#fff', borderRadius: 12, padding: '12px 16px', display: 'flex', gap: 10, alignItems: 'center', marginBottom: 16, boxShadow: '0 2px 8px rgba(0,0,0,.04)', flexWrap: 'wrap' }}>
+            <div className="vj-type-chips" style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
               {TIPOS.map(t => (
-                <button key={t} onClick={() => setFilterType(t)} style={{ fontFamily: 'inherit', padding: '5px 11px', borderRadius: 6, border: '1.5px solid', cursor: 'pointer', fontSize: 11, fontWeight: 600, borderColor: filterType === t ? '#1F2B1F' : '#E0E0E0', background: filterType === t ? '#1F2B1F' : 'transparent', color: filterType === t ? '#fff' : '#666', transition: 'all .15s' }}>
+                <button key={t} onClick={() => setFilterType(t)} style={{ fontFamily: 'inherit', padding: '5px 11px', borderRadius: 6, border: '1.5px solid', cursor: 'pointer', fontSize: 11, fontWeight: 600, borderColor: filterType === t ? '#1F2B1F' : '#E0E0E0', background: filterType === t ? '#1F2B1F' : 'transparent', color: filterType === t ? '#fff' : '#666', transition: 'all .15s', whiteSpace: 'nowrap' }}>
                   {t === 'all' ? 'Todos los tipos' : t}
                 </button>
               ))}
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6, border: '1.5px solid #E0E0E0', borderRadius: 7, padding: '5px 11px', flex: 1, minWidth: 160 }}>
-              <Icon name="filter" size={12} color="#E07A34"/>
-              <input value={filterZona} onChange={e => setFilterZona(e.target.value)} placeholder="Filtrar por zona..." style={{ border: 'none', outline: 'none', fontSize: 12, color: '#555', background: 'transparent', width: '100%', fontFamily: 'inherit' }}/>
+            <div className="vj-filterrow" style={{ display: 'flex', gap: 8, flex: 1, minWidth: 0, alignItems: 'center', flexWrap: 'wrap' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, border: '1.5px solid #E0E0E0', borderRadius: 7, padding: '5px 11px', flex: 1, minWidth: 140 }}>
+                <Icon name="filter" size={12} color="#E07A34"/>
+                <input value={filterZona} onChange={e => setFilterZona(e.target.value)} placeholder="Filtrar por zona..." style={{ border: 'none', outline: 'none', fontSize: 12, color: '#555', background: 'transparent', width: '100%', fontFamily: 'inherit' }}/>
+              </div>
+              <input type="date" value={filterDate} onChange={e => setFilterDate(e.target.value)} style={{ border: '1.5px solid #E0E0E0', borderRadius: 7, padding: '5px 10px', fontSize: 12, color: '#555', outline: 'none', fontFamily: 'inherit', flex: '0 0 auto' }}/>
+              {(filterType !== 'all' || filterZona || filterDate) && (
+                <button onClick={() => { setFilterType('all'); setFilterZona(''); setFilterDate(''); }} style={{ fontSize: 11, color: '#999', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline', whiteSpace: 'nowrap' }}>Limpiar</button>
+              )}
             </div>
-            <input type="date" value={filterDate} onChange={e => setFilterDate(e.target.value)} style={{ border: '1.5px solid #E0E0E0', borderRadius: 7, padding: '5px 10px', fontSize: 12, color: '#555', outline: 'none', fontFamily: 'inherit' }}/>
-            {(filterType !== 'all' || filterZona || filterDate) && (
-              <button onClick={() => { setFilterType('all'); setFilterZona(''); setFilterDate(''); }} style={{ fontSize: 11, color: '#999', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline', whiteSpace: 'nowrap' }}>Limpiar</button>
-            )}
           </div>
 
           {/* Available trips */}
@@ -355,10 +367,11 @@ export default function ViajesPage() {
         </div>
 
         {/* FAB */}
-        <Link href="/disponibilidad" style={{ position: 'fixed', bottom: 28, right: 28, background: '#E07A34', color: '#fff', borderRadius: 50, padding: '13px 22px', fontSize: 13, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 8, boxShadow: '0 6px 24px rgba(224,122,52,.5)', zIndex: 10, textDecoration: 'none' }}>
+        <Link href="/disponibilidad" style={{ position: 'fixed', bottom: 24, right: 20, background: '#E07A34', color: '#fff', borderRadius: 50, padding: '13px 20px', fontSize: 13, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 8, boxShadow: '0 6px 24px rgba(224,122,52,.5)', zIndex: 50, textDecoration: 'none' }}>
           <Icon name="plus" size={16} color="#fff"/>
-          Publicar disponibilidad
+          <span className="fab-label">Publicar disponibilidad</span>
         </Link>
+        <style>{`.fab-label { } @media (max-width: 480px) { .fab-label { display: none; } }`}</style>
 
         {editando && <EditDisponibilidadModal disp={editando} onClose={() => setEditando(null)} onSave={handleSaveEdit}/>}
         {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)}/>}

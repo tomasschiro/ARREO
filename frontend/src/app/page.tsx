@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 
 const css = `
@@ -224,6 +224,69 @@ html{scroll-behavior:smooth}
 .ft-legal{display:flex;gap:22px}
 .ft-legal a{font-size:12px;color:rgba(255,255,255,.2);text-decoration:none}
 .ft-legal a:hover{color:rgba(255,255,255,.45)}
+
+/* ─ MOBILE (≤ 768px) ─ */
+@media(max-width:768px){
+  .lp nav{padding:0 20px;height:60px}
+  .nav-links{display:none}
+  .nav-actions{gap:6px}
+  .btn-ghost{padding:7px 14px;font-size:13px}
+  .btn-t{padding:8px 16px;font-size:13px}
+
+  .hero-content{grid-template-columns:1fr;padding:100px 20px 60px;gap:32px}
+  .hero-left{max-width:100%}
+  .hero-h1{font-size:clamp(38px,10vw,56px)}
+  .hero-sub{font-size:15px}
+  .hero-right{align-items:stretch}
+  .stat-card{min-width:unset}
+
+  .stats-inner{padding:0 20px;display:grid;grid-template-columns:1fr 1fr;gap:20px}
+  .stat-div{display:none}
+  .stat-val{font-size:24px}
+  .stat-item{align-items:flex-start}
+
+  .inner{padding:0 20px}
+  .lp section{padding:60px 0}
+  .steps-head{margin-bottom:36px}
+  .steps-grid{grid-template-columns:1fr 1fr;gap:2px}
+  .step-arr{display:none}
+
+  .split{grid-template-columns:1fr;gap:36px}
+  .split-vis{order:-1;aspect-ratio:3/2}
+  .ac-a,.ac-b{width:160px}
+
+  .tr-inner{grid-template-columns:1fr;gap:36px}
+  .perks{grid-template-columns:1fr 1fr}
+
+  .testi-grid{grid-template-columns:1fr;gap:12px}
+
+  .dl-inner{grid-template-columns:1fr;gap:32px}
+  .phone{display:none}
+
+  .ft-inner{padding:0 20px}
+  .ft-top{grid-template-columns:1fr 1fr;gap:28px;margin-bottom:32px}
+  .ft-bottom{flex-direction:column;gap:14px;text-align:center}
+  .ft-legal{justify-content:center}
+
+  .widget{border-radius:14px;padding:18px}
+  .hero-vignette{background:linear-gradient(to bottom,rgba(13,21,13,.7) 0%,rgba(13,21,13,.3) 60%,rgba(13,21,13,.85) 100%)}
+}
+@media(max-width:480px){
+  .steps-grid{grid-template-columns:1fr}
+  .step-card:first-child{border-radius:12px 12px 0 0}
+  .step-card:last-child{border-radius:0 0 12px 12px}
+  .perks{grid-template-columns:1fr}
+  .ft-top{grid-template-columns:1fr}
+  .hero-h1{font-size:clamp(34px,11vw,48px)}
+}
+.w-fields{overflow:visible}
+.w-sug-wrap{position:relative}
+.w-sug-wrap:first-child .w-row{border-radius:12px 12px 0 0}
+.w-sug-wrap:last-child .w-row{border-radius:0 0 12px 12px}
+.w-sugs{position:absolute;top:calc(100% + 4px);left:0;right:0;background:#182418;border:1px solid rgba(139,175,78,.22);border-radius:10px;overflow-y:auto;z-index:200;box-shadow:0 8px 32px rgba(0,0,0,.5);max-height:220px}
+.w-sug-item{padding:10px 16px;font-size:13px;color:rgba(255,255,255,.8);cursor:pointer;transition:background .15s;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.w-sug-item:hover{background:rgba(139,175,78,.18);color:#fff}
+.w-sug-empty{padding:10px 16px;font-size:13px;color:rgba(255,255,255,.4);font-style:italic}
 `;
 
 const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api';
@@ -232,6 +295,17 @@ export default function LandingPage() {
   const router = useRouter();
   const [origen, setOrigen] = useState('');
   const [destino, setDestino] = useState('');
+
+  type Sug = { label: string; lat: number; lng: number };
+  const [origenSugs, setOrigenSugs] = useState<Sug[]>([]);
+  const [destinoSugs, setDestinoSugs] = useState<Sug[]>([]);
+  const [origenCoords, setOrigenCoords] = useState<{ lat: number; lng: number } | null>(null);
+  const [destinoCoords, setDestinoCoords] = useState<{ lat: number; lng: number } | null>(null);
+  const [origenStatus, setOrigenStatus] = useState<'idle' | 'searching' | 'done'>('idle');
+  const [destinoStatus, setDestinoStatus] = useState<'idle' | 'searching' | 'done'>('idle');
+  const origenTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const destinoTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const widgetRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -262,10 +336,56 @@ export default function LandingPage() {
     loadStats();
   }, []);
 
+  useEffect(() => {
+    function onDown(e: MouseEvent) {
+      if (widgetRef.current && !widgetRef.current.contains(e.target as Node)) {
+        setOrigenSugs([]); setDestinoSugs([]);
+        setOrigenStatus('idle'); setDestinoStatus('idle');
+      }
+    }
+    document.addEventListener('mousedown', onDown);
+    return () => document.removeEventListener('mousedown', onDown);
+  }, []);
+
+  async function fetchSugs(q: string): Promise<Sug[]> {
+    try {
+      const res = await fetch(
+        `https://nominatim.openstreetmap.org/search?format=json&limit=5&countrycodes=ar&q=${encodeURIComponent(q)}`,
+        { headers: { 'Accept-Language': 'es' } }
+      );
+      const data: { display_name: string; lat: string; lon: string }[] = await res.json();
+      return data.map(d => ({ label: d.display_name, lat: +d.lat, lng: +d.lon }));
+    } catch { return []; }
+  }
+
+  function handleOrigenChange(val: string) {
+    setOrigen(val); setOrigenCoords(null); setOrigenSugs([]);
+    if (val.length < 3) { setOrigenStatus('idle'); return; }
+    setOrigenStatus('searching');
+    if (origenTimer.current) clearTimeout(origenTimer.current);
+    origenTimer.current = setTimeout(async () => {
+      const sugs = await fetchSugs(val);
+      setOrigenSugs(sugs); setOrigenStatus('done');
+    }, 400);
+  }
+
+  function handleDestinoChange(val: string) {
+    setDestino(val); setDestinoCoords(null); setDestinoSugs([]);
+    if (val.length < 3) { setDestinoStatus('idle'); return; }
+    setDestinoStatus('searching');
+    if (destinoTimer.current) clearTimeout(destinoTimer.current);
+    destinoTimer.current = setTimeout(async () => {
+      const sugs = await fetchSugs(val);
+      setDestinoSugs(sugs); setDestinoStatus('done');
+    }, 400);
+  }
+
   function handleBuscar() {
     const params = new URLSearchParams();
     if (origen.trim()) params.set('origen', origen.trim());
     if (destino.trim()) params.set('destino', destino.trim());
+    if (origenCoords) { params.set('olat', String(origenCoords.lat)); params.set('olng', String(origenCoords.lng)); }
+    if (destinoCoords) { params.set('dlat', String(destinoCoords.lat)); params.set('dlng', String(destinoCoords.lng)); }
     router.push(`/viajes-disponibles?${params.toString()}`);
   }
 
@@ -427,7 +547,7 @@ export default function LandingPage() {
 
         function draw(){
           if(cancelled)return;
-          t+=.007; ctx.clearRect(0,0,W,H);
+          t+=.001; ctx.clearRect(0,0,W,H);
           const sky=ctx.createLinearGradient(0,0,0,H*.62);
           sky.addColorStop(0,'#060e06');sky.addColorStop(.3,'#0f2010');sky.addColorStop(.65,'#1e3c14');sky.addColorStop(1,'#3a6a20');
           ctx.fillStyle=sky;ctx.fillRect(0,0,W,H*.62);
@@ -474,13 +594,13 @@ export default function LandingPage() {
             ctx.beginPath();ctx.moveTo(px+p.lean*H*.02,fy-22);ctx.lineTo(px-p.lean*H*.02,fy+12);ctx.stroke();
           });
           horses.forEach(h=>{
-            h.phase+=.08;h.x=(h.x+h.spd*h.dir+1)%1.1;
+            h.phase+=.012;h.x=(h.x+h.spd*h.dir+1)%1.1;
             drawHorse(h.x*W,h.y*H,h.sz*(0.55+(h.y-.72)*4),h.dir<0,h.phase);
           });
           [...cattle].sort((a,b)=>a.y-b.y).forEach(cow=>{
             cow.pauseTimer--;
             if(cow.pauseTimer<=0){cow.pause=!cow.pause;cow.pauseTimer=rnd(60,300);if(!cow.pause)cow.dir=Math.random()>.5?1:-1;}
-            if(!cow.pause){cow.x=(cow.x+cow.spd*cow.dir+1.1)%1.1;cow.phase+=.09;}
+            if(!cow.pause){cow.x=(cow.x+cow.spd*cow.dir+1.1)%1.1;cow.phase+=.013;}
             drawCow(cow.x*W,cow.y*H,cow.sz*(0.55+(cow.y-.68)*3.5),cow.dir<0,cow.type,cow.phase);
           });
           dust.forEach(d=>{
@@ -490,7 +610,7 @@ export default function LandingPage() {
             ctx.fillStyle=dg;ctx.beginPath();ctx.arc(d.x*W,d.y*H,d.r,0,Math.PI*2);ctx.fill();
           });
           birds.forEach(b=>{
-            b.x=(b.x+b.spd)%1.1;b.wp+=.1;
+            b.x=(b.x+b.spd)%1.1;b.wp+=.015;
             const bx=b.x*W,by=b.y*H,wing=Math.sin(b.wp)*5*b.sz;
             ctx.strokeStyle='rgba(189,209,138,.28)';ctx.lineWidth=1.2;
             ctx.beginPath();ctx.moveTo(bx-6*b.sz,by+wing);ctx.quadraticCurveTo(bx,by,bx+6*b.sz,by+wing);ctx.stroke();
@@ -560,11 +680,43 @@ export default function LandingPage() {
               <span className="word"><span>destinos.</span></span>
             </h1>
             <p className="hero-sub" id="heroSub">La plataforma que une ganaderos con transportistas de confianza. Simple, seguro y con seguimiento en tiempo real.</p>
-            <div className="widget" id="heroWidget">
+            <div className="widget" id="heroWidget" ref={widgetRef}>
               <div className="w-label">Solicitá un viaje</div>
               <div className="w-fields">
-                <label className="w-row"><div className="w-dot w-o"></div><input type="text" placeholder="¿Desde dónde retiramos el ganado?" value={origen} onChange={e => setOrigen(e.target.value)} /></label>
-                <label className="w-row"><div className="w-dot w-d"></div><input type="text" placeholder="¿A dónde lo llevamos?" value={destino} onChange={e => setDestino(e.target.value)} /></label>
+                <div className="w-sug-wrap">
+                  <label className="w-row">
+                    <div className="w-dot w-o"></div>
+                    <input type="text" placeholder="¿Desde dónde retiramos el ganado?" value={origen}
+                      onChange={e => handleOrigenChange(e.target.value)} autoComplete="off" />
+                  </label>
+                  {origenStatus === 'done' && (
+                    <div className="w-sugs">
+                      {origenSugs.length > 0 ? origenSugs.map((s, i) => (
+                        <div key={i} className="w-sug-item" onClick={() => {
+                          setOrigen(s.label); setOrigenCoords({ lat: s.lat, lng: s.lng });
+                          setOrigenSugs([]); setOrigenStatus('idle');
+                        }}>{s.label}</div>
+                      )) : <div className="w-sug-empty">Sin resultados</div>}
+                    </div>
+                  )}
+                </div>
+                <div className="w-sug-wrap">
+                  <label className="w-row">
+                    <div className="w-dot w-d"></div>
+                    <input type="text" placeholder="¿A dónde lo llevamos?" value={destino}
+                      onChange={e => handleDestinoChange(e.target.value)} autoComplete="off" />
+                  </label>
+                  {destinoStatus === 'done' && (
+                    <div className="w-sugs">
+                      {destinoSugs.length > 0 ? destinoSugs.map((s, i) => (
+                        <div key={i} className="w-sug-item" onClick={() => {
+                          setDestino(s.label); setDestinoCoords({ lat: s.lat, lng: s.lng });
+                          setDestinoSugs([]); setDestinoStatus('idle');
+                        }}>{s.label}</div>
+                      )) : <div className="w-sug-empty">Sin resultados</div>}
+                    </div>
+                  )}
+                </div>
               </div>
               <button className="w-btn" onClick={handleBuscar}>Buscar transportistas disponibles</button>
               <div className="w-note">Sin costo hasta confirmar · Cotización instantánea</div>
