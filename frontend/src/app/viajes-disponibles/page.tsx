@@ -198,7 +198,7 @@ function ViajesContent() {
   const hasFiltro = origen !== '' || destino !== '';
 
   return (
-    <div style={{ minHeight: '100vh', background: '#F6F8F5', fontFamily: "'DM Sans', system-ui, sans-serif" }}>
+    <div style={{ minHeight: '100vh', background: '#F6F8F5', fontFamily: "'DM Sans', system-ui, sans-serif", display: 'flex', flexDirection: 'column' }}>
       <style>{`
         .vd-search input { color: #fff !important; }
         .vd-search input::placeholder { color: rgba(255,255,255,.38) !important; }
@@ -268,7 +268,7 @@ function ViajesContent() {
       </div>
 
       {/* Contenido */}
-      <div className="vd-body" style={{ maxWidth: 900, margin: '0 auto', padding: '32px 32px 80px' }}>
+      <div className="vd-body" style={{ maxWidth: 900, margin: '0 auto', padding: '32px 32px 80px', flex: 1, width: '100%' }}>
         {/* CTA publicar */}
         <div className="vd-cta" style={{
           background: '#fff', border: '1px solid rgba(139,175,78,.25)', borderRadius: 14,
