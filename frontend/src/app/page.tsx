@@ -48,7 +48,7 @@ html{scroll-behavior:smooth}
 .widget{background:rgba(255,255,255,.97);border-radius:20px;padding:22px;box-shadow:0 32px 80px rgba(0,0,0,.6),0 0 0 1px rgba(255,255,255,.06),inset 0 1px 0 rgba(255,255,255,.8);opacity:0;transform:translateY(22px);transition:opacity .8s .8s,transform .8s .8s cubic-bezier(.16,1,.3,1)}
 .widget.in{opacity:1;transform:none}
 .w-label{font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#bbb;margin-bottom:14px}
-.w-fields{background:var(--n);border-radius:12px;overflow:hidden;margin-bottom:12px}
+.w-fields{background:var(--n);border-radius:12px;overflow:visible;margin-bottom:12px}
 .w-row{display:flex;align-items:center;gap:12px;padding:13px 16px;border:none;width:100%;background:transparent;cursor:text;transition:background .15s}
 .w-row:hover{background:rgba(0,0,0,.03)}
 .w-row+.w-row{border-top:1px solid rgba(0,0,0,.07)}
@@ -283,7 +283,7 @@ html{scroll-behavior:smooth}
 .w-sug-wrap{position:relative}
 .w-sug-wrap:first-child .w-row{border-radius:12px 12px 0 0}
 .w-sug-wrap:last-child .w-row{border-radius:0 0 12px 12px}
-.w-sugs{position:absolute;top:calc(100% + 4px);left:0;right:0;background:#182418;border:1px solid rgba(139,175,78,.22);border-radius:10px;overflow-y:auto;z-index:200;box-shadow:0 8px 32px rgba(0,0,0,.5);max-height:260px}
+.w-sugs{position:absolute;top:calc(100% + 4px);left:0;right:0;background:#182418;border:1px solid rgba(139,175,78,.22);border-radius:10px;overflow-y:auto;z-index:9999;box-shadow:0 8px 32px rgba(0,0,0,.5);max-height:260px}
 .w-sug-item{padding:11px 16px;cursor:pointer;transition:background .15s;border-bottom:1px solid rgba(255,255,255,.04)}
 .w-sug-item:last-child{border-bottom:none}
 .w-sug-item:hover,.w-sug-item:active{background:rgba(139,175,78,.18)}
@@ -293,7 +293,7 @@ html{scroll-behavior:smooth}
 .w-sug-spin{display:inline-block;width:12px;height:12px;border:2px solid rgba(255,255,255,.12);border-top-color:#8BAF4E;border-radius:50%;animation:wspin .6s linear infinite;flex-shrink:0}
 @keyframes wspin{to{transform:rotate(360deg)}}
 @media(max-width:640px){
-  .w-sugs{position:fixed;bottom:0;left:0;right:0;top:auto;border-radius:16px 16px 0 0;max-height:55vh;z-index:9999;box-shadow:0 -4px 32px rgba(0,0,0,.6);border:none;border-top:1px solid rgba(139,175,78,.2)}
+  .w-sugs{position:absolute;top:calc(100% + 4px);left:0;right:0;max-height:55vh}
   .w-sug-item{padding:16px 20px}
   .w-sug-main{font-size:15px}
   .w-sug-sub{font-size:13px;margin-top:3px}

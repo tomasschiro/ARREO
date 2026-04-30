@@ -278,7 +278,7 @@ function ViajesContent() {
         .vd-search input { color: #fff !important; }
         .vd-search input::placeholder { color: rgba(255,255,255,.38) !important; }
         .vd-sw { position: relative; flex: 1; min-width: 180px; }
-        .vd-sugs { position: absolute; top: calc(100% + 4px); left: 0; right: 0; background: #182418; border: 1px solid rgba(139,175,78,.22); border-radius: 10px; overflow-y: auto; z-index: 200; box-shadow: 0 8px 32px rgba(0,0,0,.5); max-height: 260px; }
+        .vd-sugs { position: absolute; top: calc(100% + 4px); left: 0; right: 0; background: #182418; border: 1px solid rgba(139,175,78,.22); border-radius: 10px; overflow-y: auto; z-index: 9999; box-shadow: 0 8px 32px rgba(0,0,0,.5); max-height: 260px; }
         .vd-si { padding: 11px 16px; cursor: pointer; transition: background .15s; border-bottom: 1px solid rgba(255,255,255,.04); }
         .vd-si:last-child { border-bottom: none; }
         .vd-si:hover, .vd-si:active { background: rgba(139,175,78,.18); }
@@ -292,7 +292,7 @@ function ViajesContent() {
           .vd-hero h1 { font-size: 22px !important; }
           .vd-search { flex-direction: column !important; }
           .vd-sw { min-width: 0; width: 100%; }
-          .vd-sugs { position: fixed; bottom: 0; left: 0; right: 0; top: auto; border-radius: 16px 16px 0 0; max-height: 55vh; z-index: 9999; box-shadow: 0 -4px 32px rgba(0,0,0,.6); border: none; border-top: 1px solid rgba(139,175,78,.2); }
+          .vd-sugs { position: absolute; top: calc(100% + 4px); left: 0; right: 0; max-height: 55vh; }
           .vd-si { padding: 16px 20px; }
           .vd-sm { font-size: 15px; }
           .vd-ss { font-size: 13px; margin-top: 3px; }
@@ -373,22 +373,24 @@ function ViajesContent() {
               )}
             </div>
 
-            <button type="submit" style={{
-              padding: '12px 24px', borderRadius: 10, border: 'none',
-              background: '#8BAF4E', color: '#fff', fontSize: 14, fontWeight: 700,
-              cursor: 'pointer', fontFamily: 'inherit',
-            }}>
-              Filtrar
-            </button>
-            {hasFiltro && (
-              <button type="button" onClick={handleLimpiar} style={{
-                padding: '12px 16px', borderRadius: 10,
-                border: '1px solid rgba(255,255,255,.2)', background: 'transparent',
-                color: 'rgba(255,255,255,.6)', fontSize: 13, cursor: 'pointer', fontFamily: 'inherit',
+            <div style={{ display: 'flex', gap: 10, width: '100%' }}>
+              <button type="submit" style={{
+                flex: 1, padding: '12px 24px', borderRadius: 10, border: 'none',
+                background: '#8BAF4E', color: '#fff', fontSize: 14, fontWeight: 700,
+                cursor: 'pointer', fontFamily: 'inherit',
               }}>
-                Limpiar
+                Filtrar
               </button>
-            )}
+              {hasFiltro && (
+                <button type="button" onClick={handleLimpiar} style={{
+                  padding: '12px 16px', borderRadius: 10,
+                  border: '1px solid rgba(255,255,255,.2)', background: 'transparent',
+                  color: 'rgba(255,255,255,.6)', fontSize: 13, cursor: 'pointer', fontFamily: 'inherit',
+                }}>
+                  Limpiar
+                </button>
+              )}
+            </div>
           </form>
         </div>
       </div>
