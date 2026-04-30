@@ -195,11 +195,18 @@ export default function DisponibilidadesPage() {
 
   return (
     <div className="app-layout">
+      <style>{`
+        @media (max-width: 768px) {
+          .disp-header { padding: 10px 12px !important; }
+          .disp-filter { padding: 8px 12px !important; }
+          .disp-body   { padding: 12px !important; }
+        }
+      `}</style>
       <AppSidebar/>
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden', marginLeft: 'var(--sidebar-width)' }}>
+      <div className="app-panel" style={{ height: '100vh', overflow: 'hidden' }}>
 
         {/* Header */}
-        <div style={{ background: '#fff', padding: '14px 28px', borderBottom: '1px solid #F0F0F0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
+        <div className="disp-header" style={{ background: '#fff', padding: '14px 28px', borderBottom: '1px solid #F0F0F0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
           <div>
             <div style={{ fontSize: 17, fontWeight: 700, color: '#111' }}>Buscar camiones</div>
             <div style={{ fontSize: 12, color: '#aaa', marginTop: 2 }}>Camiones disponibles para tu hacienda</div>
@@ -210,7 +217,7 @@ export default function DisponibilidadesPage() {
         </div>
 
         {/* Filter bar */}
-        <div style={{ background: '#fff', padding: '12px 28px', borderBottom: '1px solid #F0F0F0', display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
+        <div className="disp-filter" style={{ background: '#fff', padding: '12px 28px', borderBottom: '1px solid #F0F0F0', display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
           <div style={{ position: 'relative', flex: 1, maxWidth: 320 }}>
             <input
               type="text"
@@ -235,7 +242,7 @@ export default function DisponibilidadesPage() {
         </div>
 
         {/* Content */}
-        <div style={{ flex: 1, overflowY: 'auto', background: '#F2F2F0', padding: '20px 28px' }}>
+        <div className="disp-body" style={{ flex: 1, overflowY: 'auto', background: '#F2F2F0', padding: '20px 28px' }}>
           {fetching ? (
             <div style={{ display: 'flex', justifyContent: 'center', padding: '60px 0' }}>
               <div style={{ width: 28, height: 28, border: '3px solid #8BAF4E', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 1s linear infinite' }}/>

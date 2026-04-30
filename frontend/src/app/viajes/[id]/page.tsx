@@ -162,6 +162,17 @@ export default function ViajeDetailPage() {
 
   return (
     <div className="app-layout">
+      <style>{`
+        @media (max-width: 640px) {
+          .vjd-3col { grid-template-columns: 1fr 1fr !important; }
+          .vjd-apply-actions { flex-wrap: wrap !important; }
+          .vjd-apply-actions button, .vjd-apply-actions a { flex: 1 !important; min-width: 0 !important; }
+          .vjd-map { max-height: 220px !important; }
+        }
+        @media (max-width: 420px) {
+          .vjd-3col { grid-template-columns: 1fr !important; }
+        }
+      `}</style>
       <AppSidebar />
 
       <div className="app-content">
@@ -219,10 +230,12 @@ export default function ViajeDetailPage() {
                 <div style={{ padding: '16px 24px', borderBottom: '1px solid var(--color-border)' }}>
                   <h3 style={{ fontSize: 13, fontWeight: 700, color: 'var(--color-text-muted)' }}>Ruta</h3>
                 </div>
-                <MapView
-                  origenLat={viaje.origen_lat} origenLng={viaje.origen_lng}
-                  destinoLat={viaje.destino_lat} destinoLng={viaje.destino_lng}
-                />
+                <div className="vjd-map">
+                  <MapView
+                    origenLat={viaje.origen_lat} origenLng={viaje.origen_lng}
+                    destinoLat={viaje.destino_lat} destinoLng={viaje.destino_lng}
+                  />
+                </div>
                 <div style={{ padding: '12px 24px', display: 'flex', gap: 24, borderTop: '1px solid var(--color-border)' }}>
                   <span style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: 'var(--color-text-muted)' }}>
                     <span style={{ width: 12, height: 12, borderRadius: '50%', backgroundColor: '#8BAF4E', display: 'inline-block' }} /> Origen
@@ -237,7 +250,7 @@ export default function ViajeDetailPage() {
             {/* Detalles */}
             <section className="card">
               <h3 style={{ fontSize: 11, fontWeight: 700, color: 'var(--color-text-muted)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 16 }}>Detalles de la carga</h3>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16 }}>
+              <div className="vjd-3col" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16 }}>
                 {[
                   { label: 'Cabezas',       value: `${viaje.cantidad_cabezas} cab.` },
                   { label: 'Peso promedio', value: viaje.peso_promedio_kg ? `${viaje.peso_promedio_kg} kg` : '—' },
@@ -313,7 +326,7 @@ export default function ViajeDetailPage() {
                           </div>
                           <span className={APLIC_CLS[a.estado]}>{APLIC_LABEL[a.estado]}</span>
                         </div>
-                        <div style={{ display: 'flex', gap: 8, marginTop: 12, paddingTop: 12, borderTop: '1px solid rgba(255,255,255,0.6)' }}>
+                        <div className="vjd-apply-actions" style={{ display: 'flex', gap: 8, marginTop: 12, paddingTop: 12, borderTop: '1px solid rgba(255,255,255,0.6)' }}>
                           <button onClick={() => setPerfilModal(a.transportista_id)}
                             className="btn btn-sm"
                             style={{ border: '2px solid #8BAF4E', color: '#4d6b1a', backgroundColor: 'transparent' }}>
