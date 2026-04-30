@@ -283,13 +283,27 @@ html{scroll-behavior:smooth}
 .w-sug-wrap{position:relative}
 .w-sug-wrap:first-child .w-row{border-radius:12px 12px 0 0}
 .w-sug-wrap:last-child .w-row{border-radius:0 0 12px 12px}
-.w-sugs{position:absolute;top:calc(100% + 4px);left:0;right:0;background:#182418;border:1px solid rgba(139,175,78,.22);border-radius:10px;overflow-y:auto;z-index:200;box-shadow:0 8px 32px rgba(0,0,0,.5);max-height:220px}
-.w-sug-item{padding:10px 16px;font-size:13px;color:rgba(255,255,255,.8);cursor:pointer;transition:background .15s;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.w-sug-item:hover{background:rgba(139,175,78,.18);color:#fff}
-.w-sug-empty{padding:10px 16px;font-size:13px;color:rgba(255,255,255,.4);font-style:italic}
+.w-sugs{position:absolute;top:calc(100% + 4px);left:0;right:0;background:#182418;border:1px solid rgba(139,175,78,.22);border-radius:10px;overflow-y:auto;z-index:200;box-shadow:0 8px 32px rgba(0,0,0,.5);max-height:260px}
+.w-sug-item{padding:11px 16px;cursor:pointer;transition:background .15s;border-bottom:1px solid rgba(255,255,255,.04)}
+.w-sug-item:last-child{border-bottom:none}
+.w-sug-item:hover,.w-sug-item:active{background:rgba(139,175,78,.18)}
+.w-sug-main{font-size:13px;font-weight:600;color:rgba(255,255,255,.88);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.w-sug-sub{font-size:11px;color:rgba(255,255,255,.38);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.w-sug-empty{padding:12px 16px;font-size:13px;color:rgba(255,255,255,.4);display:flex;align-items:center;gap:8px}
+.w-sug-spin{display:inline-block;width:12px;height:12px;border:2px solid rgba(255,255,255,.12);border-top-color:#8BAF4E;border-radius:50%;animation:wspin .6s linear infinite;flex-shrink:0}
+@keyframes wspin{to{transform:rotate(360deg)}}
+@media(max-width:640px){
+  .w-sugs{position:fixed;bottom:0;left:0;right:0;top:auto;border-radius:16px 16px 0 0;max-height:55vh;z-index:9999;box-shadow:0 -4px 32px rgba(0,0,0,.6);border:none;border-top:1px solid rgba(139,175,78,.2)}
+  .w-sug-item{padding:16px 20px}
+  .w-sug-main{font-size:15px}
+  .w-sug-sub{font-size:13px;margin-top:3px}
+  .w-sug-empty{padding:14px 20px;font-size:14px}
+}
 `;
 
 const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api';
+
+const _nomCache = new Map<string, { label: string; lat: number; lng: number }[]>();
 
 export default function LandingPage() {
   const router = useRouter();
@@ -306,6 +320,8 @@ export default function LandingPage() {
   const origenTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const destinoTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const widgetRef = useRef<HTMLDivElement>(null);
+  const origenInputRef = useRef<HTMLInputElement>(null);
+  const destinoInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -348,36 +364,46 @@ export default function LandingPage() {
   }, []);
 
   async function fetchSugs(q: string): Promise<Sug[]> {
+    const key = q.toLowerCase().trim();
+    const hit = _nomCache.get(key);
+    if (hit) return hit;
     try {
       const res = await fetch(
-        `https://nominatim.openstreetmap.org/search?format=json&limit=5&countrycodes=ar&q=${encodeURIComponent(q)}`,
+        `https://nominatim.openstreetmap.org/search?format=json&limit=5&countrycodes=ar&addressdetails=0&q=${encodeURIComponent(q)}`,
         { headers: { 'Accept-Language': 'es' } }
       );
       const data: { display_name: string; lat: string; lon: string }[] = await res.json();
-      return data.map(d => ({ label: d.display_name, lat: +d.lat, lng: +d.lon }));
+      const result = data.map(d => ({ label: d.display_name, lat: +d.lat, lng: +d.lon }));
+      if (_nomCache.size >= 20) { const k = _nomCache.keys().next().value; if (k) _nomCache.delete(k); }
+      _nomCache.set(key, result);
+      return result;
     } catch { return []; }
   }
 
   function handleOrigenChange(val: string) {
     setOrigen(val); setOrigenCoords(null); setOrigenSugs([]);
-    if (val.length < 3) { setOrigenStatus('idle'); return; }
+    if (val.length < 2) { setOrigenStatus('idle'); return; }
+    const cached = _nomCache.get(val.toLowerCase().trim());
+    if (cached) { setOrigenSugs(cached); setOrigenStatus('done'); return; }
     setOrigenStatus('searching');
     if (origenTimer.current) clearTimeout(origenTimer.current);
     origenTimer.current = setTimeout(async () => {
       const sugs = await fetchSugs(val);
       setOrigenSugs(sugs); setOrigenStatus('done');
-    }, 400);
+    }, 100);
   }
 
   function handleDestinoChange(val: string) {
     setDestino(val); setDestinoCoords(null); setDestinoSugs([]);
-    if (val.length < 3) { setDestinoStatus('idle'); return; }
+    if (val.length < 2) { setDestinoStatus('idle'); return; }
+    const cached = _nomCache.get(val.toLowerCase().trim());
+    if (cached) { setDestinoSugs(cached); setDestinoStatus('done'); return; }
     setDestinoStatus('searching');
     if (destinoTimer.current) clearTimeout(destinoTimer.current);
     destinoTimer.current = setTimeout(async () => {
       const sugs = await fetchSugs(val);
       setDestinoSugs(sugs); setDestinoStatus('done');
-    }, 400);
+    }, 100);
   }
 
   function handleBuscar() {
@@ -686,34 +712,52 @@ export default function LandingPage() {
                 <div className="w-sug-wrap">
                   <label className="w-row">
                     <div className="w-dot w-o"></div>
-                    <input type="text" placeholder="¿Desde dónde retiramos el ganado?" value={origen}
+                    <input ref={origenInputRef} type="text" placeholder="¿Desde dónde retiramos el ganado?" value={origen}
                       onChange={e => handleOrigenChange(e.target.value)} autoComplete="off" />
                   </label>
-                  {origenStatus === 'done' && (
+                  {(origenStatus === 'searching' || origenStatus === 'done') && (
                     <div className="w-sugs">
-                      {origenSugs.length > 0 ? origenSugs.map((s, i) => (
-                        <div key={i} className="w-sug-item" onClick={() => {
-                          setOrigen(s.label); setOrigenCoords({ lat: s.lat, lng: s.lng });
-                          setOrigenSugs([]); setOrigenStatus('idle');
-                        }}>{s.label}</div>
-                      )) : <div className="w-sug-empty">Sin resultados</div>}
+                      {origenStatus === 'searching' ? (
+                        <div className="w-sug-empty"><span className="w-sug-spin" />Buscando...</div>
+                      ) : origenSugs.length > 0 ? origenSugs.map((s, i) => {
+                        const parts = s.label.split(', ').filter(p => p !== 'Argentina');
+                        return (
+                          <div key={i} className="w-sug-item" onClick={() => {
+                            setOrigen(s.label); setOrigenCoords({ lat: s.lat, lng: s.lng });
+                            setOrigenSugs([]); setOrigenStatus('idle');
+                            origenInputRef.current?.blur();
+                          }}>
+                            <div className="w-sug-main">{parts[0] ?? s.label}</div>
+                            {parts.length > 1 && <div className="w-sug-sub">{parts.slice(1).join(', ')}</div>}
+                          </div>
+                        );
+                      }) : <div className="w-sug-empty">Sin resultados</div>}
                     </div>
                   )}
                 </div>
                 <div className="w-sug-wrap">
                   <label className="w-row">
                     <div className="w-dot w-d"></div>
-                    <input type="text" placeholder="¿A dónde lo llevamos?" value={destino}
+                    <input ref={destinoInputRef} type="text" placeholder="¿A dónde lo llevamos?" value={destino}
                       onChange={e => handleDestinoChange(e.target.value)} autoComplete="off" />
                   </label>
-                  {destinoStatus === 'done' && (
+                  {(destinoStatus === 'searching' || destinoStatus === 'done') && (
                     <div className="w-sugs">
-                      {destinoSugs.length > 0 ? destinoSugs.map((s, i) => (
-                        <div key={i} className="w-sug-item" onClick={() => {
-                          setDestino(s.label); setDestinoCoords({ lat: s.lat, lng: s.lng });
-                          setDestinoSugs([]); setDestinoStatus('idle');
-                        }}>{s.label}</div>
-                      )) : <div className="w-sug-empty">Sin resultados</div>}
+                      {destinoStatus === 'searching' ? (
+                        <div className="w-sug-empty"><span className="w-sug-spin" />Buscando...</div>
+                      ) : destinoSugs.length > 0 ? destinoSugs.map((s, i) => {
+                        const parts = s.label.split(', ').filter(p => p !== 'Argentina');
+                        return (
+                          <div key={i} className="w-sug-item" onClick={() => {
+                            setDestino(s.label); setDestinoCoords({ lat: s.lat, lng: s.lng });
+                            setDestinoSugs([]); setDestinoStatus('idle');
+                            destinoInputRef.current?.blur();
+                          }}>
+                            <div className="w-sug-main">{parts[0] ?? s.label}</div>
+                            {parts.length > 1 && <div className="w-sug-sub">{parts.slice(1).join(', ')}</div>}
+                          </div>
+                        );
+                      }) : <div className="w-sug-empty">Sin resultados</div>}
                     </div>
                   )}
                 </div>

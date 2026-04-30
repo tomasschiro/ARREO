@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, Suspense } from 'react';
+import { useEffect, useState, useRef, Suspense } from 'react';
 import Link from 'next/link';
 import { useSearchParams, useRouter } from 'next/navigation';
 
@@ -18,7 +18,31 @@ type Viaje = {
   zona_publicante: string | null;
 };
 
+type VDSug = { label: string; main: string; sub: string; lat: number; lng: number };
+
 const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api';
+
+const _vdCache = new Map<string, VDSug[]>();
+
+async function fetchVDNominatim(q: string): Promise<VDSug[]> {
+  const key = q.toLowerCase().trim();
+  const hit = _vdCache.get(key);
+  if (hit) return hit;
+  try {
+    const res = await fetch(
+      `https://nominatim.openstreetmap.org/search?format=json&limit=5&countrycodes=ar&addressdetails=0&q=${encodeURIComponent(q)}`,
+      { headers: { 'Accept-Language': 'es' } }
+    );
+    const data: { display_name: string; lat: string; lon: string }[] = await res.json();
+    const result = data.map(d => {
+      const parts = d.display_name.split(', ').filter(p => p !== 'Argentina');
+      return { label: d.display_name, main: parts[0] ?? d.display_name, sub: parts.slice(1).join(', '), lat: +d.lat, lng: +d.lon };
+    });
+    if (_vdCache.size >= 20) { const k = _vdCache.keys().next().value; if (k) _vdCache.delete(k); }
+    _vdCache.set(key, result);
+    return result;
+  } catch { return []; }
+}
 
 function fmt(s: string) {
   return new Date(s).toLocaleDateString('es-AR', { day: '2-digit', month: 'short', year: 'numeric' });
@@ -82,7 +106,6 @@ function ViajeCard({ v }: { v: Viaje }) {
       padding: '22px 24px', display: 'flex', flexDirection: 'column', gap: 14,
       boxShadow: '0 2px 12px rgba(0,0,0,.06)',
     }}>
-      {/* Route + status */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -105,7 +128,6 @@ function ViajeCard({ v }: { v: Viaje }) {
         </span>
       </div>
 
-      {/* Chips */}
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
         <Chip>📅 {fmt(v.fecha_salida)}</Chip>
         <Chip>🐄 {v.tipo_hacienda}</Chip>
@@ -116,7 +138,6 @@ function ViajeCard({ v }: { v: Viaje }) {
         {v.zona_publicante && <Chip color="#3a6e8a" bg="rgba(58,110,138,.09)">📍 {v.zona_publicante}</Chip>}
       </div>
 
-      {/* CTA */}
       <Link href="/register" style={{
         display: 'block', textAlign: 'center', padding: '12px', borderRadius: 10,
         background: '#E07A34', color: '#fff', fontSize: 14, fontWeight: 700, textDecoration: 'none',
@@ -152,9 +173,29 @@ function ViajesContent() {
   const [loading, setLoading] = useState(true);
   const [origen, setOrigen] = useState(searchParams.get('origen') ?? '');
   const [destino, setDestino] = useState(searchParams.get('destino') ?? '');
+  const [origenSugs, setOrigenSugs] = useState<VDSug[]>([]);
+  const [destinoSugs, setDestinoSugs] = useState<VDSug[]>([]);
+  const [origenStatus, setOrigenStatus] = useState<'idle' | 'searching' | 'done'>('idle');
+  const [destinoStatus, setDestinoStatus] = useState<'idle' | 'searching' | 'done'>('idle');
+  const origenTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const destinoTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const origenInputRef = useRef<HTMLInputElement>(null);
+  const destinoInputRef = useRef<HTMLInputElement>(null);
+  const formRef = useRef<HTMLFormElement>(null);
 
   useEffect(() => {
     setHasToken(!!localStorage.getItem('token'));
+  }, []);
+
+  useEffect(() => {
+    function onDown(e: MouseEvent) {
+      if (formRef.current && !formRef.current.contains(e.target as Node)) {
+        setOrigenSugs([]); setDestinoSugs([]);
+        setOrigenStatus('idle'); setDestinoStatus('idle');
+      }
+    }
+    document.addEventListener('mousedown', onDown);
+    return () => document.removeEventListener('mousedown', onDown);
   }, []);
 
   async function fetchViajes(o: string, d: string) {
@@ -179,6 +220,32 @@ function ViajesContent() {
     fetchViajes(searchParams.get('origen') ?? '', searchParams.get('destino') ?? '');
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
+  function handleOrigenChange(val: string) {
+    setOrigen(val); setOrigenSugs([]);
+    if (val.length < 2) { setOrigenStatus('idle'); return; }
+    const cached = _vdCache.get(val.toLowerCase().trim());
+    if (cached) { setOrigenSugs(cached); setOrigenStatus('done'); return; }
+    setOrigenStatus('searching');
+    if (origenTimer.current) clearTimeout(origenTimer.current);
+    origenTimer.current = setTimeout(async () => {
+      const sugs = await fetchVDNominatim(val);
+      setOrigenSugs(sugs); setOrigenStatus('done');
+    }, 100);
+  }
+
+  function handleDestinoChange(val: string) {
+    setDestino(val); setDestinoSugs([]);
+    if (val.length < 2) { setDestinoStatus('idle'); return; }
+    const cached = _vdCache.get(val.toLowerCase().trim());
+    if (cached) { setDestinoSugs(cached); setDestinoStatus('done'); return; }
+    setDestinoStatus('searching');
+    if (destinoTimer.current) clearTimeout(destinoTimer.current);
+    destinoTimer.current = setTimeout(async () => {
+      const sugs = await fetchVDNominatim(val);
+      setDestinoSugs(sugs); setDestinoStatus('done');
+    }, 100);
+  }
+
   function handleBuscar(e: React.FormEvent) {
     e.preventDefault();
     fetchViajes(origen, destino);
@@ -191,21 +258,45 @@ function ViajesContent() {
   function handleLimpiar() {
     setOrigen('');
     setDestino('');
+    setOrigenSugs([]); setDestinoSugs([]);
+    setOrigenStatus('idle'); setDestinoStatus('idle');
     fetchViajes('', '');
     router.replace('/viajes-disponibles');
   }
 
   const hasFiltro = origen !== '' || destino !== '';
 
+  const inputStyle: React.CSSProperties = {
+    width: '100%', padding: '12px 16px', borderRadius: 10,
+    border: 'none', background: 'rgba(255,255,255,.1)', color: '#fff',
+    fontSize: 14, fontFamily: 'inherit', outline: 'none',
+  };
+
   return (
     <div style={{ minHeight: '100vh', background: '#F6F8F5', fontFamily: "'DM Sans', system-ui, sans-serif", display: 'flex', flexDirection: 'column' }}>
       <style>{`
         .vd-search input { color: #fff !important; }
         .vd-search input::placeholder { color: rgba(255,255,255,.38) !important; }
+        .vd-sw { position: relative; flex: 1; min-width: 180px; }
+        .vd-sugs { position: absolute; top: calc(100% + 4px); left: 0; right: 0; background: #182418; border: 1px solid rgba(139,175,78,.22); border-radius: 10px; overflow-y: auto; z-index: 200; box-shadow: 0 8px 32px rgba(0,0,0,.5); max-height: 260px; }
+        .vd-si { padding: 11px 16px; cursor: pointer; transition: background .15s; border-bottom: 1px solid rgba(255,255,255,.04); }
+        .vd-si:last-child { border-bottom: none; }
+        .vd-si:hover, .vd-si:active { background: rgba(139,175,78,.18); }
+        .vd-sm { font-size: 13px; font-weight: 600; color: rgba(255,255,255,.88); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .vd-ss { font-size: 11px; color: rgba(255,255,255,.38); margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .vd-se { padding: 12px 16px; font-size: 13px; color: rgba(255,255,255,.4); display: flex; align-items: center; gap: 8px; }
+        .vd-spin { display: inline-block; width: 12px; height: 12px; border: 2px solid rgba(255,255,255,.12); border-top-color: #8BAF4E; border-radius: 50%; animation: vdspin .6s linear infinite; flex-shrink: 0; }
+        @keyframes vdspin { to { transform: rotate(360deg); } }
         @media (max-width: 640px) {
           .vd-hero { padding: 24px 16px 20px !important; }
           .vd-hero h1 { font-size: 22px !important; }
           .vd-search { flex-direction: column !important; }
+          .vd-sw { min-width: 0; width: 100%; }
+          .vd-sugs { position: fixed; bottom: 0; left: 0; right: 0; top: auto; border-radius: 16px 16px 0 0; max-height: 55vh; z-index: 9999; box-shadow: 0 -4px 32px rgba(0,0,0,.6); border: none; border-top: 1px solid rgba(139,175,78,.2); }
+          .vd-si { padding: 16px 20px; }
+          .vd-sm { font-size: 15px; }
+          .vd-ss { font-size: 13px; margin-top: 3px; }
+          .vd-se { padding: 14px 20px; font-size: 14px; }
           .vd-body { padding: 16px 14px 60px !important; }
           .vd-cta { flex-direction: column !important; gap: 10px !important; }
           .vd-cta a { width: 100% !important; text-align: center !important; }
@@ -224,29 +315,64 @@ function ViajesContent() {
           <p style={{ color: 'rgba(255,255,255,.45)', fontSize: 15, marginBottom: 28 }}>
             Encontrá viajes de hacienda y aplicá con tu camión.
           </p>
-          <form onSubmit={handleBuscar} className="vd-search" style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-            <input
-              type="text"
-              placeholder="Origen..."
-              value={origen}
-              onChange={e => setOrigen(e.target.value)}
-              style={{
-                flex: 1, minWidth: 180, padding: '12px 16px', borderRadius: 10,
-                border: 'none', background: 'rgba(255,255,255,.1)', color: '#fff',
-                fontSize: 14, fontFamily: 'inherit', outline: 'none',
-              }}
-            />
-            <input
-              type="text"
-              placeholder="Destino..."
-              value={destino}
-              onChange={e => setDestino(e.target.value)}
-              style={{
-                flex: 1, minWidth: 180, padding: '12px 16px', borderRadius: 10,
-                border: 'none', background: 'rgba(255,255,255,.1)', color: '#fff',
-                fontSize: 14, fontFamily: 'inherit', outline: 'none',
-              }}
-            />
+          <form ref={formRef} onSubmit={handleBuscar} className="vd-search" style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+
+            {/* Origen */}
+            <div className="vd-sw">
+              <input
+                ref={origenInputRef}
+                type="text"
+                placeholder="Origen..."
+                value={origen}
+                onChange={e => handleOrigenChange(e.target.value)}
+                autoComplete="off"
+                style={inputStyle}
+              />
+              {(origenStatus === 'searching' || origenStatus === 'done') && (
+                <div className="vd-sugs">
+                  {origenStatus === 'searching' ? (
+                    <div className="vd-se"><span className="vd-spin" />Buscando...</div>
+                  ) : origenSugs.length > 0 ? origenSugs.map((s, i) => (
+                    <div key={i} className="vd-si" onClick={() => {
+                      setOrigen(s.main); setOrigenSugs([]); setOrigenStatus('idle');
+                      origenInputRef.current?.blur();
+                    }}>
+                      <div className="vd-sm">{s.main}</div>
+                      {s.sub && <div className="vd-ss">{s.sub}</div>}
+                    </div>
+                  )) : <div className="vd-se">Sin resultados</div>}
+                </div>
+              )}
+            </div>
+
+            {/* Destino */}
+            <div className="vd-sw">
+              <input
+                ref={destinoInputRef}
+                type="text"
+                placeholder="Destino..."
+                value={destino}
+                onChange={e => handleDestinoChange(e.target.value)}
+                autoComplete="off"
+                style={inputStyle}
+              />
+              {(destinoStatus === 'searching' || destinoStatus === 'done') && (
+                <div className="vd-sugs">
+                  {destinoStatus === 'searching' ? (
+                    <div className="vd-se"><span className="vd-spin" />Buscando...</div>
+                  ) : destinoSugs.length > 0 ? destinoSugs.map((s, i) => (
+                    <div key={i} className="vd-si" onClick={() => {
+                      setDestino(s.main); setDestinoSugs([]); setDestinoStatus('idle');
+                      destinoInputRef.current?.blur();
+                    }}>
+                      <div className="vd-sm">{s.main}</div>
+                      {s.sub && <div className="vd-ss">{s.sub}</div>}
+                    </div>
+                  )) : <div className="vd-se">Sin resultados</div>}
+                </div>
+              )}
+            </div>
+
             <button type="submit" style={{
               padding: '12px 24px', borderRadius: 10, border: 'none',
               background: '#8BAF4E', color: '#fff', fontSize: 14, fontWeight: 700,
