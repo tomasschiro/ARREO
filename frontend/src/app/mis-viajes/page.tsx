@@ -71,6 +71,9 @@ interface Aplicacion {
   peso_total_kg?: number; tipo_jaula?: string;
   estado_viaje: string; publicado_por: string;
   created_at: string;
+  dte_numero?: string;
+  guia_provincial_numero?: string;
+  documentacion_cargada?: boolean;
 }
 
 interface MiDisponibilidad {
@@ -305,6 +308,30 @@ function DetailModal({ aplic, onClose }: { aplic: Aplicacion; onClose: () => voi
               </div>
             ))}
           </div>
+          {/* Documentación de ruta */}
+          {aplic.estado === 'aceptada' && (
+            <div style={{ marginBottom: 16 }}>
+              <div style={{ height: 1, background: '#F0F0F0', marginBottom: 16 }}/>
+              <div style={{ fontSize: 11, fontWeight: 700, color: '#aaa', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: 10 }}>Documentación de ruta</div>
+              {aplic.documentacion_cargada ? (
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                  <div style={{ background: '#F6F8F5', borderRadius: 10, padding: '12px 16px' }}>
+                    <div style={{ fontSize: 10, color: '#aaa', marginBottom: 4, fontWeight: 600 }}>NÚMERO DTE</div>
+                    <div style={{ fontSize: 18, fontWeight: 800, color: '#1F2B1F', letterSpacing: '.02em' }}>{aplic.dte_numero}</div>
+                  </div>
+                  <div style={{ background: '#F6F8F5', borderRadius: 10, padding: '12px 16px' }}>
+                    <div style={{ fontSize: 10, color: '#aaa', marginBottom: 4, fontWeight: 600 }}>GUÍA PROVINCIAL</div>
+                    <div style={{ fontSize: 18, fontWeight: 800, color: '#1F2B1F', letterSpacing: '.02em' }}>{aplic.guia_provincial_numero}</div>
+                  </div>
+                </div>
+              ) : (
+                <div style={{ background: 'rgba(224,122,52,.07)', border: '1px solid rgba(224,122,52,.2)', borderRadius: 10, padding: '12px 16px' }}>
+                  <p style={{ fontSize: 13, color: '#9a5225', fontWeight: 600 }}>⏳ El productor aún no cargó la documentación</p>
+                  <p style={{ fontSize: 12, color: '#9a5225', marginTop: 2 }}>El DTE y la Guía Provincial aparecerán aquí una vez que el productor los ingrese.</p>
+                </div>
+              )}
+            </div>
+          )}
           <button onClick={onClose} style={{ width: '100%', background: '#1F2B1F', border: 'none', color: '#fff', borderRadius: 8, padding: '11px', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
             Cerrar
           </button>

@@ -23,6 +23,9 @@ router.post('/register', async (req, res) => {
     nombre, email, password, rol, zona, telefono, cuit_cuil,
     patente, marca_camion, modelo_camion, año_camion, tipo_remolque, capacidad_kg,
     foto_dni_frente, foto_dni_dorso, foto_licencia, foto_camion,
+    foto_linti, foto_seguro, foto_senasa, foto_vtv,
+    declaracion_jurada,
+    renspa,
   } = req.body;
 
   if (!nombre || !email || !password || !rol) {
@@ -40,6 +43,10 @@ router.post('/register', async (req, res) => {
 
   const isTransportista = rol === 'transportista';
 
+  if (isTransportista && !declaracion_jurada) {
+    return res.status(400).json({ error: 'Debés aceptar la declaración jurada para completar el registro' });
+  }
+
   try {
     const existe = await pool.query('SELECT id FROM usuarios WHERE email = $1', [email]);
     if (existe.rows.length > 0) {
@@ -52,9 +59,12 @@ router.post('/register', async (req, res) => {
       `INSERT INTO usuarios (
          nombre, email, password_hash, rol, estado, zona, telefono, cuit_cuil,
          patente, marca_camion, modelo_camion, año_camion, tipo_remolque, capacidad_kg,
-         foto_dni_frente, foto_dni_dorso, foto_licencia, foto_camion
+         foto_dni_frente, foto_dni_dorso, foto_licencia, foto_camion,
+         foto_linti, foto_seguro, foto_senasa, foto_vtv,
+         declaracion_jurada, declaracion_jurada_fecha,
+         renspa
        )
-       VALUES ($1,$2,$3,$4,'pendiente',$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17)
+       VALUES ($1,$2,$3,$4,'pendiente',$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24)
        RETURNING ${CAMPOS_USUARIO}`,
       [
         nombre, email, password_hash, rol,
@@ -69,6 +79,13 @@ router.post('/register', async (req, res) => {
         isTransportista ? (foto_dni_dorso || null) : null,
         isTransportista ? (foto_licencia || null) : null,
         isTransportista ? (foto_camion || null) : null,
+        isTransportista ? (foto_linti || null) : null,
+        isTransportista ? (foto_seguro || null) : null,
+        isTransportista ? (foto_senasa || null) : null,
+        isTransportista ? (foto_vtv || null) : null,
+        isTransportista ? (declaracion_jurada === true) : false,
+        isTransportista && declaracion_jurada ? new Date() : null,
+        (!isTransportista) ? (renspa || null) : null,
       ]
     );
 

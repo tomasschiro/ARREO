@@ -182,6 +182,8 @@ function ViajesContent() {
   const origenInputRef = useRef<HTMLInputElement>(null);
   const destinoInputRef = useRef<HTMLInputElement>(null);
   const formRef = useRef<HTMLFormElement>(null);
+  const [origenGps, setOrigenGps] = useState(false);
+  const [destinoGps, setDestinoGps] = useState(false);
 
   useEffect(() => {
     setHasToken(!!localStorage.getItem('token'));
@@ -244,6 +246,28 @@ function ViajesContent() {
       const sugs = await fetchVDNominatim(val);
       setDestinoSugs(sugs); setDestinoStatus('done');
     }, 100);
+  }
+
+  async function reverseGeocodeVD(lat: number, lng: number): Promise<string> {
+    try {
+      const res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`, { headers: { 'Accept-Language': 'es' } });
+      const data = await res.json();
+      const parts = (data.display_name ?? '').split(', ').filter((p: string) => p !== 'Argentina');
+      return parts[0] ?? data.display_name ?? `${lat.toFixed(5)}, ${lng.toFixed(5)}`;
+    } catch { return `${lat.toFixed(5)}, ${lng.toFixed(5)}`; }
+  }
+
+  function useGPSField(setVal: (v: string) => void, setGpsLoading: (v: boolean) => void) {
+    if (!navigator.geolocation) return;
+    setGpsLoading(true);
+    navigator.geolocation.getCurrentPosition(
+      async ({ coords }) => {
+        const locality = await reverseGeocodeVD(coords.latitude, coords.longitude);
+        setVal(locality);
+        setGpsLoading(false);
+      },
+      () => setGpsLoading(false)
+    );
   }
 
   function handleBuscar(e: React.FormEvent) {
@@ -319,15 +343,21 @@ function ViajesContent() {
 
             {/* Origen */}
             <div className="vd-sw">
-              <input
-                ref={origenInputRef}
-                type="text"
-                placeholder="Origen..."
-                value={origen}
-                onChange={e => handleOrigenChange(e.target.value)}
-                autoComplete="off"
-                style={inputStyle}
-              />
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                <input
+                  ref={origenInputRef}
+                  type="text"
+                  placeholder="Origen..."
+                  value={origen}
+                  onChange={e => handleOrigenChange(e.target.value)}
+                  autoComplete="off"
+                  style={{ ...inputStyle, flex: 1 }}
+                />
+                <button type="button" title="Usar mi ubicación" disabled={origenGps} onClick={() => useGPSField(setOrigen, setOrigenGps)}
+                  style={{ flexShrink: 0, minWidth: 44, height: 44, display: 'flex', alignItems: 'center', justifyContent: 'center', border: 'none', background: 'rgba(255,255,255,.12)', borderRadius: 10, cursor: origenGps ? 'not-allowed' : 'pointer', opacity: origenGps ? .5 : 1, fontSize: 18 }}>
+                  {origenGps ? <span style={{ width: 14, height: 14, border: '2px solid rgba(139,175,78,.3)', borderTopColor: '#8BAF4E', borderRadius: '50%', display: 'inline-block', animation: 'vdspin .6s linear infinite' }}/> : '📍'}
+                </button>
+              </div>
               {(origenStatus === 'searching' || origenStatus === 'done') && (
                 <div className="vd-sugs">
                   {origenStatus === 'searching' ? (
@@ -347,15 +377,21 @@ function ViajesContent() {
 
             {/* Destino */}
             <div className="vd-sw">
-              <input
-                ref={destinoInputRef}
-                type="text"
-                placeholder="Destino..."
-                value={destino}
-                onChange={e => handleDestinoChange(e.target.value)}
-                autoComplete="off"
-                style={inputStyle}
-              />
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                <input
+                  ref={destinoInputRef}
+                  type="text"
+                  placeholder="Destino..."
+                  value={destino}
+                  onChange={e => handleDestinoChange(e.target.value)}
+                  autoComplete="off"
+                  style={{ ...inputStyle, flex: 1 }}
+                />
+                <button type="button" title="Usar mi ubicación" disabled={destinoGps} onClick={() => useGPSField(setDestino, setDestinoGps)}
+                  style={{ flexShrink: 0, minWidth: 44, height: 44, display: 'flex', alignItems: 'center', justifyContent: 'center', border: 'none', background: 'rgba(255,255,255,.12)', borderRadius: 10, cursor: destinoGps ? 'not-allowed' : 'pointer', opacity: destinoGps ? .5 : 1, fontSize: 18 }}>
+                  {destinoGps ? <span style={{ width: 14, height: 14, border: '2px solid rgba(139,175,78,.3)', borderTopColor: '#8BAF4E', borderRadius: '50%', display: 'inline-block', animation: 'vdspin .6s linear infinite' }}/> : '📍'}
+                </button>
+              </div>
               {(destinoStatus === 'searching' || destinoStatus === 'done') && (
                 <div className="vd-sugs">
                   {destinoStatus === 'searching' ? (

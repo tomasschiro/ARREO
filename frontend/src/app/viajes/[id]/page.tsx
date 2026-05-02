@@ -25,6 +25,9 @@ interface Viaje {
   estado: 'disponible' | 'con_ofertas' | 'completo';
   publicado_por: string; zona_publicante: string;
   usuario_id: number;
+  dte_numero?: string;
+  guia_provincial_numero?: string;
+  documentacion_cargada?: boolean;
 }
 
 interface Aplicacion {
@@ -38,6 +41,7 @@ interface Aplicacion {
   capacidad_kg?: number;
   puntuacion_promedio?: number;
   cantidad_reseñas?: number;
+  transportista_estado?: string;
 }
 
 const ESTADO_CLS: Record<string, string> = {
@@ -93,6 +97,10 @@ export default function ViajeDetailPage() {
   const [gestionando,  setGestionando]  = useState<number | null>(null);
   const [perfilModal,  setPerfilModal]  = useState<number | null>(null);
   const [toast,        setToast]        = useState<{ message: string; type: 'success' | 'error' } | null>(null);
+  const [docModal,     setDocModal]     = useState(false);
+  const [dteNum,       setDteNum]       = useState('');
+  const [guiaNum,      setGuiaNum]      = useState('');
+  const [savingDoc,    setSavingDoc]    = useState(false);
 
   useEffect(() => {
     if (!authLoading && !user) router.push('/login');
@@ -114,6 +122,22 @@ export default function ViajeDetailPage() {
   }, [id, user, router]);
 
   useEffect(() => { if (user) load(); }, [user, load]);
+
+  async function handleGuardarDoc() {
+    if (!dteNum.trim() || !guiaNum.trim()) return;
+    setSavingDoc(true);
+    try {
+      const { data } = await api.put(`/viajes/${id}/documentacion`, { dte_numero: dteNum.trim(), guia_provincial_numero: guiaNum.trim() });
+      setViaje(prev => prev ? { ...prev, ...data.viaje } : prev);
+      setDocModal(false);
+      setToast({ message: 'Documentación guardada', type: 'success' });
+    } catch (err: unknown) {
+      const msg = (err as { response?: { data?: { error?: string } } })?.response?.data?.error;
+      setToast({ message: msg || 'Error al guardar', type: 'error' });
+    } finally {
+      setSavingDoc(false);
+    }
+  }
 
   async function handleAplicar() {
     setAplicando(true);
@@ -306,7 +330,14 @@ export default function ViajeDetailPage() {
                               {a.transportista_nombre[0]}
                             </div>
                             <div style={{ minWidth: 0 }}>
-                              <p style={{ fontSize: 14, fontWeight: 700 }}>{a.transportista_nombre}</p>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                                <p style={{ fontSize: 14, fontWeight: 700 }}>{a.transportista_nombre}</p>
+                                {a.transportista_estado === 'aprobado' ? (
+                                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 11, fontWeight: 600, color: '#4d6b1a', background: 'rgba(139,175,78,.15)', padding: '2px 8px', borderRadius: 5 }}>✓ Verificado</span>
+                                ) : (
+                                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 11, fontWeight: 600, color: '#7a5a00', background: 'rgba(224,180,52,.15)', padding: '2px 8px', borderRadius: 5 }}>⏳ Verificación pendiente</span>
+                                )}
+                              </div>
                               <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginTop: 2 }}>
                                 {a.tipo_remolque && a.tipo_remolque.split(',').map(t => t.trim()).filter(Boolean).map(t => (
                                   <span key={t} className={TIPO_JAULA_CLS[t] ?? 'badge badge-neutral'} style={{ fontSize: 11 }}>🚛 {t}</span>
@@ -358,6 +389,40 @@ export default function ViajeDetailPage() {
               </section>
             )}
 
+            {/* Documentación — solo el dueño cuando está completo */}
+            {isOwner && viaje.estado === 'completo' && (
+              <section className="card">
+                <h3 style={{ fontSize: 11, fontWeight: 700, color: 'var(--color-text-muted)', textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 12 }}>
+                  Documentación del viaje
+                </h3>
+                {viaje.documentacion_cargada ? (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                      <div style={{ background: '#F6F8F5', borderRadius: 10, padding: '12px 16px' }}>
+                        <div style={{ fontSize: 10, color: '#aaa', marginBottom: 4, fontWeight: 600 }}>NÚMERO DTE</div>
+                        <div style={{ fontSize: 18, fontWeight: 800, color: '#1F2B1F', letterSpacing: '.02em' }}>{viaje.dte_numero}</div>
+                      </div>
+                      <div style={{ background: '#F6F8F5', borderRadius: 10, padding: '12px 16px' }}>
+                        <div style={{ fontSize: 10, color: '#aaa', marginBottom: 4, fontWeight: 600 }}>GUÍA PROVINCIAL</div>
+                        <div style={{ fontSize: 18, fontWeight: 800, color: '#1F2B1F', letterSpacing: '.02em' }}>{viaje.guia_provincial_numero}</div>
+                      </div>
+                    </div>
+                    <p style={{ fontSize: 12, color: '#8BAF4E', fontWeight: 600 }}>✓ Documentación cargada</p>
+                  </div>
+                ) : (
+                  <div>
+                    <div style={{ background: 'rgba(224,122,52,.08)', border: '1px solid rgba(224,122,52,.25)', borderRadius: 10, padding: '12px 16px', marginBottom: 12 }}>
+                      <p style={{ fontSize: 13, color: '#b05a1e', fontWeight: 600, marginBottom: 2 }}>⚠ Documentación pendiente</p>
+                      <p style={{ fontSize: 12, color: '#b05a1e' }}>Cargá el DTE y la Guía Provincial antes de que salga el camión.</p>
+                    </div>
+                    <button onClick={() => setDocModal(true)} style={{ background: '#E07A34', color: '#fff', border: 'none', borderRadius: 8, padding: '10px 20px', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
+                      Cargar documentación
+                    </button>
+                  </div>
+                )}
+              </section>
+            )}
+
             {/* Botón aplicar — transportista */}
             {user.rol === 'transportista' && !isOwner && (
               <section className="card">
@@ -393,6 +458,51 @@ export default function ViajeDetailPage() {
           canReview={isOwner}
         />
       )}
+
+      {docModal && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 300, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,.5)', padding: 16 }}>
+          <div style={{ background: '#fff', borderRadius: 16, padding: 24, width: '100%', maxWidth: 420, display: 'flex', flexDirection: 'column', gap: 16 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <h3 style={{ fontSize: 16, fontWeight: 700, color: '#111' }}>Documentación requerida antes del viaje</h3>
+              <button onClick={() => setDocModal(false)} style={{ fontSize: 20, color: '#999', cursor: 'pointer', background: 'none', border: 'none' }}>✕</button>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+              <label style={{ fontSize: 12, fontWeight: 600, color: '#555' }}>
+                Número de DTE{' '}
+                <span title="Generalo en senasa.gob.ar/dte" style={{ fontSize: 11, color: '#8BAF4E', cursor: 'help', fontWeight: 400 }}>ℹ Generalo en senasa.gob.ar/dte</span>
+              </label>
+              <input
+                type="text"
+                value={dteNum}
+                onChange={e => setDteNum(e.target.value)}
+                placeholder="Ej: DTE-2024-00123456"
+                style={{ padding: '10px 14px', border: '1.5px solid #E0E0E0', borderRadius: 8, fontSize: 14, outline: 'none', fontFamily: 'inherit' }}
+              />
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+              <label style={{ fontSize: 12, fontWeight: 600, color: '#555' }}>Número de Guía Provincial</label>
+              <input
+                type="text"
+                value={guiaNum}
+                onChange={e => setGuiaNum(e.target.value)}
+                placeholder="Ej: GP-CBA-2024-00456"
+                style={{ padding: '10px 14px', border: '1.5px solid #E0E0E0', borderRadius: 8, fontSize: 14, outline: 'none', fontFamily: 'inherit' }}
+              />
+            </div>
+            <div style={{ display: 'flex', gap: 10 }}>
+              <button onClick={() => setDocModal(false)} style={{ flex: 1, padding: '11px', border: '1.5px solid #E0E0E0', borderRadius: 8, background: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>Cancelar</button>
+              <button
+                onClick={handleGuardarDoc}
+                disabled={savingDoc || !dteNum.trim() || !guiaNum.trim()}
+                style={{ flex: 2, padding: '11px', border: 'none', borderRadius: 8, background: '#E07A34', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', opacity: (savingDoc || !dteNum.trim() || !guiaNum.trim()) ? .6 : 1 }}
+              >
+                {savingDoc ? 'Guardando…' : 'Guardar documentación'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
     </div>
   );

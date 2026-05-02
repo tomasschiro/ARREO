@@ -322,6 +322,8 @@ export default function LandingPage() {
   const widgetRef = useRef<HTMLDivElement>(null);
   const origenInputRef = useRef<HTMLInputElement>(null);
   const destinoInputRef = useRef<HTMLInputElement>(null);
+  const [origenGps, setOrigenGps] = useState(false);
+  const [destinoGps, setDestinoGps] = useState(false);
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -404,6 +406,33 @@ export default function LandingPage() {
       const sugs = await fetchSugs(val);
       setDestinoSugs(sugs); setDestinoStatus('done');
     }, 100);
+  }
+
+  async function reverseGeocodeWidget(lat: number, lng: number): Promise<string> {
+    try {
+      const res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`, { headers: { 'Accept-Language': 'es' } });
+      const data = await res.json();
+      return data.display_name ?? `${lat.toFixed(5)}, ${lng.toFixed(5)}`;
+    } catch { return `${lat.toFixed(5)}, ${lng.toFixed(5)}`; }
+  }
+
+  function useGPSForField(
+    setVal: (v: string) => void,
+    setCoords: (c: { lat: number; lng: number }) => void,
+    setGpsLoading: (v: boolean) => void
+  ) {
+    if (!navigator.geolocation) return;
+    setGpsLoading(true);
+    navigator.geolocation.getCurrentPosition(
+      async ({ coords }) => {
+        const address = await reverseGeocodeWidget(coords.latitude, coords.longitude);
+        const parts = address.split(', ').filter(p => p !== 'Argentina');
+        setVal(parts[0] ?? address);
+        setCoords({ lat: coords.latitude, lng: coords.longitude });
+        setGpsLoading(false);
+      },
+      () => setGpsLoading(false)
+    );
   }
 
   function handleBuscar() {
@@ -714,6 +743,10 @@ export default function LandingPage() {
                     <div className="w-dot w-o"></div>
                     <input ref={origenInputRef} type="text" placeholder="¿Desde dónde retiramos el ganado?" value={origen}
                       onChange={e => handleOrigenChange(e.target.value)} autoComplete="off" />
+                    <button type="button" title="Usar mi ubicación actual" disabled={origenGps} onClick={() => useGPSForField(setOrigen, setOrigenCoords, setOrigenGps)}
+                      style={{ flexShrink: 0, width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center', border: 'none', background: 'transparent', cursor: origenGps ? 'not-allowed' : 'pointer', opacity: origenGps ? .5 : 1, fontSize: 16 }}>
+                      {origenGps ? <span style={{ width: 14, height: 14, border: '2px solid rgba(139,175,78,.3)', borderTopColor: '#8BAF4E', borderRadius: '50%', display: 'inline-block', animation: 'wspin .6s linear infinite' }}/> : '📍'}
+                    </button>
                   </label>
                   {(origenStatus === 'searching' || origenStatus === 'done') && (
                     <div className="w-sugs">
@@ -740,6 +773,10 @@ export default function LandingPage() {
                     <div className="w-dot w-d"></div>
                     <input ref={destinoInputRef} type="text" placeholder="¿A dónde lo llevamos?" value={destino}
                       onChange={e => handleDestinoChange(e.target.value)} autoComplete="off" />
+                    <button type="button" title="Usar mi ubicación actual" disabled={destinoGps} onClick={() => useGPSForField(setDestino, setDestinoCoords, setDestinoGps)}
+                      style={{ flexShrink: 0, width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center', border: 'none', background: 'transparent', cursor: destinoGps ? 'not-allowed' : 'pointer', opacity: destinoGps ? .5 : 1, fontSize: 16 }}>
+                      {destinoGps ? <span style={{ width: 14, height: 14, border: '2px solid rgba(139,175,78,.3)', borderTopColor: '#8BAF4E', borderRadius: '50%', display: 'inline-block', animation: 'wspin .6s linear infinite' }}/> : '📍'}
+                    </button>
                   </label>
                   {(destinoStatus === 'searching' || destinoStatus === 'done') && (
                     <div className="w-sugs">

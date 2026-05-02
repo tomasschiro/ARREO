@@ -167,7 +167,8 @@ router.get('/:id', async (req, res) => {
       `SELECT a.id, a.estado, a.mensaje, a.created_at,
               u.id AS transportista_id, u.nombre AS transportista_nombre,
               u.tipo_remolque, u.capacidad_kg,
-              u.puntuacion_promedio, u.cantidad_reseñas
+              u.puntuacion_promedio, u.cantidad_reseñas,
+              u.estado AS transportista_estado
        FROM aplicaciones a
        JOIN usuarios u ON u.id = a.transportista_id
        WHERE a.viaje_id = $1
@@ -294,6 +295,30 @@ router.post('/:id/aplicar', authMiddleware, async (req, res) => {
   }
 });
 
+// PUT /api/viajes/:id/documentacion — cargar DTE y guía provincial
+router.put('/:id/documentacion', authMiddleware, async (req, res) => {
+  const { dte_numero, guia_provincial_numero } = req.body ?? {};
+  if (!dte_numero || !guia_provincial_numero) {
+    return res.status(400).json({ error: 'dte_numero y guia_provincial_numero son obligatorios' });
+  }
+  try {
+    const viaje = await pool.query('SELECT * FROM viajes WHERE id = $1', [req.params.id]);
+    if (!viaje.rows[0]) return res.status(404).json({ error: 'Viaje no encontrado' });
+    if (viaje.rows[0].usuario_id !== req.user.id) {
+      return res.status(403).json({ error: 'Solo el dueño del viaje puede cargar la documentación' });
+    }
+    const { rows } = await pool.query(
+      `UPDATE viajes SET dte_numero = $1, guia_provincial_numero = $2, documentacion_cargada = true
+       WHERE id = $3 RETURNING id, dte_numero, guia_provincial_numero, documentacion_cargada`,
+      [dte_numero.trim(), guia_provincial_numero.trim(), req.params.id]
+    );
+    res.json({ viaje: rows[0] });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Error interno del servidor' });
+  }
+});
+
 // GET /api/mis-viajes
 async function misViajes(req, res) {
   try {
@@ -322,6 +347,7 @@ async function misAplicaciones(req, res) {
       `SELECT a.*, v.origen, v.destino, v.fecha_salida, v.tipo_hacienda,
               v.cantidad_cabezas, v.estado AS estado_viaje,
               v.tipo_jaula, v.peso_total_kg, v.condicion_camino,
+              v.dte_numero, v.guia_provincial_numero, v.documentacion_cargada,
               u.nombre AS publicado_por
        FROM aplicaciones a
        JOIN viajes v ON v.id = a.viaje_id

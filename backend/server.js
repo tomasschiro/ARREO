@@ -43,6 +43,19 @@ const pool = require('./database/connect');
 async function runMigrations() {
   await pool.query(`ALTER TABLE viajes DROP COLUMN IF EXISTS categoria`);
   await pool.query(`ALTER TABLE viajes ADD COLUMN IF NOT EXISTS condicion_camino VARCHAR(50)`);
+  // Documentos transportista
+  await pool.query(`ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS foto_linti TEXT`);
+  await pool.query(`ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS foto_seguro TEXT`);
+  await pool.query(`ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS foto_senasa TEXT`);
+  await pool.query(`ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS foto_vtv TEXT`);
+  await pool.query(`ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS declaracion_jurada BOOLEAN DEFAULT false`);
+  await pool.query(`ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS declaracion_jurada_fecha TIMESTAMPTZ`);
+  // RENSPA productor/consignataria
+  await pool.query(`ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS renspa VARCHAR(20)`);
+  // Documentación por viaje
+  await pool.query(`ALTER TABLE viajes ADD COLUMN IF NOT EXISTS dte_numero VARCHAR(50)`);
+  await pool.query(`ALTER TABLE viajes ADD COLUMN IF NOT EXISTS guia_provincial_numero VARCHAR(50)`);
+  await pool.query(`ALTER TABLE viajes ADD COLUMN IF NOT EXISTS documentacion_cargada BOOLEAN DEFAULT false`);
 }
 
 const PORT = process.env.PORT || 4000;

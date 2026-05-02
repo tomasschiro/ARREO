@@ -74,6 +74,17 @@ function validarCuit(v: string) {
   return /^\d{2}-\d{6,8}-\d$/.test(v.trim());
 }
 
+function validarRenspa(v: string) {
+  return /^\d{2}-\d{7}-\d$/.test(v.trim());
+}
+
+function formatRenspa(raw: string) {
+  const digits = raw.replace(/\D/g, '');
+  if (digits.length <= 2)  return digits;
+  if (digits.length <= 9)  return `${digits.slice(0,2)}-${digits.slice(2)}`;
+  return `${digits.slice(0,2)}-${digits.slice(2,9)}-${digits.slice(9,10)}`;
+}
+
 function formatCuit(raw: string) {
   const digits = raw.replace(/\D/g, '');
   if (digits.length <= 2)  return digits;
@@ -191,14 +202,15 @@ export default function RegisterPage() {
   const [loading,  setLoading]  = useState(false);
 
   // Step 1 — datos personales (todos los roles)
-  const [s1, setS1] = useState({ nombre: '', email: '', password: '', telefono: '', cuit_cuil: '', zona: '' });
+  const [s1, setS1] = useState({ nombre: '', email: '', password: '', telefono: '', cuit_cuil: '', zona: '', renspa: '' });
 
   // Step 2 — datos camión (solo transportistas)
   const [s2, setS2] = useState({ patente: '', marca_camion: '', modelo_camion: '', año_camion: '', capacidad_kg: '' });
   const [tiposRemolque, setTiposRemolque] = useState<string[]>([]);
 
-  // Step 3 — fotos (solo transportistas)
-  const [fotos, setFotos] = useState({ foto_dni_frente: '', foto_dni_dorso: '', foto_licencia: '', foto_camion: '' });
+  // Step 3 — documentos (solo transportistas)
+  const [fotos, setFotos] = useState({ foto_dni_frente: '', foto_dni_dorso: '', foto_linti: '', foto_seguro: '', foto_senasa: '', foto_vtv: '' });
+  const [declaracionJurada, setDeclaracionJurada] = useState(false);
 
   function setF1(k: string, v: string) { setS1(p => ({ ...p, [k]: v })); setError(''); }
   function setF2(k: string, v: string) { setS2(p => ({ ...p, [k]: v })); setError(''); }
@@ -215,6 +227,10 @@ export default function RegisterPage() {
     if (!s1.cuit_cuil.trim()) return 'El CUIT/CUIL es obligatorio';
     if (!validarCuit(s1.cuit_cuil)) return 'Formato de CUIT/CUIL inválido (ej: 20-12345678-9)';
     if (!s1.zona.trim()) return 'La zona/provincia es obligatoria';
+    if (rol !== 'transportista') {
+      if (!s1.renspa.trim()) return 'El RENSPA es obligatorio';
+      if (!validarRenspa(s1.renspa)) return 'Formato de RENSPA inválido (ej: 01-1234567-8)';
+    }
     return null;
   }
 
@@ -231,8 +247,11 @@ export default function RegisterPage() {
   function validateStep3() {
     if (!fotos.foto_dni_frente) return 'Foto DNI frente obligatoria';
     if (!fotos.foto_dni_dorso)  return 'Foto DNI dorso obligatoria';
-    if (!fotos.foto_licencia)   return 'Foto licencia de conducir obligatoria';
-    if (!fotos.foto_camion)     return 'Foto del camión/jaula obligatoria';
+    if (!fotos.foto_linti)      return 'Foto LINTI (Licencia interjurisdiccional) obligatoria';
+    if (!fotos.foto_seguro)     return 'Foto seguro de responsabilidad civil obligatoria';
+    if (!fotos.foto_senasa)     return 'Foto habilitación SENASA para animales vivos obligatoria';
+    if (!fotos.foto_vtv)        return 'Foto VTV vigente obligatoria';
+    if (!declaracionJurada)     return 'Debés aceptar la declaración jurada para continuar';
     return null;
   }
 
@@ -268,6 +287,9 @@ export default function RegisterPage() {
         cuit_cuil: s1.cuit_cuil.trim(),
         zona: s1.zona.trim(),
       };
+      if (rol !== 'transportista') {
+        Object.assign(payload, { renspa: s1.renspa.trim() });
+      }
       if (rol === 'transportista') {
         Object.assign(payload, {
           patente: s2.patente.trim().toUpperCase(),
@@ -277,6 +299,7 @@ export default function RegisterPage() {
           tipo_remolque: tiposRemolque.join(','),
           capacidad_kg: +s2.capacidad_kg,
           ...fotos,
+          declaracion_jurada: declaracionJurada,
         });
       }
       const { data } = await api.post('/auth/register', payload);
@@ -419,6 +442,16 @@ export default function RegisterPage() {
                 </div>
               </div>
               <div style={GRP}><label style={LBL}>Provincia / Zona de operación *</label><input style={INP} type="text" value={s1.zona} onChange={e => setF1('zona', e.target.value)} placeholder="Ej: Córdoba, Corrientes…"/></div>
+              {rol !== 'transportista' && (
+                <div style={GRP}>
+                  <label style={LBL}>
+                    RENSPA * (XX-XXXXXXX-X){' '}
+                    <span title="Registro Nacional Sanitario de Productores Agropecuarios. Lo encontrás en tu documentación de SENASA." style={{ fontSize: 11, color: '#8BAF4E', cursor: 'help', fontWeight: 400 }}>ℹ ¿Qué es?</span>
+                  </label>
+                  <input style={INP} type="text" value={s1.renspa} onChange={e => setF1('renspa', formatRenspa(e.target.value))} placeholder="01-1234567-8" maxLength={12}/>
+                  <span style={{ fontSize: 11, color: '#aaa' }}>Registro Nacional Sanitario de Productores Agropecuarios (SENASA)</span>
+                </div>
+              )}
             </div>
           )}
 
@@ -441,19 +474,32 @@ export default function RegisterPage() {
             </div>
           )}
 
-          {/* ── Step 3: fotos ── */}
+          {/* ── Step 3: documentación ── */}
           {step === 3 && (
             <div>
               <p style={{ fontSize: 13, color: '#666', marginBottom: 16, lineHeight: 1.5 }}>
-                Subí las fotos requeridas para verificar tu identidad y habilitación. Cada foto debe ser legible.
+                Subí los documentos requeridos para operar legalmente. Cada foto debe ser legible y vigente.
               </p>
-              <div className="reg-photo-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 14 }}>
+              <div className="reg-photo-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 16 }}>
                 <FotoBox label="DNI frente" preview={fotos.foto_dni_frente} onChange={v => setFotos(p => ({ ...p, foto_dni_frente: v }))}/>
                 <FotoBox label="DNI dorso"  preview={fotos.foto_dni_dorso}  onChange={v => setFotos(p => ({ ...p, foto_dni_dorso: v }))}/>
-                <FotoBox label="Licencia de conducir" preview={fotos.foto_licencia} onChange={v => setFotos(p => ({ ...p, foto_licencia: v }))}/>
-                <FotoBox label="Camión / Jaula" preview={fotos.foto_camion} onChange={v => setFotos(p => ({ ...p, foto_camion: v }))}/>
+                <FotoBox label="LINTI — Licencia interjurisdiccional" preview={fotos.foto_linti} onChange={v => setFotos(p => ({ ...p, foto_linti: v }))}/>
+                <FotoBox label="Seguro de responsabilidad civil vigente" preview={fotos.foto_seguro} onChange={v => setFotos(p => ({ ...p, foto_seguro: v }))}/>
+                <FotoBox label="Habilitación SENASA animales vivos" preview={fotos.foto_senasa} onChange={v => setFotos(p => ({ ...p, foto_senasa: v }))}/>
+                <FotoBox label="VTV vigente" preview={fotos.foto_vtv} onChange={v => setFotos(p => ({ ...p, foto_vtv: v }))}/>
               </div>
-              <p style={{ fontSize: 11, color: '#aaa' }}>* Las 4 fotos son obligatorias. Se comprimen automáticamente.</p>
+              <p style={{ fontSize: 11, color: '#aaa', marginBottom: 16 }}>* Los 6 documentos son obligatorios. Se comprimen automáticamente.</p>
+              <label style={{ display: 'flex', gap: 12, alignItems: 'flex-start', padding: '14px 16px', background: declaracionJurada ? 'rgba(139,175,78,.07)' : '#FAFAFA', border: `1.5px solid ${declaracionJurada ? '#8BAF4E' : '#E0E0E0'}`, borderRadius: 10, cursor: 'pointer', transition: 'all .15s' }}>
+                <input
+                  type="checkbox"
+                  checked={declaracionJurada}
+                  onChange={e => { setDeclaracionJurada(e.target.checked); setError(''); }}
+                  style={{ marginTop: 2, accentColor: '#8BAF4E', width: 16, height: 16, flexShrink: 0 }}
+                />
+                <span style={{ fontSize: 12, color: '#444', lineHeight: 1.55 }}>
+                  Declaro bajo juramento que los documentos presentados son auténticos y vigentes. Acepto que ARREO puede verificar su validez y que la presentación de documentación falsa implica la cancelación inmediata de mi cuenta y las responsabilidades legales correspondientes.
+                </span>
+              </label>
             </div>
           )}
 
