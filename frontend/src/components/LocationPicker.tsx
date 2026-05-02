@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import dynamic from 'next/dynamic';
+import { MapPin, Navigation } from 'lucide-react';
 
 const MapPickerClient = dynamic(() => import('./MapPickerClient'), { ssr: false });
 
@@ -163,7 +164,7 @@ export default function LocationPicker({
               return (
                 <li key={i}>
                   <button type="button" className="lp-sug-btn" onClick={() => selectResult(r)}>
-                    <div className="lp-sug-main">📍 {main}</div>
+                    <div className="lp-sug-main" style={{ display: 'flex', alignItems: 'center', gap: 4 }}><MapPin size={12} /> {main}</div>
                     {sub && <div className="lp-sug-sub">{sub}</div>}
                   </button>
                 </li>
@@ -184,7 +185,7 @@ export default function LocationPicker({
       >
         {gpsLoading
           ? <><span className="animate-spin inline-block w-3 h-3 border-2 border-[#8BAF4E] border-t-transparent rounded-full" /> Obteniendo ubicación…</>
-          : <> 📡 Usar mi ubicación actual</>
+          : <><Navigation size={12} /> Usar mi ubicación actual</>
         }
       </button>
 
@@ -193,7 +194,7 @@ export default function LocationPicker({
       </div>
 
       {value && (
-        <p className="text-xs text-gray-400 truncate">📍 {value.address}</p>
+        <p className="text-xs text-gray-400 truncate" style={{ display: 'flex', alignItems: 'center', gap: 4 }}><MapPin size={12} /> {value.address}</p>
       )}
       {error && <p className="text-xs text-red-500">{error}</p>}
     </div>

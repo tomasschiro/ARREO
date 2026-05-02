@@ -7,6 +7,7 @@ import { useAuth } from '@/context/AuthContext';
 import AppSidebar from '@/components/AppSidebar';
 import LocationPicker, { LocationValue } from '@/components/LocationPicker';
 import api from '@/lib/api';
+import { Truck, AlertTriangle } from 'lucide-react';
 
 const TIPOS_JAULA = ['Jaula simple', 'Acoplado', 'Semirremolque'];
 
@@ -158,7 +159,7 @@ export default function DisponibilidadPage() {
 
               {serverError && (
                 <div style={{ backgroundColor: 'var(--color-error-bg)', border: '1px solid rgba(217,79,79,.2)', borderRadius: 'var(--radius-md)', padding: '10px 14px', color: 'var(--color-error)', fontSize: 13 }}>
-                  ⚠ {serverError}
+                  <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}><AlertTriangle size={13} /> {serverError}</span>
                 </div>
               )}
 
@@ -172,7 +173,7 @@ export default function DisponibilidadPage() {
                       <span className="animate-spin" style={{ width: 16, height: 16, border: '2px solid white', borderTopColor: 'transparent', borderRadius: '50%', display: 'inline-block' }} />
                       Publicando…
                     </span>
-                  ) : '🚛 Publicar disponibilidad'}
+                  ) : <span style={{ display: 'flex', alignItems: 'center', gap: 6, justifyContent: 'center' }}><Truck size={16} /> Publicar disponibilidad</span>}
                 </button>
               </div>
 

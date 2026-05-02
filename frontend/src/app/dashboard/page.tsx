@@ -8,6 +8,7 @@ import AppSidebar from '@/components/AppSidebar';
 import StarRating from '@/components/StarRating';
 import TransportistaPerfilModal from '@/components/TransportistaPerfilModal';
 import api from '@/lib/api';
+import { Check, X, Users, FileText, Truck, MapPin, Scale, Calendar } from 'lucide-react';
 
 // ─── Shared primitives (UI Kit style) ────────────────────────────────────────
 
@@ -74,8 +75,8 @@ function Toast({ message, type, onClose }: { message: string; type: 'success' | 
   useEffect(() => { const t = setTimeout(onClose, 3500); return () => clearTimeout(t); }, [onClose]);
   return (
     <div style={{ position: 'fixed', bottom: 24, right: 24, zIndex: 9999, display: 'flex', alignItems: 'center', gap: 12, padding: '12px 20px', borderRadius: 12, boxShadow: '0 4px 24px rgba(0,0,0,.15)', color: 'white', fontSize: 14, fontWeight: 500, backgroundColor: type === 'success' ? '#8BAF4E' : '#E24B4A' }}>
-      {type === 'success' ? '✓' : '✕'} {message}
-      <button onClick={onClose} style={{ marginLeft: 8, opacity: .7, cursor: 'pointer', background: 'none', border: 'none', color: 'inherit' }}>✕</button>
+      {type === 'success' ? <Check size={14} /> : <X size={14} />} {message}
+      <button onClick={onClose} style={{ marginLeft: 8, opacity: .7, cursor: 'pointer', background: 'none', border: 'none', color: 'inherit', display: 'flex' }}><X size={14} /></button>
     </div>
   );
 }
@@ -175,7 +176,7 @@ function ContactarModal({ disp, onClose, onSent }: { disp: MiDisponibilidad; onC
       <div className="card" style={{ width: '100%', maxWidth: 460, display: 'flex', flexDirection: 'column', gap: 16 }} onClick={e => e.stopPropagation()}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <h3 style={{ fontSize: 15, fontWeight: 700 }}>Enviar consulta</h3>
-          <button onClick={onClose} style={{ fontSize: 20, color: '#999', cursor: 'pointer', background: 'none', border: 'none' }}>✕</button>
+          <button onClick={onClose} style={{ color: '#999', cursor: 'pointer', background: 'none', border: 'none', display: 'flex' }}><X size={20} /></button>
         </div>
         <p style={{ fontSize: 13, color: '#666' }}>Para <strong>{disp.transportista_nombre}</strong></p>
         <div className="form-group"><label className="form-label">Asunto</label>
@@ -442,7 +443,7 @@ function ProductorDashboard({ userId, userName }: { userId: number; userName: st
           </div>
           {misViajes.length === 0 ? (
             <div style={{ background: '#fff', borderRadius: 14, padding: '48px', textAlign: 'center' }}>
-              <div style={{ fontSize: 36, marginBottom: 12 }}>📋</div>
+              <div style={{ marginBottom: 12, color: '#bbb', display: 'flex', justifyContent: 'center' }}><FileText size={36} /></div>
               <p style={{ fontWeight: 600, color: '#111', marginBottom: 4 }}>Todavía no publicaste viajes</p>
               <p style={{ fontSize: 13, color: '#888', marginBottom: 16 }}>Publicá tu primer viaje y empezá a recibir ofertas</p>
               <Link href="/publicar" style={{ background: '#E07A34', color: '#fff', borderRadius: 8, padding: '9px 20px', fontSize: 13, fontWeight: 600, textDecoration: 'none' }}>+ Publicar primer viaje</Link>
@@ -467,7 +468,7 @@ function ProductorDashboard({ userId, userName }: { userId: number; userName: st
                         {v.peso_total_kg && <Chip label={`${Number(v.peso_total_kg).toLocaleString('es-AR')} kg`} color="#555"/>}
                       </div>
                       <button onClick={() => toggleViaje(v.id)} style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', borderRadius: 10, fontSize: 13, fontWeight: 600, border: 'none', cursor: 'pointer', background: isOpen ? '#1F2B1F' : total > 0 ? 'rgba(139,175,78,.12)' : '#F2F2F0', color: isOpen ? '#fff' : total > 0 ? '#4d6b1a' : '#888' }}>
-                        <span>👥 {total > 0 ? `${total} transportista${total === 1 ? '' : 's'} interesado${total === 1 ? '' : 's'}` : 'Sin transportistas todavía'}</span>
+                        <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}><Users size={13} /> {total > 0 ? `${total} transportista${total === 1 ? '' : 's'} interesado${total === 1 ? '' : 's'}` : 'Sin transportistas todavía'}</span>
                         <span style={{ fontSize: 11 }}>{isOpen ? '▲' : '▼'}</span>
                       </button>
                     </div>
@@ -503,8 +504,8 @@ function ProductorDashboard({ userId, userName }: { userId: number; userName: st
                               <div style={{ display: 'flex', gap: 8 }}>
                                 <button onClick={() => setPerfilModal(a.transportista_id!)} className="btn btn-secondary btn-sm" style={{ flex: 1 }}>Ver perfil</button>
                                 {a.estado === 'pendiente' && <>
-                                  <button onClick={() => handleGestionar(v.id, a.id, 'aceptada')} disabled={gestionando === a.id} className="btn btn-sm" style={{ flex: 1, background: '#8BAF4E', color: 'white', border: 'none' }}>✓ Aceptar</button>
-                                  <button onClick={() => handleGestionar(v.id, a.id, 'rechazada')} disabled={gestionando === a.id} className="btn btn-sm" style={{ flex: 1, background: '#E24B4A', color: 'white', border: 'none' }}>✕ Rechazar</button>
+                                  <button onClick={() => handleGestionar(v.id, a.id, 'aceptada')} disabled={gestionando === a.id} className="btn btn-sm" style={{ flex: 1, background: '#8BAF4E', color: 'white', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}><Check size={13} /> Aceptar</button>
+                                  <button onClick={() => handleGestionar(v.id, a.id, 'rechazada')} disabled={gestionando === a.id} className="btn btn-sm" style={{ flex: 1, background: '#E24B4A', color: 'white', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}><X size={13} /> Rechazar</button>
                                 </>}
                               </div>
                             </div>
@@ -527,7 +528,7 @@ function ProductorDashboard({ userId, userName }: { userId: number; userName: st
           </div>
           {disponibilidades.length === 0 ? (
             <div style={{ background: '#fff', borderRadius: 14, padding: '48px', textAlign: 'center' }}>
-              <div style={{ fontSize: 36, marginBottom: 8 }}>🚛</div>
+              <div style={{ marginBottom: 8, color: '#bbb', display: 'flex', justifyContent: 'center' }}><Truck size={36} /></div>
               <p style={{ fontSize: 13, color: '#aaa' }}>No hay camiones disponibles en este momento</p>
             </div>
           ) : (
@@ -540,7 +541,7 @@ function ProductorDashboard({ userId, userName }: { userId: number; userName: st
                     </div>
                     <div style={{ minWidth: 0 }}>
                       <p style={{ fontSize: 14, fontWeight: 700, color: '#111', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{d.transportista_nombre}</p>
-                      {d.transportista_zona && <p style={{ fontSize: 12, color: '#888' }}>📍 {d.transportista_zona}</p>}
+                      {d.transportista_zona && <p style={{ fontSize: 12, color: '#888', display: 'flex', alignItems: 'center', gap: 4 }}><MapPin size={12} /> {d.transportista_zona}</p>}
                     </div>
                     {(d.cantidad_reseñas ?? 0) > 0 && (
                       <div style={{ marginLeft: 'auto', flexShrink: 0, textAlign: 'right' }}>
@@ -551,12 +552,12 @@ function ProductorDashboard({ userId, userName }: { userId: number; userName: st
                   </div>
                   <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                     {d.tipo_remolque && d.tipo_remolque.split(',').map(t => t.trim()).filter(Boolean).map(t => (
-                      <span key={t} className={TIPO_JAULA_CLS[t] ?? 'badge badge-neutral'}>🚛 {t}</span>
+                      <span key={t} className={TIPO_JAULA_CLS[t] ?? 'badge badge-neutral'} style={{ display: 'inline-flex', alignItems: 'center', gap: 3 }}><Truck size={11} /> {t}</span>
                     ))}
-                    {d.capacidad_kg && <span className="badge badge-neutral">⚖️ {Number(d.capacidad_kg).toLocaleString('es-AR')} kg</span>}
+                    {d.capacidad_kg && <span className="badge badge-neutral" style={{ display: 'inline-flex', alignItems: 'center', gap: 3 }}><Scale size={11} /> {Number(d.capacidad_kg).toLocaleString('es-AR')} kg</span>}
                   </div>
                   <RouteInline origin={d.origen_direccion?.split(',')[0] ?? ''} destination={d.destino_direccion?.split(',')[0] ?? ''}/>
-                  <Chip label={`📅 ${fmtFecha(d.fecha)}`} color="#555"/>
+                  <Chip icon="calendar" label={fmtFecha(d.fecha)} color="#555"/>
                   {d.transportista_id !== userId && (
                     <button onClick={() => setContactarModal(d)} style={{ width: '100%', background: '#E07A34', color: '#fff', border: 'none', borderRadius: 8, padding: '9px', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
                       Enviar consulta

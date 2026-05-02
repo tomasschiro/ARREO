@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import AppSidebar from '@/components/AppSidebar';
 import api from '@/lib/api';
+import { Check, X, Truck, Calendar, Users } from 'lucide-react';
 
 interface Interesado {
   id: number;
@@ -37,8 +38,8 @@ function Toast({ message, type, onClose }: { message: string; type: 'success' | 
       boxShadow: 'var(--shadow-lg)', color: 'white', fontSize: 14, fontWeight: 500,
       backgroundColor: type === 'success' ? '#8BAF4E' : '#E24B4A',
     }}>
-      {type === 'success' ? '✓' : '✕'} {message}
-      <button onClick={onClose} style={{ marginLeft: 8, opacity: .7, cursor: 'pointer', background: 'none', border: 'none', color: 'inherit' }}>✕</button>
+      {type === 'success' ? <Check size={14} /> : <X size={14} />} {message}
+      <button onClick={onClose} style={{ marginLeft: 8, opacity: .7, cursor: 'pointer', background: 'none', border: 'none', color: 'inherit', display: 'flex' }}><X size={14} /></button>
     </div>
   );
 }
@@ -166,7 +167,7 @@ export default function MisDisponibilidadesPage() {
               </div>
             ) : disponibilidades.length === 0 ? (
               <div className="card" style={{ textAlign: 'center', padding: '64px 24px', color: 'var(--color-text-muted)' }}>
-                <p style={{ fontSize: 36, marginBottom: 12 }}>🚛</p>
+                <p style={{ marginBottom: 12, color: '#bbb', display: 'flex', justifyContent: 'center' }}><Truck size={36} /></p>
                 <p style={{ fontWeight: 500 }}>No publicaste disponibilidades todavía</p>
               </div>
             ) : disponibilidades.map(d => {
@@ -195,7 +196,7 @@ export default function MisDisponibilidadesPage() {
                           </p>
                         </div>
                         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                          <span className="badge badge-neutral">📅 {fecha}</span>
+                          <span className="badge badge-neutral" style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}><Calendar size={11} /> {fecha}</span>
                           <span className={TIPO_JAULA_CLS[d.tipo_jaula] ?? 'badge badge-neutral'}>{d.tipo_jaula}</span>
                         </div>
                       </div>
@@ -211,7 +212,7 @@ export default function MisDisponibilidadesPage() {
                       <button onClick={() => setExpandido(open ? null : d.id)}
                         className="btn btn-sm"
                         style={{ flex: 2, backgroundColor: open ? '#1F2B1F' : '#8BAF4E', color: 'white', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
-                        👥 Interesados
+                        <Users size={13} /> Interesados
                         {nuevos > 0 && (
                           <span style={{ width: 20, height: 20, borderRadius: '50%', backgroundColor: '#E24B4A', color: 'white', fontSize: 11, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700 }}>
                             {nuevos}

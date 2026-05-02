@@ -6,6 +6,7 @@ import { useAuth } from '@/context/AuthContext';
 import AppSidebar from '@/components/AppSidebar';
 import StarRating from '@/components/StarRating';
 import api from '@/lib/api';
+import { Check, X, MapPin, Truck } from 'lucide-react';
 
 function Icon({ name, size = 15, color = 'currentColor' }: { name: string; size?: number; color?: string }) {
   const s = { width: size, height: size, stroke: color, fill: 'none', strokeWidth: 2, strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const };
@@ -40,8 +41,8 @@ function Toast({ message, type, onClose }: { message: string; type: 'success' | 
   useEffect(() => { const t = setTimeout(onClose, 3500); return () => clearTimeout(t); }, [onClose]);
   return (
     <div style={{ position: 'fixed', bottom: 24, right: 24, zIndex: 9999, display: 'flex', alignItems: 'center', gap: 12, padding: '12px 20px', borderRadius: 12, boxShadow: '0 4px 24px rgba(0,0,0,.15)', color: 'white', fontSize: 14, fontWeight: 500, backgroundColor: type === 'success' ? '#8BAF4E' : '#E24B4A' }}>
-      {type === 'success' ? '✓' : '✕'} {message}
-      <button onClick={onClose} style={{ marginLeft: 8, opacity: .7, cursor: 'pointer', background: 'none', border: 'none', color: 'inherit' }}>✕</button>
+      {type === 'success' ? <Check size={14} /> : <X size={14} />} {message}
+      <button onClick={onClose} style={{ marginLeft: 8, opacity: .7, cursor: 'pointer', background: 'none', border: 'none', color: 'inherit', display: 'flex' }}><X size={14} /></button>
     </div>
   );
 }
@@ -89,7 +90,7 @@ function ContactarModal({ disp, onClose, onSent }: { disp: Disponibilidad; onClo
       <div className="card" style={{ width: '100%', maxWidth: 460, display: 'flex', flexDirection: 'column', gap: 16 }} onClick={e => e.stopPropagation()}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <h3 style={{ fontSize: 15, fontWeight: 700 }}>Enviar consulta</h3>
-          <button onClick={onClose} style={{ fontSize: 20, color: '#999', cursor: 'pointer', background: 'none', border: 'none' }}>✕</button>
+          <button onClick={onClose} style={{ color: '#999', cursor: 'pointer', background: 'none', border: 'none', display: 'flex' }}><X size={20} /></button>
         </div>
         <p style={{ fontSize: 13, color: '#666' }}>Para <strong>{disp.transportista_nombre}</strong></p>
         <div className="form-group">
@@ -123,7 +124,7 @@ function TruckCard({ disp, userId, onContact }: { disp: Disponibilidad; userId: 
         </div>
         <div style={{ minWidth: 0, flex: 1 }}>
           <p style={{ fontSize: 14, fontWeight: 700, color: '#111', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{disp.transportista_nombre}</p>
-          {disp.transportista_zona && <p style={{ fontSize: 12, color: '#888' }}>📍 {disp.transportista_zona}</p>}
+          {disp.transportista_zona && <p style={{ fontSize: 12, color: '#888', display: 'flex', alignItems: 'center', gap: 4 }}><MapPin size={12} /> {disp.transportista_zona}</p>}
         </div>
         {(disp.cantidad_reseñas ?? 0) > 0 && (
           <div style={{ flexShrink: 0, textAlign: 'right' }}>
@@ -136,7 +137,7 @@ function TruckCard({ disp, userId, onContact }: { disp: Disponibilidad; userId: 
       {/* Vehicle badges */}
       <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
         {disp.tipo_remolque && disp.tipo_remolque.split(',').map(t => t.trim()).filter(Boolean).map(t => (
-          <span key={t} className={TIPO_CLS[t] ?? 'badge badge-neutral'}>🚛 {t}</span>
+          <span key={t} className={TIPO_CLS[t] ?? 'badge badge-neutral'} style={{ display: 'inline-flex', alignItems: 'center', gap: 3 }}><Truck size={11} /> {t}</span>
         ))}
         {disp.capacidad_kg  && <span className="badge badge-neutral"><Icon name="weight" size={11} color="#666"/> {Number(disp.capacidad_kg).toLocaleString('es-AR')} kg</span>}
       </div>

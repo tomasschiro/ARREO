@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import api from '@/lib/api';
+import { X as XIcon } from 'lucide-react';
 
 interface MenuItem { href: string; icon: React.ReactNode; label: string; badge?: number }
 
@@ -175,8 +176,8 @@ export default function AppSidebar() {
       <aside className={`sidebar${mobileOpen ? ' open' : ''}`}>
 
         {/* Close button (mobile only) */}
-        <button className="sidebar-close" onClick={() => setMobileOpen(false)} aria-label="Cerrar menú">
-          ✕
+        <button className="sidebar-close" onClick={() => setMobileOpen(false)} aria-label="Cerrar menú" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <XIcon size={20} />
         </button>
 
         {/* Logo */}

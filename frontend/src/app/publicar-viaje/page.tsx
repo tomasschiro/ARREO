@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
 import api from '@/lib/api';
+import { Beef, AlertTriangle } from 'lucide-react';
 
 const CIUDADES = [
   'Paraná', 'Gualeguaychú', 'Concordia', 'Villaguay', 'Victoria',
@@ -214,7 +215,7 @@ export default function PublicarViajePage() {
 
             {serverError && (
               <div className="flex items-center gap-2 bg-red-50 border border-red-100 text-red-600 text-sm rounded-lg px-4 py-3">
-                ⚠ {serverError}
+                <AlertTriangle size={14} className="shrink-0" /> {serverError}
               </div>
             )}
 
@@ -232,7 +233,7 @@ export default function PublicarViajePage() {
                     <span className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full" />
                     Publicando...
                   </span>
-                ) : '🐄 Publicar viaje'}
+                ) : <span className="flex items-center justify-center gap-2"><Beef size={16} /> Publicar viaje</span>}
               </button>
             </div>
 

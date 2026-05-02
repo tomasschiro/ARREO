@@ -4,7 +4,8 @@
       "Bash(powershell -Command \"Expand-Archive -Path 'ARREO Design System.zip' -DestinationPath './arreo-design-system-kit' -Force\")",
       "PowerShell($env:PGPASSWORD=\"npg_n7jh4QdctEie\"; & \"C:\\\\Program Files\\\\PostgreSQL\\\\17\\\\bin\\\\psql.exe\" \"postgresql://neondb_owner@ep-cool-mode-acgftf0t-pooler.sa-east-1.aws.neon.tech/neondb?sslmode=require\" -f \"backend\\\\database\\\\migrate-neon.sql\")",
       "Bash(node database/run-migration.js)",
-      "Bash(npx tsc *)"
+      "Bash(npx tsc *)",
+      "Bash(npm install *)"
     ]
   }
 }

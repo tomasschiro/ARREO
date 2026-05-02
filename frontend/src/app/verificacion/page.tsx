@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import api from '@/lib/api';
+import { Clock, Check } from 'lucide-react';
 
 function ToroBull() {
   return (
@@ -91,7 +92,7 @@ export default function VerificacionPage() {
           </>
         ) : (
           <>
-            <div style={{ fontSize: 52, marginBottom: 14 }}>⏳</div>
+            <div style={{ marginBottom: 14, color: '#E07A34', display: 'flex', justifyContent: 'center' }}><Clock size={52} /></div>
             <h2 style={{ fontSize: 20, fontWeight: 700, color: '#1F2B1F', marginBottom: 10 }}>Cuenta en verificación</h2>
             <p style={{ fontSize: 14, color: '#666', lineHeight: 1.6, marginBottom: 20 }}>
               El equipo de ARREO está revisando tu información{estado === 'pendiente' && ' y documentación'}.
@@ -106,7 +107,7 @@ export default function VerificacionPage() {
               ].map(it => (
                 <div key={it.label} style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
                   <div style={{ width: 20, height: 20, borderRadius: '50%', flexShrink: 0, background: it.done ? '#8BAF4E' : it.active ? 'rgba(224,122,52,.2)' : '#F0F0F0', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10 }}>
-                    {it.done ? '✓' : it.active ? '⋯' : ''}
+                    {it.done ? <Check size={11} strokeWidth={3} /> : it.active ? '⋯' : ''}
                   </div>
                   <span style={{ fontSize: 13, color: it.done ? '#4d6b1a' : it.active ? '#E07A34' : '#aaa', fontWeight: it.active ? 600 : 400 }}>{it.label}</span>
                 </div>

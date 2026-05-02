@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import StarRating from './StarRating';
 import api from '@/lib/api';
+import { MapPin, X, Check } from 'lucide-react';
 
 interface Transportista {
   id: number;
@@ -102,11 +103,11 @@ export default function TransportistaPerfilModal({ transportistaId, onClose, can
                 <div>
                   <p className="text-white font-bold text-base">{transportista.nombre}</p>
                   {transportista.zona && (
-                    <p className="text-xs" style={{ color: '#8BAF4E' }}>📍 {transportista.zona}</p>
+                    <p className="text-xs" style={{ color: '#8BAF4E', display: 'flex', alignItems: 'center', gap: 4 }}><MapPin size={12} /> {transportista.zona}</p>
                   )}
                 </div>
               </div>
-              <button onClick={onClose} className="text-white/60 hover:text-white text-xl transition">✕</button>
+              <button onClick={onClose} className="text-white/60 hover:text-white transition" style={{ display: 'flex' }}><X size={20} /></button>
             </div>
 
             <div className="p-6 flex flex-col gap-5">
@@ -191,7 +192,7 @@ export default function TransportistaPerfilModal({ transportistaId, onClose, can
               )}
               {reviewDone && (
                 <p className="text-sm text-center font-semibold py-2" style={{ color: '#8BAF4E' }}>
-                  ✓ Reseña enviada. ¡Gracias!
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}><Check size={13} /> Reseña enviada. ¡Gracias!</span>
                 </p>
               )}
             </div>

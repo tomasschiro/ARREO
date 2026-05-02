@@ -6,6 +6,7 @@ import { useAuth } from '@/context/AuthContext';
 import AppSidebar from '@/components/AppSidebar';
 import StarRating from '@/components/StarRating';
 import api from '@/lib/api';
+import { Check, X, AlertTriangle } from 'lucide-react';
 
 const TIPOS_REMOLQUE_OPTS = [
   { value: 'Jaula simple',  cap: 'hasta 6.000 kg' },
@@ -34,8 +35,8 @@ function Toast({ message, onClose }: { message: string; onClose: () => void }) {
       boxShadow: 'var(--shadow-lg)', color: 'white', fontSize: 14, fontWeight: 500,
       backgroundColor: '#8BAF4E',
     }}>
-      ✓ {message}
-      <button onClick={onClose} style={{ marginLeft: 8, opacity: .7, cursor: 'pointer', background: 'none', border: 'none', color: 'inherit' }}>✕</button>
+      <Check size={14} /> {message}
+      <button onClick={onClose} style={{ marginLeft: 8, opacity: .7, cursor: 'pointer', background: 'none', border: 'none', color: 'inherit', display: 'flex' }}><X size={14} /></button>
     </div>
   );
 }
@@ -249,8 +250,8 @@ export default function PerfilPage() {
                                 <div style={{
                                   position: 'absolute', top: 5, right: 5, width: 17, height: 17, borderRadius: '50%',
                                   background: '#8BAF4E', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                  fontSize: 10, color: '#fff', fontWeight: 800,
-                                }}>✓</div>
+                                  color: '#fff',
+                                }}><Check size={11} strokeWidth={3} /></div>
                               )}
                               <TruckIcon color={on ? '#4d6b1a' : '#aaa'} />
                               <div style={{ fontSize: 11, fontWeight: 700, color: on ? '#1F2B1F' : 'var(--color-text-muted)', textAlign: 'center', lineHeight: 1.25 }}>{value}</div>
@@ -284,7 +285,7 @@ export default function PerfilPage() {
 
               {error && (
                 <div style={{ backgroundColor: 'var(--color-error-bg)', border: '1px solid rgba(217,79,79,.2)', borderRadius: 'var(--radius-md)', padding: '10px 14px', color: 'var(--color-error)', fontSize: 13 }}>
-                  ⚠ {error}
+                  <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}><AlertTriangle size={13} /> {error}</span>
                 </div>
               )}
 

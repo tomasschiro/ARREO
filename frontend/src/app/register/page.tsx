@@ -3,6 +3,7 @@
 import { useState, useRef } from 'react';
 import Link from 'next/link';
 import api from '@/lib/api';
+import { Truck, Beef, FileText, Camera, Clock, AlertTriangle, Check } from 'lucide-react';
 
 // ─── Logo ─────────────────────────────────────────────────────────────────────
 
@@ -55,8 +56,8 @@ function TipoRemolqueCards({ selected, onChange }: { selected: string[]; onChang
               <div style={{
                 position: 'absolute', top: 5, right: 5, width: 17, height: 17, borderRadius: '50%',
                 background: '#8BAF4E', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: 10, color: '#fff', fontWeight: 800, lineHeight: 1,
-              }}>✓</div>
+                color: '#fff',
+              }}><Check size={11} strokeWidth={3} /></div>
             )}
             <TruckIcon color={on ? '#4d6b1a' : '#aaa'} />
             <div style={{ fontSize: 11, fontWeight: 700, color: on ? '#1F2B1F' : '#666', textAlign: 'center', lineHeight: 1.25 }}>{value}</div>
@@ -149,12 +150,12 @@ function FotoBox({ label, preview, onChange }: { label: string; preview: string;
         <>
           <img src={preview} alt={label} style={{ width: '100%', height: '100%', objectFit: 'cover', position: 'absolute', inset: 0 }}/>
           <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, background: 'rgba(0,0,0,.55)', color: '#fff', fontSize: 11, fontWeight: 600, padding: '4px 8px', textAlign: 'center' }}>
-            ✓ {label}
+            <Check size={11} strokeWidth={3} style={{ display: 'inline', verticalAlign: 'middle', marginRight: 4 }} /> {label}
           </div>
         </>
       ) : (
         <>
-          <div style={{ fontSize: 28, marginBottom: 6 }}>📷</div>
+          <div style={{ marginBottom: 6, color: '#bbb' }}><Camera size={28} /></div>
           <div style={{ fontSize: 11, fontWeight: 600, color: '#999', textAlign: 'center', padding: '0 8px' }}>{label}</div>
           <div style={{ fontSize: 10, color: '#bbb', marginTop: 3 }}>Tocá para subir</div>
         </>
@@ -178,7 +179,7 @@ function Stepper({ step, total }: { step: number; total: number }) {
             background: i + 1 <= step ? '#1F2B1F' : '#F0F0F0',
             color: i + 1 <= step ? '#fff' : '#aaa',
           }}>
-            {i + 1 < step ? '✓' : i + 1}
+            {i + 1 < step ? <Check size={13} strokeWidth={3} /> : i + 1}
           </div>
           {i < total - 1 && (
             <div style={{ flex: 1, height: 2, background: i + 1 < step ? '#1F2B1F' : '#F0F0F0', margin: '0 4px' }}/>
@@ -332,15 +333,15 @@ export default function RegisterPage() {
             <p className="auth-subtitle">Elegí tu rol para comenzar el registro</p>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginTop: 8 }}>
               {([
-                { value: 'transportista', emoji: '🚛', label: 'Transportista', desc: 'Tengo camiones y ofrezco fletes para hacienda', steps: '3 pasos + documentación' },
-                { value: 'productor',     emoji: '🐄', label: 'Productor',     desc: 'Necesito transportar mi hacienda', steps: '1 paso' },
-                { value: 'consignataria', emoji: '📋', label: 'Consignataria', desc: 'Gestiono operaciones ganaderas', steps: '1 paso' },
+                { value: 'transportista', icon: <Truck size={28} />, label: 'Transportista', desc: 'Tengo camiones y ofrezco fletes para hacienda', steps: '3 pasos + documentación' },
+                { value: 'productor',     icon: <Beef size={28} />,  label: 'Productor',     desc: 'Necesito transportar mi hacienda', steps: '1 paso' },
+                { value: 'consignataria', icon: <FileText size={28} />, label: 'Consignataria', desc: 'Gestiono operaciones ganaderas', steps: '1 paso' },
               ] as const).map(r => (
                 <button key={r.value} onClick={() => selectRol(r.value)} style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '16px 20px', border: '2px solid #E0E0E0', borderRadius: 12, cursor: 'pointer', background: '#fff', textAlign: 'left', transition: 'border-color .15s, background .15s' }}
                   onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = '#8BAF4E'; (e.currentTarget as HTMLElement).style.background = 'rgba(139,175,78,.04)'; }}
                   onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = '#E0E0E0'; (e.currentTarget as HTMLElement).style.background = '#fff'; }}
                 >
-                  <div style={{ fontSize: 32, lineHeight: 1 }}>{r.emoji}</div>
+                  <div style={{ lineHeight: 1, color: '#555' }}>{r.icon}</div>
                   <div style={{ flex: 1 }}>
                     <div style={{ fontSize: 15, fontWeight: 700, color: '#111' }}>{r.label}</div>
                     <div style={{ fontSize: 12, color: '#888', marginTop: 2 }}>{r.desc}</div>
@@ -366,7 +367,7 @@ export default function RegisterPage() {
       <main className="auth-page">
         <div style={{ width: '100%', maxWidth: 460 }}>
           <div className="auth-card" style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: 56, marginBottom: 16 }}>⏳</div>
+            <div style={{ marginBottom: 16, color: '#E07A34', display: 'flex', justifyContent: 'center' }}><Clock size={56} /></div>
             <h2 style={{ fontSize: 20, fontWeight: 700, color: '#1F2B1F', marginBottom: 10 }}>
               {rol === 'transportista' ? 'Solicitud enviada' : 'Cuenta creada'}
             </h2>
@@ -420,7 +421,10 @@ export default function RegisterPage() {
             <button onClick={() => step > 1 ? setStep(s => s - 1) : setPhase('role')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#888', fontSize: 20, padding: 0, lineHeight: 1 }}>←</button>
             <div style={{ flex: 1 }}>
               <div style={{ fontSize: 16, fontWeight: 700, color: '#111' }}>
-                {rol === 'transportista' ? '🚛 Transportista' : rol === 'productor' ? '🐄 Productor' : '📋 Consignataria'}
+                <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  {rol === 'transportista' ? <Truck size={16} /> : rol === 'productor' ? <Beef size={16} /> : <FileText size={16} />}
+                  {rol === 'transportista' ? 'Transportista' : rol === 'productor' ? 'Productor' : 'Consignataria'}
+                </span>
               </div>
               <div style={{ fontSize: 12, color: '#aaa' }}>{stepLabels[step - 1]}</div>
             </div>
@@ -506,7 +510,7 @@ export default function RegisterPage() {
           {/* Error */}
           {error && (
             <div style={{ marginTop: 14, background: 'rgba(217,79,79,.08)', border: '1px solid rgba(217,79,79,.2)', borderRadius: 8, padding: '10px 14px', color: '#C03030', fontSize: 13 }}>
-              ⚠ {error}
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}><AlertTriangle size={13} /> {error}</span>
             </div>
           )}
 

@@ -7,13 +7,14 @@ import { useAuth } from '@/context/AuthContext';
 import api from '@/lib/api';
 import AppSidebar from '@/components/AppSidebar';
 import LocationPicker, { LocationValue } from '@/components/LocationPicker';
+import { Beef, Ban, AlertTriangle } from 'lucide-react';
 
 const TIPOS_HACIENDA = ['Novillos', 'Vacas', 'Terneros', 'Toros', 'Vaquillonas'];
 const CONDICIONES_CAMINO = [
-  { value: 'Seco',            label: '☀️ Seco (campo normal)' },
-  { value: 'Lluvia reciente', label: '🌧️ Lluvia reciente (caminos blandos)' },
-  { value: 'Lluvia intensa',  label: '⛈️ Lluvia intensa (campo muy blando)' },
-  { value: 'Helada',          label: '❄️ Helada' },
+  { value: 'Seco',            label: 'Seco (campo normal)' },
+  { value: 'Lluvia reciente', label: 'Lluvia reciente (caminos blandos)' },
+  { value: 'Lluvia intensa',  label: 'Lluvia intensa (campo muy blando)' },
+  { value: 'Helada',          label: 'Helada' },
 ];
 const JAULA_RANK: Record<string, number> = { 'Jaula simple': 1, 'Acoplado': 2, 'Semirremolque': 3 };
 const JAULA_CLS:  Record<string, string> = {
@@ -153,7 +154,7 @@ export default function PublicarPage() {
         <AppSidebar />
         <div className="app-content" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <div className="card" style={{ textAlign: 'center', maxWidth: 360 }}>
-            <p style={{ fontSize: 36, marginBottom: 16 }}>🚫</p>
+            <p style={{ marginBottom: 16, color: '#aaa', display: 'flex', justifyContent: 'center' }}><Ban size={36} /></p>
             <h2 style={{ fontSize: 18, fontWeight: 700, marginBottom: 8 }}>Acceso restringido</h2>
             <p style={{ fontSize: 14, color: 'var(--color-text-muted)', marginBottom: 20 }}>
               Solo productores y consignatarias pueden publicar viajes.
@@ -244,7 +245,7 @@ export default function PublicarPage() {
                 </div>
                 {(condicionCamino === 'Lluvia reciente' || condicionCamino === 'Lluvia intensa') && (
                   <div style={{ marginTop: 16, padding: '12px 16px', borderRadius: 'var(--radius-md)', backgroundColor: 'rgba(224,170,52,.12)', border: '1px solid rgba(224,170,52,.4)', color: '#7a5a00', fontSize: 13 }}>
-                    ⚠️ Algunos transportistas pueden no tener acceso al campo en estas condiciones. Aclaralo en las observaciones.
+                    <span style={{ display: 'flex', alignItems: 'flex-start', gap: 6 }}><AlertTriangle size={14} style={{ flexShrink: 0, marginTop: 1 }} /> Algunos transportistas pueden no tener acceso al campo en estas condiciones. Aclaralo en las observaciones.</span>
                   </div>
                 )}
               </section>
@@ -315,7 +316,7 @@ export default function PublicarPage() {
 
               {serverError && (
                 <div style={{ backgroundColor: 'var(--color-error-bg)', border: '1px solid rgba(217,79,79,.2)', borderRadius: 'var(--radius-md)', padding: '10px 14px', color: 'var(--color-error)', fontSize: 13 }}>
-                  ⚠ {serverError}
+                  <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}><AlertTriangle size={13} /> {serverError}</span>
                 </div>
               )}
 
@@ -329,7 +330,7 @@ export default function PublicarPage() {
                       <span className="animate-spin" style={{ width: 16, height: 16, border: '2px solid white', borderTopColor: 'transparent', borderRadius: '50%', display: 'inline-block' }} />
                       Publicando…
                     </span>
-                  ) : '🐄 Publicar viaje'}
+                  ) : <span style={{ display: 'flex', alignItems: 'center', gap: 6, justifyContent: 'center' }}><Beef size={16} /> Publicar viaje</span>}
                 </button>
               </div>
 

@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import AppSidebar from '@/components/AppSidebar';
 import api from '@/lib/api';
+import { X, AlertTriangle, Check } from 'lucide-react';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -258,9 +259,9 @@ export default function AdminPage() {
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={lightboxFoto} alt="Documento" style={{ maxWidth: '90vw', maxHeight: '90vh', objectFit: 'contain', borderRadius: 8, boxShadow: '0 0 60px rgba(0,0,0,.8)' }} />
             <button
-              style={{ position: 'absolute', top: 20, right: 24, background: 'none', border: 'none', color: '#fff', fontSize: 28, cursor: 'pointer', lineHeight: 1 }}
+              style={{ position: 'absolute', top: 20, right: 24, background: 'none', border: 'none', color: '#fff', cursor: 'pointer', display: 'flex' }}
               onClick={() => setLightboxFoto(null)}
-            >✕</button>
+            ><X size={28} /></button>
           </div>
         )}
 
@@ -303,7 +304,7 @@ export default function AdminPage() {
           {pendientes.length > 0 && (
             <section>
               <h3 style={{ fontSize: 14, fontWeight: 600, color: '#F59E0B', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
-                ⚠ Pendientes de aprobación ({pendientes.length})
+                <AlertTriangle size={14} /> Pendientes de aprobación ({pendientes.length})
               </h3>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
                 {pendientes.map(u => (
@@ -390,7 +391,7 @@ export default function AdminPage() {
                         disabled={loadingAction === u.id}
                         onClick={() => aprobar(u.id)}
                       >
-                        ✓ Aprobar
+                        <Check size={13} /> Aprobar
                       </button>
                     </div>
 

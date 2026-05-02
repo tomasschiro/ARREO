@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import AppSidebar from '@/components/AppSidebar';
 import api from '@/lib/api';
+import { Check, X, Clock } from 'lucide-react';
 
 // ─── Shared UI Kit primitives ─────────────────────────────────────────────────
 
@@ -54,8 +55,8 @@ function Toast({ message, type, onClose }: { message: string; type: 'success' | 
   useEffect(() => { const t = setTimeout(onClose, 3500); return () => clearTimeout(t); }, [onClose]);
   return (
     <div style={{ position: 'fixed', bottom: 24, right: 24, zIndex: 9999, display: 'flex', alignItems: 'center', gap: 12, padding: '12px 20px', borderRadius: 12, boxShadow: '0 4px 24px rgba(0,0,0,.15)', color: 'white', fontSize: 14, fontWeight: 500, backgroundColor: type === 'success' ? '#8BAF4E' : '#E24B4A' }}>
-      {type === 'success' ? '✓' : '✕'} {message}
-      <button onClick={onClose} style={{ marginLeft: 8, opacity: .7, cursor: 'pointer', background: 'none', border: 'none', color: 'inherit' }}>✕</button>
+      {type === 'success' ? <Check size={14} /> : <X size={14} />} {message}
+      <button onClick={onClose} style={{ marginLeft: 8, opacity: .7, cursor: 'pointer', background: 'none', border: 'none', color: 'inherit', display: 'flex' }}><X size={14} /></button>
     </div>
   );
 }
@@ -107,7 +108,7 @@ function EditDisponibilidadModal({ disp, onClose, onSave }: {
       <div className="card" style={{ width: '100%', maxWidth: 360, display: 'flex', flexDirection: 'column', gap: 16 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <h3 style={{ fontSize: 15, fontWeight: 700 }}>Editar disponibilidad</h3>
-          <button onClick={onClose} style={{ fontSize: 20, color: '#999', cursor: 'pointer', background: 'none', border: 'none' }}>✕</button>
+          <button onClick={onClose} style={{ color: '#999', cursor: 'pointer', background: 'none', border: 'none', display: 'flex' }}><X size={20} /></button>
         </div>
         <div className="form-group"><label className="form-label">Fecha</label>
           <input type="date" min={hoy} value={fecha} onChange={e => setFecha(e.target.value)} className="form-input"/>
@@ -326,7 +327,7 @@ function DetailModal({ aplic, onClose }: { aplic: Aplicacion; onClose: () => voi
                 </div>
               ) : (
                 <div style={{ background: 'rgba(224,122,52,.07)', border: '1px solid rgba(224,122,52,.2)', borderRadius: 10, padding: '12px 16px' }}>
-                  <p style={{ fontSize: 13, color: '#9a5225', fontWeight: 600 }}>⏳ El productor aún no cargó la documentación</p>
+                  <p style={{ fontSize: 13, color: '#9a5225', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6 }}><Clock size={14} /> El productor aún no cargó la documentación</p>
                   <p style={{ fontSize: 12, color: '#9a5225', marginTop: 2 }}>El DTE y la Guía Provincial aparecerán aquí una vez que el productor los ingrese.</p>
                 </div>
               )}

@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import api from '@/lib/api';
+import { AlertTriangle } from 'lucide-react';
 
 function ToroBull() {
   return (
@@ -77,7 +78,7 @@ export default function LoginPage() {
 
             {error && (
               <div style={{ backgroundColor: 'var(--color-error-bg)', border: '1px solid rgba(217,79,79,.2)', borderRadius: 'var(--radius-md)', padding: '10px 14px', color: 'var(--color-error)', fontSize: 13 }}>
-                ⚠ {error}
+                <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}><AlertTriangle size={13} /> {error}</span>
               </div>
             )}
 

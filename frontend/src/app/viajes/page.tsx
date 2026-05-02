@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import AppSidebar from '@/components/AppSidebar';
 import api from '@/lib/api';
+import { Check, X, Map, Truck, Sun, CloudRain, CloudLightning, Snowflake } from 'lucide-react';
 
 // ─── Shared UI Kit primitives ─────────────────────────────────────────────────
 
@@ -72,8 +73,8 @@ function Toast({ message, type, onClose }: { message: string; type: 'success' | 
   useEffect(() => { const t = setTimeout(onClose, 3500); return () => clearTimeout(t); }, [onClose]);
   return (
     <div style={{ position: 'fixed', bottom: 24, right: 24, zIndex: 9999, display: 'flex', alignItems: 'center', gap: 12, padding: '12px 20px', borderRadius: 12, boxShadow: '0 4px 24px rgba(0,0,0,.15)', color: 'white', fontSize: 14, fontWeight: 500, backgroundColor: type === 'success' ? '#8BAF4E' : '#E24B4A' }}>
-      {type === 'success' ? '✓' : '✕'} {message}
-      <button onClick={onClose} style={{ marginLeft: 8, opacity: .7, cursor: 'pointer', background: 'none', border: 'none', color: 'inherit' }}>✕</button>
+      {type === 'success' ? <Check size={14} /> : <X size={14} />} {message}
+      <button onClick={onClose} style={{ marginLeft: 8, opacity: .7, cursor: 'pointer', background: 'none', border: 'none', color: 'inherit', display: 'flex' }}><X size={14} /></button>
     </div>
   );
 }
@@ -112,7 +113,7 @@ function EditDisponibilidadModal({ disp, onClose, onSave }: {
       <div className="card" style={{ width: '100%', maxWidth: 360, display: 'flex', flexDirection: 'column', gap: 16 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <h3 style={{ fontSize: 15, fontWeight: 700 }}>Editar disponibilidad</h3>
-          <button onClick={onClose} style={{ fontSize: 20, color: '#999', cursor: 'pointer', background: 'none', border: 'none' }}>✕</button>
+          <button onClick={onClose} style={{ color: '#999', cursor: 'pointer', background: 'none', border: 'none', display: 'flex' }}><X size={20} /></button>
         </div>
         <div className="form-group"><label className="form-label">Fecha</label>
           <input type="date" min={hoy} value={fecha} onChange={e => setFecha(e.target.value)} className="form-input"/>
@@ -210,7 +211,12 @@ function TripSearchCard({ viaje }: { viaje: Viaje }) {
         <Chip                 label={`${viaje.cantidad_cabezas} cab.`} color="#555"/>
         {viaje.peso_total_kg    && <Chip icon="weight" label={`${Number(viaje.peso_total_kg).toLocaleString('es-AR')} kg`} color="#555"/>}
         {viaje.tipo_jaula       && <Chip icon="truck"  label={viaje.tipo_jaula} color="#8BAF4E" bg="rgba(139,175,78,.1)"/>}
-        {viaje.condicion_camino && <Chip label={`${viaje.condicion_camino === 'Seco' ? '☀️' : viaje.condicion_camino === 'Lluvia reciente' ? '🌧️' : viaje.condicion_camino === 'Lluvia intensa' ? '⛈️' : '❄️'} ${viaje.condicion_camino}`} color="#666"/>}
+        {viaje.condicion_camino && (
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, background: 'rgba(0,0,0,.06)', color: '#666', fontSize: 11, fontWeight: 500, padding: '3px 8px', borderRadius: 5, whiteSpace: 'nowrap' }}>
+            {viaje.condicion_camino === 'Seco' ? <Sun size={12} /> : viaje.condicion_camino === 'Lluvia reciente' ? <CloudRain size={12} /> : viaje.condicion_camino === 'Lluvia intensa' ? <CloudLightning size={12} /> : <Snowflake size={12} />}
+            {viaje.condicion_camino}
+          </span>
+        )}
       </div>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
@@ -341,7 +347,7 @@ export default function ViajesPage() {
 
           {filtered.length === 0 && (
             <div style={{ background: '#fff', borderRadius: 14, padding: '48px', textAlign: 'center', color: '#ccc', marginBottom: 10, boxShadow: '0 2px 12px rgba(0,0,0,.05)' }}>
-              <div style={{ fontSize: 32, marginBottom: 12 }}>🗺️</div>
+              <div style={{ marginBottom: 12, color: '#bbb', display: 'flex', justifyContent: 'center' }}><Map size={32} /></div>
               <div style={{ fontSize: 13 }}>No hay viajes disponibles{filterType !== 'all' || filterZona || filterDate ? ' con esos filtros' : ''}</div>
             </div>
           )}
@@ -356,7 +362,7 @@ export default function ViajesPage() {
             ))}
             {misDisps.length === 0 && (
               <div style={{ background: '#fff', borderRadius: 14, padding: '32px', textAlign: 'center', color: '#ccc', boxShadow: '0 2px 12px rgba(0,0,0,.05)' }}>
-                <div style={{ fontSize: 28, marginBottom: 8 }}>🚛</div>
+                <div style={{ marginBottom: 8, color: '#bbb', display: 'flex', justifyContent: 'center' }}><Truck size={28} /></div>
                 <div style={{ fontSize: 13 }}>No publicaste disponibilidades todavía</div>
               </div>
             )}

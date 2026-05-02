@@ -9,6 +9,7 @@ import AppSidebar from '@/components/AppSidebar';
 import StarRating from '@/components/StarRating';
 import TransportistaPerfilModal from '@/components/TransportistaPerfilModal';
 import api from '@/lib/api';
+import { Check, X, Clock, Calendar, Beef, Sun, CloudRain, CloudLightning, Snowflake, Cloud, MapPin, AlertTriangle, Truck, Scale, Lock } from 'lucide-react';
 
 const MapView = dynamic(() => import('@/components/MapViewClient'), { ssr: false });
 
@@ -78,8 +79,8 @@ function Toast({ message, type, onClose }: { message: string; type: 'success' | 
       boxShadow: 'var(--shadow-lg)', color: 'white', fontSize: 14, fontWeight: 500,
       backgroundColor: type === 'success' ? '#8BAF4E' : '#E24B4A',
     }}>
-      {type === 'success' ? '✓' : '✕'} {message}
-      <button onClick={onClose} style={{ marginLeft: 8, opacity: .7, cursor: 'pointer', background: 'none', border: 'none', color: 'inherit' }}>✕</button>
+      {type === 'success' ? <Check size={14} /> : <X size={14} />} {message}
+      <button onClick={onClose} style={{ marginLeft: 8, opacity: .7, cursor: 'pointer', background: 'none', border: 'none', color: 'inherit', display: 'flex' }}><X size={14} /></button>
     </div>
   );
 }
@@ -232,17 +233,17 @@ export default function ViajeDetailPage() {
                 </div>
               </div>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-                <span className="badge badge-neutral">📅 {fecha}</span>
-                <span className="badge badge-neutral">🐄 {viaje.tipo_hacienda}</span>
+                <span className="badge badge-neutral" style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}><Calendar size={12} /> {fecha}</span>
+                <span className="badge badge-neutral" style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}><Beef size={12} /> {viaje.tipo_hacienda}</span>
                 {viaje.tipo_jaula && (
                   <span className={TIPO_JAULA_CLS[viaje.tipo_jaula] ?? 'badge badge-neutral'}>{viaje.tipo_jaula}</span>
                 )}
                 {viaje.condicion_camino && (
-                  <span className="badge badge-neutral">{
-                    viaje.condicion_camino === 'Seco'            ? '☀️' :
-                    viaje.condicion_camino === 'Lluvia reciente' ? '🌧️' :
-                    viaje.condicion_camino === 'Lluvia intensa'  ? '⛈️' :
-                    viaje.condicion_camino === 'Helada'          ? '❄️' : '🌦️'
+                  <span className="badge badge-neutral" style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>{
+                    viaje.condicion_camino === 'Seco'            ? <Sun size={12} /> :
+                    viaje.condicion_camino === 'Lluvia reciente' ? <CloudRain size={12} /> :
+                    viaje.condicion_camino === 'Lluvia intensa'  ? <CloudLightning size={12} /> :
+                    viaje.condicion_camino === 'Helada'          ? <Snowflake size={12} /> : <Cloud size={12} />
                   } {viaje.condicion_camino}</span>
                 )}
               </div>
@@ -306,7 +307,7 @@ export default function ViajeDetailPage() {
                 </div>
                 <div>
                   <p style={{ fontSize: 14, fontWeight: 700 }}>{viaje.publicado_por}</p>
-                  {viaje.zona_publicante && <p style={{ fontSize: 12, color: 'var(--color-text-muted)' }}>📍 {viaje.zona_publicante}</p>}
+                  {viaje.zona_publicante && <p style={{ fontSize: 12, color: 'var(--color-text-muted)', display: 'flex', alignItems: 'center', gap: 4 }}><MapPin size={12} /> {viaje.zona_publicante}</p>}
                 </div>
               </div>
             </section>
@@ -333,17 +334,17 @@ export default function ViajeDetailPage() {
                               <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
                                 <p style={{ fontSize: 14, fontWeight: 700 }}>{a.transportista_nombre}</p>
                                 {a.transportista_estado === 'aprobado' ? (
-                                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 11, fontWeight: 600, color: '#4d6b1a', background: 'rgba(139,175,78,.15)', padding: '2px 8px', borderRadius: 5 }}>✓ Verificado</span>
+                                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 11, fontWeight: 600, color: '#4d6b1a', background: 'rgba(139,175,78,.15)', padding: '2px 8px', borderRadius: 5 }}><Check size={11} /> Verificado</span>
                                 ) : (
-                                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 11, fontWeight: 600, color: '#7a5a00', background: 'rgba(224,180,52,.15)', padding: '2px 8px', borderRadius: 5 }}>⏳ Verificación pendiente</span>
+                                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 11, fontWeight: 600, color: '#7a5a00', background: 'rgba(224,180,52,.15)', padding: '2px 8px', borderRadius: 5 }}><Clock size={11} /> Verificación pendiente</span>
                                 )}
                               </div>
                               <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginTop: 2 }}>
                                 {a.tipo_remolque && a.tipo_remolque.split(',').map(t => t.trim()).filter(Boolean).map(t => (
-                                  <span key={t} className={TIPO_JAULA_CLS[t] ?? 'badge badge-neutral'} style={{ fontSize: 11 }}>🚛 {t}</span>
+                                  <span key={t} className={TIPO_JAULA_CLS[t] ?? 'badge badge-neutral'} style={{ fontSize: 11, display: 'inline-flex', alignItems: 'center', gap: 3 }}><Truck size={11} /> {t}</span>
                                 ))}
                                 {a.capacidad_kg && (
-                                  <span style={{ fontSize: 12, color: 'var(--color-text-muted)' }}>⚖️ {Number(a.capacidad_kg).toLocaleString('es-AR')} kg</span>
+                                  <span style={{ fontSize: 12, color: 'var(--color-text-muted)', display: 'inline-flex', alignItems: 'center', gap: 3 }}><Scale size={12} /> {Number(a.capacidad_kg).toLocaleString('es-AR')} kg</span>
                                 )}
                                 {(a.cantidad_reseñas ?? 0) > 0 && (
                                   <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
@@ -407,12 +408,12 @@ export default function ViajeDetailPage() {
                         <div style={{ fontSize: 18, fontWeight: 800, color: '#1F2B1F', letterSpacing: '.02em' }}>{viaje.guia_provincial_numero}</div>
                       </div>
                     </div>
-                    <p style={{ fontSize: 12, color: '#8BAF4E', fontWeight: 600 }}>✓ Documentación cargada</p>
+                    <p style={{ fontSize: 12, color: '#8BAF4E', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4 }}><Check size={12} /> Documentación cargada</p>
                   </div>
                 ) : (
                   <div>
                     <div style={{ background: 'rgba(224,122,52,.08)', border: '1px solid rgba(224,122,52,.25)', borderRadius: 10, padding: '12px 16px', marginBottom: 12 }}>
-                      <p style={{ fontSize: 13, color: '#b05a1e', fontWeight: 600, marginBottom: 2 }}>⚠ Documentación pendiente</p>
+                      <p style={{ fontSize: 13, color: '#b05a1e', fontWeight: 600, marginBottom: 2, display: 'flex', alignItems: 'center', gap: 4 }}><AlertTriangle size={13} /> Documentación pendiente</p>
                       <p style={{ fontSize: 12, color: '#b05a1e' }}>Cargá el DTE y la Guía Provincial antes de que salga el camión.</p>
                     </div>
                     <button onClick={() => setDocModal(true)} style={{ background: '#E07A34', color: '#fff', border: 'none', borderRadius: 8, padding: '10px 20px', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
@@ -428,11 +429,11 @@ export default function ViajeDetailPage() {
               <section className="card">
                 {viaje.estado === 'completo' ? (
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, color: 'var(--color-text-muted)', fontSize: 14, padding: '8px 0' }}>
-                    🔒 Este viaje ya tiene transportista asignado
+                    <Lock size={14} /> Este viaje ya tiene transportista asignado
                   </div>
                 ) : yaAplico ? (
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '12px 0', borderRadius: 'var(--radius-md)', fontSize: 14, fontWeight: 600, backgroundColor: 'rgba(139,175,78,0.12)', color: '#4d6b1a' }}>
-                    ✓ Ya aplicaste a este viaje
+                    <Check size={14} /> Ya aplicaste a este viaje
                   </div>
                 ) : (
                   <button onClick={handleAplicar} disabled={aplicando} className="btn btn-primary btn-full btn-lg">
@@ -441,7 +442,7 @@ export default function ViajeDetailPage() {
                         <span className="animate-spin" style={{ width: 16, height: 16, border: '2px solid white', borderTopColor: 'transparent', borderRadius: '50%', display: 'inline-block' }} />
                         Enviando…
                       </span>
-                    ) : '🚛 Aplicar al viaje'}
+                    ) : <span style={{ display: 'flex', alignItems: 'center', gap: 6, justifyContent: 'center' }}><Truck size={16} /> Aplicar al viaje</span>}
                   </button>
                 )}
               </section>
@@ -464,7 +465,7 @@ export default function ViajeDetailPage() {
           <div style={{ background: '#fff', borderRadius: 16, padding: 24, width: '100%', maxWidth: 420, display: 'flex', flexDirection: 'column', gap: 16 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <h3 style={{ fontSize: 16, fontWeight: 700, color: '#111' }}>Documentación requerida antes del viaje</h3>
-              <button onClick={() => setDocModal(false)} style={{ fontSize: 20, color: '#999', cursor: 'pointer', background: 'none', border: 'none' }}>✕</button>
+              <button onClick={() => setDocModal(false)} style={{ color: '#999', cursor: 'pointer', background: 'none', border: 'none', display: 'flex' }}><X size={20} /></button>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
               <label style={{ fontSize: 12, fontWeight: 600, color: '#555' }}>

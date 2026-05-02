@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
+import { MapPin } from 'lucide-react';
 
 const css = `
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -745,7 +746,7 @@ export default function LandingPage() {
                       onChange={e => handleOrigenChange(e.target.value)} autoComplete="off" />
                     <button type="button" title="Usar mi ubicación actual" disabled={origenGps} onClick={() => useGPSForField(setOrigen, setOrigenCoords, setOrigenGps)}
                       style={{ flexShrink: 0, width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center', border: 'none', background: 'transparent', cursor: origenGps ? 'not-allowed' : 'pointer', opacity: origenGps ? .5 : 1, fontSize: 16 }}>
-                      {origenGps ? <span style={{ width: 14, height: 14, border: '2px solid rgba(139,175,78,.3)', borderTopColor: '#8BAF4E', borderRadius: '50%', display: 'inline-block', animation: 'wspin .6s linear infinite' }}/> : '📍'}
+                      {origenGps ? <span style={{ width: 14, height: 14, border: '2px solid rgba(139,175,78,.3)', borderTopColor: '#8BAF4E', borderRadius: '50%', display: 'inline-block', animation: 'wspin .6s linear infinite' }}/> : <MapPin size={18} />}
                     </button>
                   </label>
                   {(origenStatus === 'searching' || origenStatus === 'done') && (
@@ -775,7 +776,7 @@ export default function LandingPage() {
                       onChange={e => handleDestinoChange(e.target.value)} autoComplete="off" />
                     <button type="button" title="Usar mi ubicación actual" disabled={destinoGps} onClick={() => useGPSForField(setDestino, setDestinoCoords, setDestinoGps)}
                       style={{ flexShrink: 0, width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center', border: 'none', background: 'transparent', cursor: destinoGps ? 'not-allowed' : 'pointer', opacity: destinoGps ? .5 : 1, fontSize: 16 }}>
-                      {destinoGps ? <span style={{ width: 14, height: 14, border: '2px solid rgba(139,175,78,.3)', borderTopColor: '#8BAF4E', borderRadius: '50%', display: 'inline-block', animation: 'wspin .6s linear infinite' }}/> : '📍'}
+                      {destinoGps ? <span style={{ width: 14, height: 14, border: '2px solid rgba(139,175,78,.3)', borderTopColor: '#8BAF4E', borderRadius: '50%', display: 'inline-block', animation: 'wspin .6s linear infinite' }}/> : <MapPin size={18} />}
                     </button>
                   </label>
                   {(destinoStatus === 'searching' || destinoStatus === 'done') && (

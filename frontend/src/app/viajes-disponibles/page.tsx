@@ -3,6 +3,7 @@
 import { useEffect, useState, useRef, Suspense } from 'react';
 import Link from 'next/link';
 import { useSearchParams, useRouter } from 'next/navigation';
+import { MapPin, Calendar, Beef, Scale, Route, Truck } from 'lucide-react';
 
 type Viaje = {
   id: number;
@@ -129,13 +130,13 @@ function ViajeCard({ v }: { v: Viaje }) {
       </div>
 
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-        <Chip>📅 {fmt(v.fecha_salida)}</Chip>
-        <Chip>🐄 {v.tipo_hacienda}</Chip>
+        <Chip><Calendar size={12} /> {fmt(v.fecha_salida)}</Chip>
+        <Chip><Beef size={12} /> {v.tipo_hacienda}</Chip>
         <Chip>{v.cantidad_cabezas} cabezas</Chip>
-        {v.peso_total_kg != null && <Chip>⚖️ {v.peso_total_kg.toLocaleString('es-AR')} kg</Chip>}
-        {v.tipo_jaula && <Chip>🚛 {v.tipo_jaula}</Chip>}
-        {v.condicion_camino && <Chip>🛣️ {v.condicion_camino}</Chip>}
-        {v.zona_publicante && <Chip color="#3a6e8a" bg="rgba(58,110,138,.09)">📍 {v.zona_publicante}</Chip>}
+        {v.peso_total_kg != null && <Chip><Scale size={12} /> {v.peso_total_kg.toLocaleString('es-AR')} kg</Chip>}
+        {v.tipo_jaula && <Chip><Truck size={12} /> {v.tipo_jaula}</Chip>}
+        {v.condicion_camino && <Chip><Route size={12} /> {v.condicion_camino}</Chip>}
+        {v.zona_publicante && <Chip color="#3a6e8a" bg="rgba(58,110,138,.09)"><MapPin size={12} /> {v.zona_publicante}</Chip>}
       </div>
 
       <Link href="/register" style={{
@@ -355,7 +356,7 @@ function ViajesContent() {
                 />
                 <button type="button" title="Usar mi ubicación" disabled={origenGps} onClick={() => useGPSField(setOrigen, setOrigenGps)}
                   style={{ flexShrink: 0, minWidth: 44, height: 44, display: 'flex', alignItems: 'center', justifyContent: 'center', border: 'none', background: 'rgba(255,255,255,.12)', borderRadius: 10, cursor: origenGps ? 'not-allowed' : 'pointer', opacity: origenGps ? .5 : 1, fontSize: 18 }}>
-                  {origenGps ? <span style={{ width: 14, height: 14, border: '2px solid rgba(139,175,78,.3)', borderTopColor: '#8BAF4E', borderRadius: '50%', display: 'inline-block', animation: 'vdspin .6s linear infinite' }}/> : '📍'}
+                  {origenGps ? <span style={{ width: 14, height: 14, border: '2px solid rgba(139,175,78,.3)', borderTopColor: '#8BAF4E', borderRadius: '50%', display: 'inline-block', animation: 'vdspin .6s linear infinite' }}/> : <MapPin size={18} />}
                 </button>
               </div>
               {(origenStatus === 'searching' || origenStatus === 'done') && (
@@ -389,7 +390,7 @@ function ViajesContent() {
                 />
                 <button type="button" title="Usar mi ubicación" disabled={destinoGps} onClick={() => useGPSField(setDestino, setDestinoGps)}
                   style={{ flexShrink: 0, minWidth: 44, height: 44, display: 'flex', alignItems: 'center', justifyContent: 'center', border: 'none', background: 'rgba(255,255,255,.12)', borderRadius: 10, cursor: destinoGps ? 'not-allowed' : 'pointer', opacity: destinoGps ? .5 : 1, fontSize: 18 }}>
-                  {destinoGps ? <span style={{ width: 14, height: 14, border: '2px solid rgba(139,175,78,.3)', borderTopColor: '#8BAF4E', borderRadius: '50%', display: 'inline-block', animation: 'vdspin .6s linear infinite' }}/> : '📍'}
+                  {destinoGps ? <span style={{ width: 14, height: 14, border: '2px solid rgba(139,175,78,.3)', borderTopColor: '#8BAF4E', borderRadius: '50%', display: 'inline-block', animation: 'vdspin .6s linear infinite' }}/> : <MapPin size={18} />}
                 </button>
               </div>
               {(destinoStatus === 'searching' || destinoStatus === 'done') && (
@@ -463,7 +464,7 @@ function ViajesContent() {
           </div>
         ) : viajes.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '60px 0' }}>
-            <div style={{ fontSize: 40, marginBottom: 12 }}>🐄</div>
+            <div style={{ marginBottom: 12, color: '#888' }}><Beef size={40} /></div>
             <div style={{ fontSize: 18, fontWeight: 700, color: '#333', marginBottom: 6 }}>
               No hay viajes disponibles
             </div>

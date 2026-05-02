@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import api from '@/lib/api';
+import { Check, AlertTriangle } from 'lucide-react';
 
 const TIPOS_REMOLQUE_OPTS = [
   { value: 'Jaula simple',  cap: 'hasta 6.000 kg' },
@@ -140,8 +141,8 @@ export default function CompletarPerfilPage() {
                         <div style={{
                           position: 'absolute', top: 5, right: 5, width: 17, height: 17, borderRadius: '50%',
                           background: '#8BAF4E', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                          fontSize: 10, color: '#fff', fontWeight: 800,
-                        }}>✓</div>
+                          color: '#fff',
+                        }}><Check size={11} strokeWidth={3} /></div>
                       )}
                       <TruckIcon color={on ? '#4d6b1a' : '#aaa'} />
                       <div style={{ fontSize: 11, fontWeight: 700, color: on ? '#1F2B1F' : 'var(--color-text-muted)', textAlign: 'center', lineHeight: 1.25 }}>{value}</div>
@@ -181,7 +182,7 @@ export default function CompletarPerfilPage() {
 
             {error && (
               <div style={{ backgroundColor: 'var(--color-error-bg)', border: '1px solid rgba(217,79,79,.2)', borderRadius: 'var(--radius-md)', padding: '10px 14px', color: 'var(--color-error)', fontSize: 13 }}>
-                ⚠ {error}
+                <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}><AlertTriangle size={13} /> {error}</span>
               </div>
             )}
 
