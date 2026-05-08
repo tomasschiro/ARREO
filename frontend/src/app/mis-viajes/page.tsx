@@ -1,12 +1,12 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import AppSidebar from '@/components/AppSidebar';
 import api from '@/lib/api';
-import { Check, X, Clock } from 'lucide-react';
+import { Check, X, Clock, Navigation, AlertTriangle } from 'lucide-react';
 
 // ─── Shared UI Kit primitives ─────────────────────────────────────────────────
 
@@ -137,6 +137,56 @@ function TripCard({ aplic, patente, onDetail }: {
   const isActive = new Date(aplic.fecha_salida) >= today;
   const progress = isActive ? 55 : 100;
 
+  const [tracking,  setTracking]  = useState(false);
+  const watchIdRef  = useRef<number | null>(null);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const lastCoords  = useRef<{ lat: number; lng: number } | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (watchIdRef.current !== null)  navigator.geolocation.clearWatch(watchIdRef.current);
+      if (intervalRef.current !== null) clearInterval(intervalRef.current);
+    };
+  }, []);
+
+  function sendCoords(lat: number, lng: number) {
+    api.post(`/viajes/${aplic.viaje_id}/ubicacion`, { lat, lng }).catch(() => {});
+  }
+
+  function startTracking() {
+    if (!navigator.geolocation) {
+      alert('Tu dispositivo no soporta geolocalización');
+      return;
+    }
+    // Enviar posición inicial de inmediato
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        lastCoords.current = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+        sendCoords(pos.coords.latitude, pos.coords.longitude);
+      },
+      () => {}
+    );
+    // Mantener posición actualizada
+    watchIdRef.current = navigator.geolocation.watchPosition(
+      (pos) => { lastCoords.current = { lat: pos.coords.latitude, lng: pos.coords.longitude }; },
+      (err) => console.warn('[GPS]', err.message),
+      { enableHighAccuracy: true, timeout: 15000, maximumAge: 5000 }
+    );
+    // Enviar cada 30 s
+    intervalRef.current = setInterval(() => {
+      if (lastCoords.current) sendCoords(lastCoords.current.lat, lastCoords.current.lng);
+    }, 30000);
+
+    setTracking(true);
+  }
+
+  function stopTracking() {
+    if (watchIdRef.current !== null)  { navigator.geolocation.clearWatch(watchIdRef.current); watchIdRef.current = null; }
+    if (intervalRef.current !== null) { clearInterval(intervalRef.current); intervalRef.current = null; }
+    lastCoords.current = null;
+    setTracking(false);
+  }
+
   const sc = isActive
     ? { bg: 'rgba(139,175,78,.15)', color: '#5a7a2a', dot: '#8BAF4E', glow: true,  label: 'En camino' }
     : { bg: 'rgba(0,0,0,.06)',      color: '#555',    dot: '#aaa',    glow: false, label: 'Completado' };
@@ -151,6 +201,14 @@ function TripCard({ aplic, patente, onDetail }: {
           {sc.label}
         </span>
       </div>
+
+      {/* Indicador GPS activo */}
+      {isActive && tracking && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 12, padding: '8px 12px', background: 'rgba(139,175,78,.08)', border: '1px solid rgba(139,175,78,.25)', borderRadius: 8 }}>
+          <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#8BAF4E', flexShrink: 0, animation: 'mv-blink 1.2s ease-in-out infinite' }} />
+          <span style={{ fontSize: 12, fontWeight: 600, color: '#4d6b1a' }}>Compartiendo ubicación en tiempo real</span>
+        </div>
+      )}
 
       {/* Progress bar (active only) */}
       {isActive && (
@@ -199,9 +257,18 @@ function TripCard({ aplic, patente, onDetail }: {
 
       {/* Action buttons */}
       <div style={{ display: 'flex', gap: 8 }}>
-        {isActive && (
-          <button style={{ flex: 2, background: '#1F2B1F', color: '#fff', border: 'none', borderRadius: 9, padding: '9px', fontSize: 12, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
-            <Icon name="map" size={13} color="#fff"/> Ver seguimiento
+        {isActive && !tracking && (
+          <button
+            onClick={startTracking}
+            style={{ flex: 2, background: '#1F2B1F', color: '#fff', border: 'none', borderRadius: 9, padding: '9px', fontSize: 12, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+            <Navigation size={13} /> Iniciar seguimiento
+          </button>
+        )}
+        {isActive && tracking && (
+          <button
+            onClick={stopTracking}
+            style={{ flex: 2, background: 'transparent', border: '1.5px solid rgba(224,122,52,.4)', color: '#b05a1e', borderRadius: 9, padding: '9px', fontSize: 12, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+            <Navigation size={13} /> Detener seguimiento
           </button>
         )}
         <button onClick={() => onDetail(aplic)} style={{ flex: 1, background: 'transparent', border: '1.5px solid #E0E0E0', color: '#666', borderRadius: 9, padding: '9px', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
@@ -412,6 +479,9 @@ export default function MisViajesPage() {
           .mv-content { padding: 12px !important; }
           .mv-infogrid { grid-template-columns: 1fr 1fr !important; }
         }
+        @keyframes mv-blink {
+          0%,100% { opacity:1; } 50% { opacity:.2; }
+        }
       `}</style>
       <AppSidebar/>
       <div className="app-panel" style={{ height: '100vh', overflow: 'hidden' }}>
@@ -447,6 +517,19 @@ export default function MisViajesPage() {
 
             {/* Trip list */}
             <div className="mv-content" style={{ flex: 1, overflowY: 'auto', background: '#F2F2F0', padding: '16px 28px', display: 'flex', flexDirection: 'column' }}>
+              {/* Banner DJ */}
+              {activas.length > 0 && user.declaracion_jurada === false && (
+                <div style={{ background: 'rgba(224,122,52,.1)', border: '1px solid rgba(224,122,52,.35)', borderRadius: 12, padding: '14px 18px', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+                  <AlertTriangle size={17} color="#b05a1e" style={{ flexShrink: 0 }} />
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: '#7a3c10' }}>Tenés un viaje activo sin declaración jurada firmada</div>
+                    <div style={{ fontSize: 12, color: '#b05a1e', marginTop: 2 }}>Firmala antes de salir para poder circular legalmente.</div>
+                  </div>
+                  <Link href={`/viajes/${activas[0].viaje_id}`} style={{ background: '#E07A34', color: '#fff', borderRadius: 7, padding: '7px 14px', fontSize: 12, fontWeight: 700, textDecoration: 'none', whiteSpace: 'nowrap', flexShrink: 0 }}>
+                    Firmar ahora
+                  </Link>
+                </div>
+              )}
               {current.length === 0 ? (
                 <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: 280, textAlign: 'center' }}>
                   <div style={{ width: 54, height: 54, borderRadius: '50%', background: '#EAEAE8', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 14 }}>

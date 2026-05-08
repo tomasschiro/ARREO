@@ -18,6 +18,8 @@ export interface User {
   foto_camion_url?: string;
   puntuacion_promedio?: number;
   cantidad_reseñas?: number;
+  declaracion_jurada?: boolean;
+  declaracion_jurada_fecha?: string | null;
   created_at: string;
 }
 

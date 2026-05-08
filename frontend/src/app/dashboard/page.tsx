@@ -8,7 +8,7 @@ import AppSidebar from '@/components/AppSidebar';
 import StarRating from '@/components/StarRating';
 import TransportistaPerfilModal from '@/components/TransportistaPerfilModal';
 import api from '@/lib/api';
-import { Check, X, Users, FileText, Truck, MapPin, Scale, Calendar } from 'lucide-react';
+import { Check, X, Users, FileText, Truck, MapPin, Scale, Calendar, AlertTriangle } from 'lucide-react';
 
 // ─── Shared primitives (UI Kit style) ────────────────────────────────────────
 
@@ -88,6 +88,7 @@ interface Viaje {
   tipo_hacienda: string; cantidad_cabezas: number; peso_total_kg?: number;
   tipo_jaula?: string; estado: string; publicado_por: string; zona_publicante?: string;
   usuario_id: number; total_aplicaciones?: number;
+  documentacion_cargada?: boolean;
 }
 
 interface Aplicacion {
@@ -198,6 +199,7 @@ function ContactarModal({ disp, onClose, onSent }: { disp: MiDisponibilidad; onC
 // ─── DASHBOARD TRANSPORTISTA ──────────────────────────────────────────────────
 
 function TransportistaDashboard({ userName, patente }: { userName: string; patente?: string | null }) {
+  const { user } = useAuth();
   const [aplicaciones, setAplicaciones] = useState<Aplicacion[]>([]);
   const [viajes,       setViajes]       = useState<Viaje[]>([]);
   const [misDisps,     setMisDisps]     = useState<MiDisponibilidad[]>([]);
@@ -246,6 +248,20 @@ function TransportistaDashboard({ userName, patente }: { userName: string; paten
 
       {/* Scrollable body */}
       <div className="dash-scroll" style={{ flex: 1, overflowY: 'auto', background: '#F2F2F0', padding: '20px 28px', display: 'flex', flexDirection: 'column', gap: 20 }}>
+
+        {/* Banner DJ */}
+        {activas.length > 0 && user?.declaracion_jurada === false && (
+          <div style={{ background: 'rgba(224,122,52,.1)', border: '1px solid rgba(224,122,52,.35)', borderRadius: 12, padding: '14px 18px', display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+            <AlertTriangle size={17} color="#b05a1e" style={{ flexShrink: 0 }} />
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: 13, fontWeight: 700, color: '#7a3c10' }}>Tenés un viaje activo sin declaración jurada firmada</div>
+              <div style={{ fontSize: 12, color: '#b05a1e', marginTop: 2 }}>Firmala antes de salir para poder circular legalmente.</div>
+            </div>
+            <Link href={`/viajes/${activas[0].viaje_id}`} style={{ background: '#E07A34', color: '#fff', borderRadius: 7, padding: '7px 14px', fontSize: 12, fontWeight: 700, textDecoration: 'none', whiteSpace: 'nowrap', flexShrink: 0 }}>
+              Firmar ahora
+            </Link>
+          </div>
+        )}
 
         {/* Metrics grid */}
         <div className="dash-metrics-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12 }}>
@@ -434,6 +450,26 @@ function ProductorDashboard({ userId, userName }: { userId: number; userName: st
       </div>
 
       <div className="dash-scroll" style={{ flex: 1, overflowY: 'auto', background: '#F2F2F0', padding: '20px 28px', display: 'flex', flexDirection: 'column', gap: 24 }}>
+
+        {/* Banner doc pendiente */}
+        {(() => {
+          const today = new Date(); today.setHours(0, 0, 0, 0);
+          const sinDoc = misViajes.filter(v => v.estado === 'completo' && !v.documentacion_cargada && new Date(v.fecha_salida) >= today);
+          if (!sinDoc.length) return null;
+          const v = sinDoc[0];
+          return (
+            <div style={{ background: 'rgba(224,122,52,.1)', border: '1px solid rgba(224,122,52,.35)', borderRadius: 12, padding: '14px 18px', display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+              <AlertTriangle size={17} color="#b05a1e" style={{ flexShrink: 0 }} />
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: 13, fontWeight: 700, color: '#7a3c10' }}>Tu viaje {v.origen.split(',')[0]} → {v.destino.split(',')[0]} no tiene documentación completa</div>
+                <div style={{ fontSize: 12, color: '#b05a1e', marginTop: 2 }}>El transportista necesita el DTE y la Guía Provincial para circular.</div>
+              </div>
+              <Link href={`/viajes/${v.id}`} style={{ background: '#E07A34', color: '#fff', borderRadius: 7, padding: '7px 14px', fontSize: 12, fontWeight: 700, textDecoration: 'none', whiteSpace: 'nowrap', flexShrink: 0 }}>
+                Completar documentación
+              </Link>
+            </div>
+          );
+        })()}
 
         {/* Mis viajes publicados */}
         <section>

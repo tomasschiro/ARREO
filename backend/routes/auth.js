@@ -15,7 +15,8 @@ const router = Router();
 const CAMPOS_USUARIO = `id, nombre, email, rol, estado, zona, telefono, cuit_cuil,
   patente, marca_camion, modelo_camion, año_camion,
   tipo_remolque, capacidad_kg, foto_camion_url,
-  puntuacion_promedio, cantidad_reseñas, created_at, motivo_rechazo`;
+  puntuacion_promedio, cantidad_reseñas, created_at, motivo_rechazo,
+  declaracion_jurada, declaracion_jurada_fecha`;
 
 // POST /api/auth/register
 router.post('/register', async (req, res) => {
@@ -222,6 +223,24 @@ router.put('/perfil', authMiddleware, async (req, res) => {
         año_camion || null, tipo_remolque || null, capacidad_kg || null,
         req.user.id,
       ]
+    );
+    res.json({ usuario: rows[0] });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Error interno del servidor' });
+  }
+});
+
+// PUT /api/auth/declaracion-jurada — el transportista firma su DJ
+router.put('/declaracion-jurada', authMiddleware, async (req, res) => {
+  if (req.user.rol !== 'transportista') {
+    return res.status(403).json({ error: 'Solo los transportistas pueden firmar la declaración jurada' });
+  }
+  try {
+    const { rows } = await pool.query(
+      `UPDATE usuarios SET declaracion_jurada = true, declaracion_jurada_fecha = NOW()
+       WHERE id = $1 RETURNING ${CAMPOS_USUARIO}`,
+      [req.user.id]
     );
     res.json({ usuario: rows[0] });
   } catch (err) {

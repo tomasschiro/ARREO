@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
@@ -9,9 +9,10 @@ import AppSidebar from '@/components/AppSidebar';
 import StarRating from '@/components/StarRating';
 import TransportistaPerfilModal from '@/components/TransportistaPerfilModal';
 import api from '@/lib/api';
-import { Check, X, Clock, Calendar, Beef, Sun, CloudRain, CloudLightning, Snowflake, Cloud, MapPin, AlertTriangle, Truck, Scale, Lock } from 'lucide-react';
+import { Check, X, Clock, Calendar, Beef, Sun, CloudRain, CloudLightning, Snowflake, Cloud, MapPin, AlertTriangle, Truck, Scale, Lock, Share2, Radio } from 'lucide-react';
 
-const MapView = dynamic(() => import('@/components/MapViewClient'), { ssr: false });
+const MapView      = dynamic(() => import('@/components/MapViewClient'),    { ssr: false });
+const TrackingMap  = dynamic(() => import('@/components/TrackingMapClient'), { ssr: false });
 
 interface Viaje {
   id: number;
@@ -29,6 +30,12 @@ interface Viaje {
   dte_numero?: string;
   guia_provincial_numero?: string;
   documentacion_cargada?: boolean;
+}
+
+interface Ubicacion {
+  lat: number;
+  lng: number;
+  actualizada_en: string;
 }
 
 interface Aplicacion {
@@ -87,7 +94,7 @@ function Toast({ message, type, onClose }: { message: string; type: 'success' | 
 
 export default function ViajeDetailPage() {
   const { id } = useParams<{ id: string }>();
-  const { user, loading: authLoading } = useAuth();
+  const { user, loading: authLoading, updateUser } = useAuth();
   const router = useRouter();
 
   const [viaje,        setViaje]        = useState<Viaje | null>(null);
@@ -102,6 +109,14 @@ export default function ViajeDetailPage() {
   const [dteNum,       setDteNum]       = useState('');
   const [guiaNum,      setGuiaNum]      = useState('');
   const [savingDoc,    setSavingDoc]    = useState(false);
+  const [djModal,      setDjModal]      = useState(false);
+  const [firmandoDJ,   setFirmandoDJ]   = useState(false);
+
+  // Seguimiento en tiempo real
+  const [ubicacion,      setUbicacion]      = useState<Ubicacion | null>(null);
+  const [linkUrl,        setLinkUrl]        = useState<string | null>(null);
+  const [generandoLink,  setGenerandoLink]  = useState(false);
+  const socketRef = useRef<import('socket.io-client').Socket | null>(null);
 
   useEffect(() => {
     if (!authLoading && !user) router.push('/login');
@@ -124,6 +139,42 @@ export default function ViajeDetailPage() {
 
   useEffect(() => { if (user) load(); }, [user, load]);
 
+  // Socket.io: suscribirse al room del viaje cuando está activo
+  useEffect(() => {
+    if (!viaje || viaje.estado !== 'completo') return;
+    const today = new Date(); today.setHours(0, 0, 0, 0);
+    if (new Date(viaje.fecha_salida) < today) return;
+
+    let socket: import('socket.io-client').Socket;
+    import('socket.io-client').then(({ io }) => {
+      const socketUrl = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api').replace(/\/api$/, '');
+      socket = io(socketUrl, { transports: ['websocket', 'polling'] });
+      socketRef.current = socket;
+      socket.emit('join_viaje', viaje.id);
+      socket.on('ubicacion_actualizada', (data: { lat: number; lng: number; timestamp: string }) => {
+        setUbicacion({ lat: data.lat, lng: data.lng, actualizada_en: data.timestamp });
+      });
+    });
+    return () => {
+      if (socket) { socket.emit('leave_viaje', viaje.id); socket.disconnect(); }
+      socketRef.current = null;
+    };
+  }, [viaje?.id, viaje?.estado, viaje?.fecha_salida]);
+
+  // Cargar la última ubicación conocida cuando el viaje está activo
+  useEffect(() => {
+    if (!viaje || viaje.estado !== 'completo') return;
+    const today = new Date(); today.setHours(0, 0, 0, 0);
+    if (new Date(viaje.fecha_salida) < today) return;
+    api.get(`/viajes/${viaje.id}/ubicacion`)
+      .then(({ data }) => {
+        if (data.lat != null && data.lng != null) {
+          setUbicacion({ lat: data.lat, lng: data.lng, actualizada_en: data.actualizada_en });
+        }
+      })
+      .catch(() => {});
+  }, [viaje?.id, viaje?.estado, viaje?.fecha_salida]);
+
   async function handleGuardarDoc() {
     if (!dteNum.trim() || !guiaNum.trim()) return;
     setSavingDoc(true);
@@ -137,6 +188,20 @@ export default function ViajeDetailPage() {
       setToast({ message: msg || 'Error al guardar', type: 'error' });
     } finally {
       setSavingDoc(false);
+    }
+  }
+
+  async function handleFirmarDJ() {
+    setFirmandoDJ(true);
+    try {
+      const { data } = await api.put('/auth/declaracion-jurada');
+      updateUser(data.usuario);
+      setDjModal(false);
+      setToast({ message: 'Declaración jurada firmada correctamente', type: 'success' });
+    } catch {
+      setToast({ message: 'Error al firmar la declaración jurada', type: 'error' });
+    } finally {
+      setFirmandoDJ(false);
     }
   }
 
@@ -169,6 +234,21 @@ export default function ViajeDetailPage() {
     }
   }
 
+  async function handleGenerarLink() {
+    if (!viaje) return;
+    setGenerandoLink(true);
+    try {
+      const { data } = await api.post(`/viajes/${viaje.id}/generar-link`);
+      setLinkUrl(data.url);
+      await navigator.clipboard.writeText(data.url);
+      setToast({ message: 'Link copiado al portapapeles', type: 'success' });
+    } catch {
+      setToast({ message: 'Error al generar el link', type: 'error' });
+    } finally {
+      setGenerandoLink(false);
+    }
+  }
+
   if (authLoading || loading || !user) {
     return (
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', backgroundColor: 'var(--color-niebla)' }}>
@@ -185,6 +265,36 @@ export default function ViajeDetailPage() {
   });
   const hasMap = viaje.origen_lat && viaje.origen_lng && viaje.destino_lat && viaje.destino_lng;
 
+  const todayMidnight = new Date(); todayMidnight.setHours(0, 0, 0, 0);
+  const isActive  = new Date(viaje.fecha_salida) >= todayMidnight;
+  const hasTracking = viaje.estado === 'completo' && isActive && Boolean(hasMap);
+  const msUntilSalida = new Date(viaje.fecha_salida).getTime() - Date.now();
+  const isUrgent24h = msUntilSalida > 0 && msUntilSalida < 24 * 60 * 60 * 1000;
+
+  function timeSince(iso: string): string {
+    const secs = Math.floor((Date.now() - new Date(iso).getTime()) / 1000);
+    if (secs < 60) return `Hace ${secs}s`;
+    const mins = Math.floor(secs / 60);
+    if (mins < 60) return `Hace ${mins} min`;
+    return `Hace ${Math.floor(mins / 60)}h`;
+  }
+
+  function calcETA(lat: number, lng: number): string {
+    if (!viaje) return '';
+    const R = 6371;
+    const dLat = (viaje.destino_lat - lat) * Math.PI / 180;
+    const dLng = (viaje.destino_lng - lng) * Math.PI / 180;
+    const a = Math.sin(dLat / 2) ** 2 +
+      Math.cos(lat * Math.PI / 180) * Math.cos(viaje.destino_lat * Math.PI / 180) * Math.sin(dLng / 2) ** 2;
+    const distKm = R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    const hrs = distKm / 80;
+    if (hrs < 0.5) return 'Menos de 30 min';
+    if (hrs < 1)   return `~${Math.round(hrs * 60)} min`;
+    const h = Math.floor(hrs);
+    const m = Math.round((hrs - h) * 60);
+    return `~${h}h${m > 0 ? ` ${m}min` : ''}`;
+  }
+
   return (
     <div className="app-layout">
       <style>{`
@@ -196,6 +306,9 @@ export default function ViajeDetailPage() {
         }
         @media (max-width: 420px) {
           .vjd-3col { grid-template-columns: 1fr !important; }
+        }
+        @keyframes vjd-live {
+          0%,100% { opacity:1; } 50% { opacity:.15; }
         }
       `}</style>
       <AppSidebar />
@@ -216,6 +329,66 @@ export default function ViajeDetailPage() {
 
         <main className="page-content">
           <div style={{ maxWidth: 768, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 20 }}>
+
+            {/* ── Banners de alerta ── */}
+
+            {/* Transportista: DJ no firmada */}
+            {user.rol === 'transportista' && !isOwner && viaje.estado === 'completo' && !user.declaracion_jurada && (
+              <div style={{ background: 'rgba(194,48,48,.07)', border: '1.5px solid rgba(194,48,48,.3)', borderRadius: 12, padding: '14px 18px', display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+                <AlertTriangle size={17} color="#b83030" style={{ flexShrink: 0 }} />
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: '#8a1c1c' }}>No podés iniciar este viaje sin firmar la declaración jurada de documentación</div>
+                  <div style={{ fontSize: 12, color: '#b83030', marginTop: 2 }}>Confirmá que tenés toda la documentación en regla antes de salir.</div>
+                </div>
+                <button
+                  onClick={() => setDjModal(true)}
+                  style={{ background: '#C83030', color: '#fff', border: 'none', borderRadius: 8, padding: '8px 16px', fontSize: 12, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0, fontFamily: 'inherit' }}>
+                  Firmar declaración jurada
+                </button>
+              </div>
+            )}
+
+            {/* Transportista: doc del productor pendiente */}
+            {user.rol === 'transportista' && !isOwner && viaje.estado === 'completo' && !viaje.documentacion_cargada && (
+              <div style={{ background: 'rgba(224,180,52,.08)', border: '1px solid rgba(224,180,52,.35)', borderRadius: 12, padding: '14px 18px', display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+                <Clock size={16} color="#9a7a00" style={{ flexShrink: 0 }} />
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: '#6b5200' }}>El productor aún no cargó el DTE y la Guía Provincial</div>
+                  <div style={{ fontSize: 12, color: '#9a7a00', marginTop: 2 }}>Recordáselo antes de salir. Sin esa documentación no podés circular.</div>
+                </div>
+              </div>
+            )}
+
+            {/* Productor: doc pendiente (urgente si <24h) */}
+            {isOwner && viaje.estado === 'completo' && !viaje.documentacion_cargada && (
+              <div style={{
+                background: isUrgent24h ? 'rgba(194,48,48,.09)' : 'rgba(194,48,48,.07)',
+                border: isUrgent24h ? '1.5px solid rgba(194,48,48,.4)' : '1.5px solid rgba(194,48,48,.25)',
+                borderRadius: 12, padding: '14px 18px',
+                display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap',
+                animation: isUrgent24h ? 'vjd-live 2s ease-in-out infinite' : 'none',
+              }}>
+                <AlertTriangle size={17} color="#b83030" style={{ flexShrink: 0 }} />
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  {isUrgent24h ? (
+                    <>
+                      <div style={{ fontSize: 13, fontWeight: 700, color: '#8a1c1c' }}>El viaje sale en menos de 24hs y falta documentación — Subila urgente</div>
+                      <div style={{ fontSize: 12, color: '#b83030', marginTop: 2 }}>El transportista no puede circular sin el DTE y la Guía Provincial.</div>
+                    </>
+                  ) : (
+                    <>
+                      <div style={{ fontSize: 13, fontWeight: 700, color: '#8a1c1c' }}>Falta documentación obligatoria</div>
+                      <div style={{ fontSize: 12, color: '#b83030', marginTop: 2 }}>El transportista no puede circular sin el DTE y la Guía Provincial.</div>
+                    </>
+                  )}
+                </div>
+                <button
+                  onClick={() => setDocModal(true)}
+                  style={{ background: '#C83030', color: '#fff', border: 'none', borderRadius: 8, padding: '8px 16px', fontSize: 12, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0, fontFamily: 'inherit' }}>
+                  Subir documentación ahora
+                </button>
+              </div>
+            )}
 
             {/* Encabezado */}
             <section className="card">
@@ -249,26 +422,85 @@ export default function ViajeDetailPage() {
               </div>
             </section>
 
-            {/* Mapa */}
+            {/* Mapa / Seguimiento en vivo */}
             {hasMap && (
               <section className="card" style={{ padding: 0, overflow: 'hidden' }}>
-                <div style={{ padding: '16px 24px', borderBottom: '1px solid var(--color-border)' }}>
-                  <h3 style={{ fontSize: 13, fontWeight: 700, color: 'var(--color-text-muted)' }}>Ruta</h3>
+                <div style={{ padding: '16px 24px', borderBottom: '1px solid var(--color-border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <h3 style={{ fontSize: 13, fontWeight: 700, color: 'var(--color-text-muted)' }}>
+                      {hasTracking ? 'Seguimiento en vivo' : 'Ruta'}
+                    </h3>
+                    {hasTracking && ubicacion && (
+                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 11, fontWeight: 700, color: '#c23030', background: 'rgba(194,48,48,.08)', border: '1px solid rgba(194,48,48,.2)', padding: '2px 8px', borderRadius: 5 }}>
+                        <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#c23030', animation: 'vjd-live 1.2s ease-in-out infinite', display: 'inline-block' }} />
+                        En vivo
+                      </span>
+                    )}
+                  </div>
+                  {hasTracking && isOwner && (
+                    <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+                      {ubicacion && (
+                        <span style={{ fontSize: 11, color: 'var(--color-text-subtle)' }}>
+                          {timeSince(ubicacion.actualizada_en)}
+                        </span>
+                      )}
+                      <button
+                        onClick={handleGenerarLink}
+                        disabled={generandoLink}
+                        style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: '#1F2B1F', color: '#fff', border: 'none', borderRadius: 7, padding: '6px 12px', fontSize: 12, fontWeight: 600, cursor: 'pointer', opacity: generandoLink ? .6 : 1 }}>
+                        <Share2 size={12} /> {generandoLink ? 'Generando…' : 'Compartir'}
+                      </button>
+                    </div>
+                  )}
                 </div>
+
                 <div className="vjd-map">
-                  <MapView
-                    origenLat={viaje.origen_lat} origenLng={viaje.origen_lng}
-                    destinoLat={viaje.destino_lat} destinoLng={viaje.destino_lng}
-                  />
+                  {hasTracking ? (
+                    <TrackingMap
+                      origenLat={viaje.origen_lat}   origenLng={viaje.origen_lng}
+                      destinoLat={viaje.destino_lat} destinoLng={viaje.destino_lng}
+                      currentLat={ubicacion?.lat}    currentLng={ubicacion?.lng}
+                      height="320px"
+                    />
+                  ) : (
+                    <MapView
+                      origenLat={viaje.origen_lat} origenLng={viaje.origen_lng}
+                      destinoLat={viaje.destino_lat} destinoLng={viaje.destino_lng}
+                    />
+                  )}
                 </div>
-                <div style={{ padding: '12px 24px', display: 'flex', gap: 24, borderTop: '1px solid var(--color-border)' }}>
+
+                <div style={{ padding: '12px 24px', display: 'flex', gap: 16, flexWrap: 'wrap', borderTop: '1px solid var(--color-border)', alignItems: 'center' }}>
                   <span style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: 'var(--color-text-muted)' }}>
                     <span style={{ width: 12, height: 12, borderRadius: '50%', backgroundColor: '#8BAF4E', display: 'inline-block' }} /> Origen
                   </span>
                   <span style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: 'var(--color-text-muted)' }}>
                     <span style={{ width: 12, height: 12, borderRadius: '50%', backgroundColor: '#E07A34', display: 'inline-block' }} /> Destino
                   </span>
+                  {hasTracking && ubicacion && (
+                    <>
+                      <span style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: 'var(--color-text-muted)' }}>
+                        <span style={{ width: 12, height: 12, borderRadius: '50%', backgroundColor: '#2563EB', display: 'inline-block' }} /> Posición actual
+                      </span>
+                      <span style={{ marginLeft: 'auto', fontSize: 12, fontWeight: 600, color: '#1F2B1F', display: 'flex', alignItems: 'center', gap: 5 }}>
+                        <Radio size={12} /> ETA: {calcETA(ubicacion.lat, ubicacion.lng)}
+                      </span>
+                    </>
+                  )}
                 </div>
+
+                {linkUrl && isOwner && (
+                  <div style={{ padding: '12px 24px', borderTop: '1px solid var(--color-border)', background: 'rgba(139,175,78,.05)' }}>
+                    <p style={{ fontSize: 11, color: '#4d6b1a', fontWeight: 600, marginBottom: 4 }}>Link de seguimiento copiado:</p>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <code style={{ fontSize: 11, color: '#555', background: '#F0F0F0', padding: '4px 8px', borderRadius: 5, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>{linkUrl}</code>
+                      <button onClick={() => { navigator.clipboard.writeText(linkUrl); setToast({ message: 'Link copiado', type: 'success' }); }}
+                        style={{ fontSize: 11, fontWeight: 600, color: '#8BAF4E', background: 'none', border: 'none', cursor: 'pointer', whiteSpace: 'nowrap' }}>
+                        Copiar de nuevo
+                      </button>
+                    </div>
+                  </div>
+                )}
               </section>
             )}
 
@@ -498,6 +730,42 @@ export default function ViajeDetailPage() {
                 style={{ flex: 2, padding: '11px', border: 'none', borderRadius: 8, background: '#E07A34', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', opacity: (savingDoc || !dteNum.trim() || !guiaNum.trim()) ? .6 : 1 }}
               >
                 {savingDoc ? 'Guardando…' : 'Guardar documentación'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {djModal && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 300, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,.5)', padding: 16 }}>
+          <div style={{ background: '#fff', borderRadius: 16, padding: 24, width: '100%', maxWidth: 440, display: 'flex', flexDirection: 'column', gap: 16 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <h3 style={{ fontSize: 16, fontWeight: 700, color: '#111' }}>Declaración jurada de documentación</h3>
+              <button onClick={() => setDjModal(false)} style={{ color: '#999', cursor: 'pointer', background: 'none', border: 'none', display: 'flex' }}><X size={20} /></button>
+            </div>
+            <div style={{ background: '#F8F8F6', borderRadius: 10, padding: '14px 16px' }}>
+              <p style={{ fontSize: 13, color: '#444', lineHeight: 1.65 }}>
+                Al firmar, declarás bajo fe de juramento que contás con toda la documentación habilitante para el traslado de hacienda:
+              </p>
+              <ul style={{ margin: '10px 0 0', paddingLeft: 18, fontSize: 13, color: '#444', lineHeight: 1.8 }}>
+                <li>LINTI vigente</li>
+                <li>Seguro de carga al día</li>
+                <li>Habilitación SENASA</li>
+                <li>VTV al día</li>
+              </ul>
+              <p style={{ fontSize: 12, color: '#888', marginTop: 10 }}>
+                Declaro también que el vehículo está en condiciones aptas y seguras para realizar el traslado.
+              </p>
+            </div>
+            <div style={{ display: 'flex', gap: 10 }}>
+              <button onClick={() => setDjModal(false)} style={{ flex: 1, padding: '11px', border: '1.5px solid #E0E0E0', borderRadius: 8, background: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
+                Cancelar
+              </button>
+              <button
+                onClick={handleFirmarDJ}
+                disabled={firmandoDJ}
+                style={{ flex: 2, padding: '11px', border: 'none', borderRadius: 8, background: '#1F2B1F', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', opacity: firmandoDJ ? .6 : 1 }}>
+                {firmandoDJ ? 'Firmando…' : 'Acepto y firmo la declaración'}
               </button>
             </div>
           </div>

@@ -6,6 +6,7 @@ const {
   emailNuevaAplicacion,
   emailAplicacionAceptada,
   emailAplicacionRechazada,
+  emailProductorTransportistaConfirmado,
 } = require('../services/email.service');
 
 const router = Router();
@@ -220,10 +221,11 @@ router.put('/:id/aplicaciones/:aid', authMiddleware, async (req, res) => {
       if (estado === 'aceptada') {
         // Incluir datos del productor (sin teléfono)
         pool.query(
-          `SELECT u.nombre, u.zona FROM usuarios u WHERE u.id = $1`,
+          `SELECT u.email, u.nombre, u.zona FROM usuarios u WHERE u.id = $1`,
           [viaje.rows[0].usuario_id]
         ).then(({ rows: [prod] }) => {
           emailAplicacionAceptada(t.email, t.nombre, viaje.rows[0], prod?.nombre || '', prod?.zona || null).catch(() => {});
+          emailProductorTransportistaConfirmado(prod?.email, prod?.nombre || '', viaje.rows[0], t.nombre).catch(() => {});
         }).catch(() => {});
       } else {
         emailAplicacionRechazada(t.email, t.nombre, viaje.rows[0]).catch(() => {});

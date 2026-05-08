@@ -161,14 +161,87 @@ function emailAplicacionAceptada(transportistaEmail, transportistaNombre, viaje,
   if (viaje.cantidad_cabezas) filas.push(['Cabezas', String(viaje.cantidad_cabezas)]);
   if (productorZona)          filas.push(['Zona productor', productorZona]);
 
+  const djBox = `<div style="background:#FFF5E6;border:1px solid rgba(224,122,52,.3);border-radius:8px;padding:14px 16px;margin:16px 0">
+    <div style="font-size:11px;font-weight:700;color:#b05a1e;text-transform:uppercase;letter-spacing:.04em;margin-bottom:6px">Acción requerida antes de salir</div>
+    <p style="margin:0;font-size:13px;color:#b05a1e;line-height:1.5">Firmá la declaración jurada de documentación desde el detalle del viaje. Sin ella, no podrás circular legalmente.</p>
+  </div>`;
+
   const html = layout(
-    h1('✅ ¡Tu aplicación fue aceptada!') +
-    p(`Hola <strong>${transportistaNombre}</strong>, el productor eligió tu propuesta para el siguiente viaje.`) +
+    h1('✅ Fuiste seleccionado para un viaje') +
+    p(`Hola <strong>${transportistaNombre}</strong>, el productor eligió tu propuesta.`) +
     infoBox(filas) +
-    p('Pronto el productor se contactará con vos para coordinar los detalles.', 'muted') +
-    btn(`${FRONTEND_URL}/mis-viajes`, 'Ver mis aplicaciones')
+    djBox +
+    btn(`${FRONTEND_URL}/mis-viajes`, 'Firmar declaración jurada')
   );
-  return sendEmail(transportistaEmail, '✅ ¡Tu aplicación fue aceptada!', html);
+  return sendEmail(transportistaEmail, '✅ Fuiste seleccionado — firmá la declaración jurada', html);
+}
+
+// ─── Email: Productor confirma transportista ──────────────────────────────────
+
+function emailProductorTransportistaConfirmado(productorEmail, productorNombre, viaje, transportistaNombre) {
+  const filas = [
+    ['Ruta', `${viaje.origen} → ${viaje.destino}`],
+    ['Fecha', fmtFecha(viaje.fecha_salida)],
+    ['Hacienda', viaje.tipo_hacienda],
+    ['Transportista', transportistaNombre],
+  ];
+  if (viaje.cantidad_cabezas) filas.push(['Cabezas', String(viaje.cantidad_cabezas)]);
+
+  const docBox = `<div style="background:#FFF5E6;border:1px solid rgba(224,122,52,.3);border-radius:8px;padding:14px 16px;margin:16px 0">
+    <div style="font-size:11px;font-weight:700;color:#b05a1e;text-transform:uppercase;letter-spacing:.04em;margin-bottom:6px">Acción requerida</div>
+    <p style="margin:0;font-size:13px;color:#b05a1e;line-height:1.5">El transportista necesita el <strong>DTE</strong> y la <strong>Guía Provincial</strong> para circular. Completá la documentación desde el detalle del viaje antes de que salga el camión.</p>
+  </div>`;
+
+  const html = layout(
+    h1('Transportista confirmado para tu viaje') +
+    p(`Hola <strong>${productorNombre}</strong>, seleccionaste a <strong>${transportistaNombre}</strong> para tu viaje.`) +
+    infoBox(filas) +
+    docBox +
+    btn(`${FRONTEND_URL}/viajes/${viaje.id}`, 'Completar documentación')
+  );
+  return sendEmail(productorEmail, 'Transportista confirmado — completá la documentación', html);
+}
+
+// ─── Email: Productor — 24hs y falta documentación ───────────────────────────
+
+function emailProductorDocFaltante24h(productorEmail, productorNombre, viaje, transportistaNombre) {
+  const filas = [
+    ['Ruta', `${viaje.origen} → ${viaje.destino}`],
+    ['Fecha', fmtFecha(viaje.fecha_salida)],
+    ['Hacienda', viaje.tipo_hacienda],
+    ['Transportista', transportistaNombre],
+  ];
+  if (viaje.cantidad_cabezas) filas.push(['Cabezas', String(viaje.cantidad_cabezas)]);
+
+  const html = layout(
+    h1('🚨 Tu viaje sale mañana — falta documentación') +
+    p(`Hola <strong>${productorNombre}</strong>, tu viaje sale en <strong>menos de 24 horas</strong> y todavía no cargaste la documentación requerida.`) +
+    infoBox(filas) +
+    p('El DTE y la Guía Provincial son obligatorios para que el transportista pueda circular. Subílos urgente.', 'muted') +
+    btn(`${FRONTEND_URL}/viajes/${viaje.id}`, 'Subir documentación urgente')
+  );
+  return sendEmail(productorEmail, '🚨 Tu viaje sale mañana — falta documentación', html);
+}
+
+// ─── Email: Transportista — 24hs y DTE pendiente ─────────────────────────────
+
+function emailTransportistaDocPendiente24h(transportistaEmail, transportistaNombre, viaje, productorNombre) {
+  const filas = [
+    ['Ruta', `${viaje.origen} → ${viaje.destino}`],
+    ['Fecha', fmtFecha(viaje.fecha_salida)],
+    ['Hacienda', viaje.tipo_hacienda],
+    ['Productor', productorNombre],
+  ];
+  if (viaje.cantidad_cabezas) filas.push(['Cabezas', String(viaje.cantidad_cabezas)]);
+
+  const html = layout(
+    h1('⚠️ Tu viaje sale mañana — el DTE está pendiente') +
+    p(`Hola <strong>${transportistaNombre}</strong>, tu viaje sale en <strong>menos de 24 horas</strong> pero el productor aún no cargó la documentación.`) +
+    infoBox(filas) +
+    p('Te recomendamos contactarlo a través de la mensajería interna de ARREO para recordarle que suba el DTE y la Guía Provincial.', 'muted') +
+    btn(`${FRONTEND_URL}/mensajes`, 'Contactar al productor')
+  );
+  return sendEmail(transportistaEmail, '⚠️ Tu viaje sale mañana — el DTE está pendiente', html);
 }
 
 // ─── Email #6: Aplicación rechazada (para transportista) ─────────────────────
@@ -312,8 +385,9 @@ function iniciarReminderViajes(pool) {
     try {
       const { rows } = await pool.query(`
         SELECT v.id, v.origen, v.destino, v.fecha_salida, v.tipo_hacienda, v.cantidad_cabezas,
+               v.documentacion_cargada,
                u.email  AS productor_email,  u.nombre  AS productor_nombre,
-               t.nombre AS transportista_nombre, t.patente
+               t.email  AS transportista_email, t.nombre AS transportista_nombre, t.patente
         FROM viajes v
         JOIN usuarios u ON u.id = v.usuario_id
         JOIN aplicaciones a ON a.viaje_id = v.id AND a.estado = 'aceptada'
@@ -323,6 +397,10 @@ function iniciarReminderViajes(pool) {
       `);
       for (const r of rows) {
         emailRecordatorioViaje(r.productor_email, r.productor_nombre, r, r.transportista_nombre, r.patente);
+        if (!r.documentacion_cargada) {
+          emailProductorDocFaltante24h(r.productor_email, r.productor_nombre, r, r.transportista_nombre).catch(() => {});
+          emailTransportistaDocPendiente24h(r.transportista_email, r.transportista_nombre, r, r.productor_nombre).catch(() => {});
+        }
       }
       if (rows.length) console.log(`[email-cron] ${rows.length} recordatorio(s) enviado(s)`);
     } catch (err) {
@@ -348,5 +426,8 @@ module.exports = {
   emailRecordatorioViaje,
   emailAdminNuevoTransportista,
   emailAdminNuevoProductor,
+  emailProductorTransportistaConfirmado,
+  emailProductorDocFaltante24h,
+  emailTransportistaDocPendiente24h,
   iniciarReminderViajes,
 };
