@@ -15,7 +15,9 @@
       "Bash(node -e \"const pool = require\\('./database/connect'\\); pool.query\\('SELECT conname FROM pg_constraint WHERE conname LIKE \\\\'%aplicaciones%\\\\''\\).then\\(r => console.log\\(r.rows\\)\\).catch\\(e => console.log\\('DB not reachable:', e.message\\)\\).finally\\(\\(\\) => pool.end\\(\\)\\)\")",
       "Bash(node --check backend/routes/remates.js)",
       "Bash(node --check backend/services/email.service.js)",
-      "Bash(node --check backend/server.js)"
+      "Bash(node --check backend/server.js)",
+      "Bash(node database/seed-usuarios-prueba.js)",
+      "Bash(node --check /c/Users/Equipo/hacienda-rutas/backend/server.js)"
     ],
     "additionalDirectories": [
       "c:\\Users\\Equipo\\hacienda-rutas\\frontend\\src\\app\\remates"

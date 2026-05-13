@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import api from '@/lib/api';
 import { AlertTriangle } from 'lucide-react';
@@ -17,8 +16,6 @@ function ToroBull() {
 }
 
 export default function LoginPage() {
-  const router = useRouter();
-
   const [email,    setEmail]    = useState('');
   const [password, setPassword] = useState('');
   const [error,    setError]    = useState('');
@@ -35,10 +32,9 @@ export default function LoginPage() {
 
       const estado = data.usuario?.estado;
       if (estado === 'superadmin' || estado === 'aprobado' || data.usuario?.rol === 'superadmin') {
-        router.push('/dashboard');
+        window.location.href = '/dashboard';
       } else {
-        // pendiente, rechazado, suspendido → pantalla de verificación
-        router.push('/verificacion');
+        window.location.href = '/verificacion';
       }
     } catch (err: unknown) {
       const msg = (err as { response?: { data?: { error?: string } } })?.response?.data?.error;
