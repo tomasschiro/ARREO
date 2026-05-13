@@ -266,17 +266,20 @@ router.post('/:id/lotes', authMiddleware, async (req, res) => {
     const {
       descripcion, tipo_hacienda, cantidad_cabezas_estimada,
       origen_direccion, origen_lat, origen_lng,
+      peso_promedio_kg, peso_total_kg,
     } = req.body;
 
     const { rows } = await pool.query(
       `INSERT INTO remate_lotes
          (remate_id, descripcion, tipo_hacienda, cantidad_cabezas_estimada,
-          origen_direccion, origen_lat, origen_lng)
-       VALUES ($1,$2,$3,$4,$5,$6,$7)
+          origen_direccion, origen_lat, origen_lng,
+          peso_promedio_kg, peso_total_kg)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)
        RETURNING *`,
       [req.params.id, descripcion || null, tipo_hacienda || null,
        cantidad_cabezas_estimada || null,
-       origen_direccion || null, origen_lat || null, origen_lng || null]
+       origen_direccion || null, origen_lat || null, origen_lng || null,
+       peso_promedio_kg || null, peso_total_kg || null]
     );
     res.status(201).json({ lote: rows[0] });
   } catch (err) {
@@ -297,6 +300,7 @@ router.put('/:id/lotes/:loteId', authMiddleware, async (req, res) => {
     const {
       descripcion, tipo_hacienda, cantidad_cabezas_estimada,
       origen_direccion, origen_lat, origen_lng,
+      peso_promedio_kg, peso_total_kg,
     } = req.body;
 
     const { rows } = await pool.query(
@@ -306,11 +310,14 @@ router.put('/:id/lotes/:loteId', authMiddleware, async (req, res) => {
          cantidad_cabezas_estimada = COALESCE($3, cantidad_cabezas_estimada),
          origen_direccion = COALESCE($4, origen_direccion),
          origen_lat = COALESCE($5, origen_lat),
-         origen_lng = COALESCE($6, origen_lng)
-       WHERE id = $7 AND remate_id = $8
+         origen_lng = COALESCE($6, origen_lng),
+         peso_promedio_kg = COALESCE($7, peso_promedio_kg),
+         peso_total_kg = COALESCE($8, peso_total_kg)
+       WHERE id = $9 AND remate_id = $10
        RETURNING *`,
       [descripcion, tipo_hacienda, cantidad_cabezas_estimada,
        origen_direccion, origen_lat, origen_lng,
+       peso_promedio_kg || null, peso_total_kg || null,
        req.params.loteId, req.params.id]
     );
     if (!rows[0]) return res.status(404).json({ error: 'Lote no encontrado' });
@@ -394,7 +401,13 @@ router.put('/:id/lotes/:loteId/vendido', authMiddleware, async (req, res) => {
       [req.params.id]
     );
 
-    res.json({ lote: loteActualizado, viaje });
+    // Otros lotes pendientes del mismo remate (para sugerir agrupación)
+    const { rows: otrosPendientes } = await pool.query(
+      `SELECT * FROM remate_lotes WHERE remate_id = $1 AND id != $2 AND estado = 'pendiente'`,
+      [req.params.id, lote.id]
+    );
+
+    res.json({ lote: loteActualizado, viaje, otros_lotes_pendientes: otrosPendientes });
 
     // Notificar a todos los pre-anotados
     pool.query(
@@ -594,6 +607,65 @@ router.put('/:id/lotes/:loteId/reasignar', authMiddleware, async (req, res) => {
     );
 
     res.json({ lote: loteActualizado });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Error interno del servidor' });
+  }
+});
+
+// ─── POST /api/remates/:id/agrupar — agrupa lotes pendientes en un viaje ya creado ──
+router.post('/:id/agrupar', authMiddleware, async (req, res) => {
+  try {
+    const { rows: [remate] } = await pool.query('SELECT * FROM remates WHERE id = $1', [req.params.id]);
+    if (!remate) return res.status(404).json({ error: 'Remate no encontrado' });
+    if (remate.consignataria_id !== req.user.id) {
+      return res.status(403).json({ error: 'Solo el dueño puede agrupar lotes' });
+    }
+
+    const { viaje_id, lote_ids, comprador_nombre, destino_direccion, destino_lat, destino_lng } = req.body;
+    if (!viaje_id || !Array.isArray(lote_ids) || lote_ids.length === 0) {
+      return res.status(400).json({ error: 'viaje_id y lote_ids son obligatorios' });
+    }
+    if (!destino_direccion) {
+      return res.status(400).json({ error: 'destino_direccion es obligatorio' });
+    }
+
+    // Verificar que los lotes pertenecen a este remate y están pendientes
+    const { rows: lotes } = await pool.query(
+      `SELECT * FROM remate_lotes WHERE id = ANY($1::int[]) AND remate_id = $2 AND estado = 'pendiente'`,
+      [lote_ids, req.params.id]
+    );
+    if (lotes.length === 0) {
+      return res.status(400).json({ error: 'No se encontraron lotes válidos para agrupar' });
+    }
+
+    const lotesActualizados = [];
+    for (const lote of lotes) {
+      const { rows: [loteAct] } = await pool.query(
+        `UPDATE remate_lotes SET
+           estado = 'vendido',
+           comprador_nombre = $1,
+           destino_direccion = $2,
+           destino_lat = $3,
+           destino_lng = $4,
+           viaje_id = $5
+         WHERE id = $6
+         RETURNING *`,
+        [comprador_nombre || null, destino_direccion, destino_lat || null, destino_lng || null, viaje_id, lote.id]
+      );
+      lotesActualizados.push(loteAct);
+    }
+
+    // Sumar cabezas al viaje principal
+    const totalCabezas = lotes.reduce((s, l) => s + (l.cantidad_cabezas_estimada || 0), 0);
+    if (totalCabezas > 0) {
+      await pool.query(
+        `UPDATE viajes SET cantidad_cabezas = cantidad_cabezas + $1 WHERE id = $2`,
+        [totalCabezas, viaje_id]
+      );
+    }
+
+    res.json({ lotes: lotesActualizados });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Error interno del servidor' });

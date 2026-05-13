@@ -21,6 +21,15 @@ interface LoteForm {
   origen_direccion: string;
   origen_lat: number | null;
   origen_lng: number | null;
+  peso_promedio_kg: string;
+  peso_total_kg: number | null;
+}
+
+function jaulaBadge(pesoTotal: number | null): { label: string; color: string } | null {
+  if (!pesoTotal) return null;
+  if (pesoTotal <= 6000)  return { label: 'Jaula simple',  color: '#5a7a2a' };
+  if (pesoTotal <= 14000) return { label: 'Acoplado',      color: '#b85e1e' };
+  return                         { label: 'Semirremolque', color: '#7a2a2a' };
 }
 
 interface LocationValue { lat: number; lng: number; address: string }
@@ -30,11 +39,15 @@ const TIPOS_HACIENDA = ['Novillos', 'Vacas', 'Terneros', 'Toros', 'Vaquillonas',
 // ─── AgregarLoteModal ─────────────────────────────────────────────────────────
 
 function AgregarLoteModal({ onClose, onAdd }: { onClose: () => void; onAdd: (l: LoteForm) => void }) {
-  const [tipo_hacienda, setTipoHacienda]     = useState('');
-  const [cantidad, setCantidad]               = useState('');
-  const [descripcion, setDescripcion]         = useState('');
-  const [origenLoc, setOrigenLoc]             = useState<LocationValue | null>(null);
-  const [err, setErr]                         = useState('');
+  const [tipo_hacienda, setTipoHacienda] = useState('');
+  const [cantidad, setCantidad]           = useState('');
+  const [pesoProm, setPesoProm]           = useState('');
+  const [descripcion, setDescripcion]     = useState('');
+  const [origenLoc, setOrigenLoc]         = useState<LocationValue | null>(null);
+  const [err, setErr]                     = useState('');
+
+  const pesoTotal = cantidad && pesoProm ? Math.round(Number(cantidad) * Number(pesoProm)) : null;
+  const badge = jaulaBadge(pesoTotal);
 
   function handleAdd() {
     if (!tipo_hacienda) { setErr('Seleccioná el tipo de hacienda'); return; }
@@ -46,9 +59,14 @@ function AgregarLoteModal({ onClose, onAdd }: { onClose: () => void; onAdd: (l: 
       origen_direccion: origenLoc?.address ?? '',
       origen_lat: origenLoc?.lat ?? null,
       origen_lng: origenLoc?.lng ?? null,
+      peso_promedio_kg: pesoProm,
+      peso_total_kg: pesoTotal,
     });
     onClose();
   }
+
+  const inp: React.CSSProperties = { width: '100%', border: '1px solid #E0E0E0', borderRadius: 8, padding: '10px 12px', fontSize: 13, color: '#111', background: '#fff' };
+  const lbl: React.CSSProperties = { fontSize: 12, fontWeight: 600, color: '#555', display: 'block', marginBottom: 6 };
 
   return (
     <div style={{ position: 'fixed', inset: 0, zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(0,0,0,0.5)', padding: 16 }} onClick={onClose}>
@@ -59,22 +77,38 @@ function AgregarLoteModal({ onClose, onAdd }: { onClose: () => void; onAdd: (l: 
         </div>
         <div style={{ padding: '20px 24px', display: 'flex', flexDirection: 'column', gap: 16 }}>
           <div>
-            <label style={{ fontSize: 12, fontWeight: 600, color: '#555', display: 'block', marginBottom: 6 }}>Tipo de hacienda *</label>
-            <select value={tipo_hacienda} onChange={e => setTipoHacienda(e.target.value)} style={{ width: '100%', border: '1px solid #E0E0E0', borderRadius: 8, padding: '10px 12px', fontSize: 13, color: '#111', background: '#fff' }}>
+            <label style={lbl}>Tipo de hacienda *</label>
+            <select value={tipo_hacienda} onChange={e => setTipoHacienda(e.target.value)} style={inp}>
               <option value="">Seleccioná…</option>
               {TIPOS_HACIENDA.map(t => <option key={t}>{t}</option>)}
             </select>
           </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+            <div>
+              <label style={lbl}>Cantidad estimada (cab.)</label>
+              <input type="number" min="1" value={cantidad} onChange={e => setCantidad(e.target.value)} placeholder="Ej: 120" style={inp} />
+            </div>
+            <div>
+              <label style={lbl}>Peso promedio (kg/cab.)</label>
+              <input type="number" min="1" value={pesoProm} onChange={e => setPesoProm(e.target.value)} placeholder="Ej: 380" style={inp} />
+            </div>
+          </div>
+          {pesoTotal !== null && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, background: '#F8F8F6', borderRadius: 8, padding: '10px 14px' }}>
+              <span style={{ fontSize: 13, color: '#555' }}>Peso total del lote: <strong>{pesoTotal.toLocaleString('es-AR')} kg</strong></span>
+              {badge && (
+                <span style={{ fontSize: 11, fontWeight: 700, background: `${badge.color}18`, color: badge.color, padding: '2px 8px', borderRadius: 5 }}>
+                  {badge.label}
+                </span>
+              )}
+            </div>
+          )}
           <div>
-            <label style={{ fontSize: 12, fontWeight: 600, color: '#555', display: 'block', marginBottom: 6 }}>Cantidad estimada de cabezas</label>
-            <input type="number" min="1" value={cantidad} onChange={e => setCantidad(e.target.value)} placeholder="Ej: 120" style={{ width: '100%', border: '1px solid #E0E0E0', borderRadius: 8, padding: '10px 12px', fontSize: 13, color: '#111', background: '#fff' }} />
+            <label style={lbl}>Descripción (opcional)</label>
+            <textarea rows={2} value={descripcion} onChange={e => setDescripcion(e.target.value)} placeholder="Ej: Novillos de invernada" style={{ ...inp, resize: 'vertical' as const }} />
           </div>
           <div>
-            <label style={{ fontSize: 12, fontWeight: 600, color: '#555', display: 'block', marginBottom: 6 }}>Descripción (opcional)</label>
-            <textarea rows={2} value={descripcion} onChange={e => setDescripcion(e.target.value)} placeholder="Ej: Novillos de invernada, 380 kg promedio" style={{ width: '100%', border: '1px solid #E0E0E0', borderRadius: 8, padding: '10px 12px', fontSize: 13, color: '#111', background: '#fff', resize: 'vertical' }} />
-          </div>
-          <div>
-            <label style={{ fontSize: 12, fontWeight: 600, color: '#555', display: 'block', marginBottom: 6 }}>Origen del lote (opcional)</label>
+            <label style={lbl}>Origen del lote (opcional)</label>
             <LocationPicker label="" value={origenLoc} onChange={setOrigenLoc} />
           </div>
           {err && <p style={{ fontSize: 12, color: '#C83030' }}>{err}</p>}
@@ -178,6 +212,8 @@ export default function CrearRematePage() {
               origen_direccion: l.origen_direccion || null,
               origen_lat: l.origen_lat,
               origen_lng: l.origen_lng,
+              peso_promedio_kg: l.peso_promedio_kg ? parseFloat(l.peso_promedio_kg) : null,
+              peso_total_kg: l.peso_total_kg || null,
             })
           )
         );
@@ -269,7 +305,7 @@ export default function CrearRematePage() {
               <div style={{ fontSize: 13, fontWeight: 700, color: '#1F2B1F', borderBottom: '1px solid #F0F0F0', paddingBottom: 12 }}>Lugar</div>
               <LocationPicker label="Lugar del remate *" value={lugarLoc} onChange={setLugarLoc} error={errors.lugar} />
               <div>
-                <label style={labelSt}>Zona / Departamento</label>
+                <label style={labelSt}>Zona</label>
                 <input type="text" value={zona} onChange={e => setZona(e.target.value)}
                   placeholder="Ej: Gualeguaychú, Entre Ríos"
                   style={inputSt} />
@@ -314,22 +350,28 @@ export default function CrearRematePage() {
                 </div>
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                  {lotes.map((l, i) => (
-                    <div key={l.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#F8F8F6', borderRadius: 10, padding: '12px 16px' }}>
-                      <div>
-                        <div style={{ fontSize: 13, fontWeight: 600, color: '#111' }}>
-                          Lote {i + 1} — {l.tipo_hacienda}
-                          {l.cantidad_cabezas_estimada && ` · ${l.cantidad_cabezas_estimada} cab. est.`}
+                  {lotes.map((l, i) => {
+                    const badge = jaulaBadge(l.peso_total_kg);
+                    return (
+                      <div key={l.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#F8F8F6', borderRadius: 10, padding: '12px 16px' }}>
+                        <div>
+                          <div style={{ fontSize: 13, fontWeight: 600, color: '#111', display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                            Lote {i + 1} — {l.tipo_hacienda}
+                            {l.cantidad_cabezas_estimada && ` · ${l.cantidad_cabezas_estimada} cab.`}
+                            {badge && <span style={{ fontSize: 10, fontWeight: 700, background: `${badge.color}18`, color: badge.color, padding: '1px 6px', borderRadius: 4 }}>{badge.label}</span>}
+                          </div>
+                          {l.peso_total_kg !== null && l.peso_total_kg !== undefined && (
+                            <div style={{ fontSize: 11, color: '#888', marginTop: 2 }}>{l.peso_total_kg.toLocaleString('es-AR')} kg totales</div>
+                          )}
+                          {l.origen_direccion && <div style={{ fontSize: 11, color: '#888', marginTop: 1 }}>Origen: {l.origen_direccion.split(',')[0]}</div>}
                         </div>
-                        {l.origen_direccion && <div style={{ fontSize: 11, color: '#888', marginTop: 2 }}>Origen: {l.origen_direccion.split(',')[0]}</div>}
-                        {l.descripcion && <div style={{ fontSize: 11, color: '#aaa', marginTop: 2 }}>{l.descripcion}</div>}
+                        <button type="button" onClick={() => setLotes(prev => prev.filter(x => x.id !== l.id))}
+                          style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#C83030', display: 'flex', padding: 4 }}>
+                          <Trash2 size={15} />
+                        </button>
                       </div>
-                      <button type="button" onClick={() => setLotes(prev => prev.filter(x => x.id !== l.id))}
-                        style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#C83030', display: 'flex', padding: 4 }}>
-                        <Trash2 size={15} />
-                      </button>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
             </div>

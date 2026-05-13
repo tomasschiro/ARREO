@@ -17,7 +17,10 @@
       "Bash(node --check backend/services/email.service.js)",
       "Bash(node --check backend/server.js)",
       "Bash(node database/seed-usuarios-prueba.js)",
-      "Bash(node --check /c/Users/Equipo/hacienda-rutas/backend/server.js)"
+      "Bash(node --check /c/Users/Equipo/hacienda-rutas/backend/server.js)",
+      "Bash(xargs grep -l \"password\\\\|zona\")",
+      "Bash(node --check /c/Users/Equipo/hacienda-rutas/backend/routes/remates.js)",
+      "Bash(node --check /c/Users/Equipo/hacienda-rutas/backend/routes/auth.js)"
     ],
     "additionalDirectories": [
       "c:\\Users\\Equipo\\hacienda-rutas\\frontend\\src\\app\\remates"

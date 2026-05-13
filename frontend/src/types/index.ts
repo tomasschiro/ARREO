@@ -58,6 +58,8 @@ export interface RemateLote {
   origen_direccion?: string;
   origen_lat?: number;
   origen_lng?: number;
+  peso_promedio_kg?: number;
+  peso_total_kg?: number;
   estado: 'pendiente' | 'vendido' | 'cancelado';
   comprador_nombre?: string;
   destino_direccion?: string;

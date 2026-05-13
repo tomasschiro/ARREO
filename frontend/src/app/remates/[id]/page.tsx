@@ -10,9 +10,27 @@ import StarRating from '@/components/StarRating';
 import api from '@/lib/api';
 import {
   Check, X, MapPin, Calendar, Users, Package,
-  ChevronLeft, Plus, AlertTriangle, Clock, Zap,
+  ChevronLeft, Plus, AlertTriangle, Clock, Zap, Layers,
 } from 'lucide-react';
 import type { Remate, RemateLote, RemateTransportista } from '@/types';
+
+function jaulaBadge(pesoTotal: number | null | undefined): { label: string; color: string } | null {
+  if (!pesoTotal) return null;
+  if (pesoTotal <= 6000)  return { label: 'Jaula simple',  color: '#5a7a2a' };
+  if (pesoTotal <= 14000) return { label: 'Acoplado',      color: '#b85e1e' };
+  return                         { label: 'Semirremolque', color: '#7a2a2a' };
+}
+
+function filtrarAgrupables(pendientes: RemateLote[], lotePrincipal: RemateLote, tipoRemate: 'feria' | 'en_campo'): RemateLote[] {
+  if (pendientes.length === 0) return [];
+  if (tipoRemate === 'feria') return pendientes;
+  const refOrigen = lotePrincipal.origen_direccion?.split(',')[0]?.toLowerCase().trim() || '';
+  if (!refOrigen) return pendientes;
+  return pendientes.filter(l => {
+    const o = l.origen_direccion?.split(',')[0]?.toLowerCase().trim() || '';
+    return !o || o === refOrigen;
+  });
+}
 
 const LocationPicker = dynamic(() => import('@/components/LocationPicker'), { ssr: false });
 
@@ -91,12 +109,16 @@ function AgregarLoteModal({ remateId, onClose, onCreated }: {
   remateId: number; onClose: () => void; onCreated: (l: RemateLote) => void;
 }) {
   const TIPOS = ['Novillos', 'Vacas', 'Terneros', 'Toros', 'Vaquillonas', 'Hacienda mixta'];
-  const [tipo_hacienda, setTipoHacienda]   = useState('');
-  const [cantidad, setCantidad]             = useState('');
-  const [descripcion, setDescripcion]       = useState('');
-  const [origenLoc, setOrigenLoc]           = useState<LocationValue | null>(null);
-  const [saving, setSaving]                 = useState(false);
-  const [err, setErr]                       = useState('');
+  const [tipo_hacienda, setTipoHacienda] = useState('');
+  const [cantidad, setCantidad]           = useState('');
+  const [pesoProm, setPesoProm]           = useState('');
+  const [descripcion, setDescripcion]     = useState('');
+  const [origenLoc, setOrigenLoc]         = useState<LocationValue | null>(null);
+  const [saving, setSaving]               = useState(false);
+  const [err, setErr]                     = useState('');
+
+  const pesoTotal = cantidad && pesoProm ? Math.round(Number(cantidad) * Number(pesoProm)) : null;
+  const badge = jaulaBadge(pesoTotal);
 
   async function handleAdd() {
     if (!tipo_hacienda) { setErr('Seleccioná el tipo de hacienda'); return; }
@@ -109,6 +131,8 @@ function AgregarLoteModal({ remateId, onClose, onCreated }: {
         origen_direccion: origenLoc?.address || null,
         origen_lat: origenLoc?.lat || null,
         origen_lng: origenLoc?.lng || null,
+        peso_promedio_kg: pesoProm ? parseFloat(pesoProm) : null,
+        peso_total_kg: pesoTotal || null,
       });
       onCreated(data.lote);
     } catch (e: unknown) {
@@ -116,6 +140,9 @@ function AgregarLoteModal({ remateId, onClose, onCreated }: {
       setErr(msg || 'Error al agregar lote');
     } finally { setSaving(false); }
   }
+
+  const inp: React.CSSProperties = { width: '100%', border: '1px solid #E0E0E0', borderRadius: 8, padding: '10px 12px', fontSize: 13, color: '#111', background: '#fff' };
+  const lbl: React.CSSProperties = { fontSize: 12, fontWeight: 600, color: '#555', display: 'block', marginBottom: 6 };
 
   return (
     <div style={{ position: 'fixed', inset: 0, zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(0,0,0,0.5)', padding: 16 }} onClick={onClose}>
@@ -126,22 +153,34 @@ function AgregarLoteModal({ remateId, onClose, onCreated }: {
         </div>
         <div style={{ padding: '20px 24px', display: 'flex', flexDirection: 'column', gap: 16 }}>
           <div>
-            <label style={{ fontSize: 12, fontWeight: 600, color: '#555', display: 'block', marginBottom: 6 }}>Tipo de hacienda *</label>
-            <select value={tipo_hacienda} onChange={e => setTipoHacienda(e.target.value)} style={{ width: '100%', border: '1px solid #E0E0E0', borderRadius: 8, padding: '10px 12px', fontSize: 13, color: '#111', background: '#fff' }}>
+            <label style={lbl}>Tipo de hacienda *</label>
+            <select value={tipo_hacienda} onChange={e => setTipoHacienda(e.target.value)} style={inp}>
               <option value="">Seleccioná…</option>
               {TIPOS.map(t => <option key={t}>{t}</option>)}
             </select>
           </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+            <div>
+              <label style={lbl}>Cantidad estimada (cab.)</label>
+              <input type="number" min="1" value={cantidad} onChange={e => setCantidad(e.target.value)} placeholder="Ej: 120" style={inp} />
+            </div>
+            <div>
+              <label style={lbl}>Peso promedio (kg/cab.)</label>
+              <input type="number" min="1" value={pesoProm} onChange={e => setPesoProm(e.target.value)} placeholder="Ej: 380" style={inp} />
+            </div>
+          </div>
+          {pesoTotal !== null && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, background: '#F8F8F6', borderRadius: 8, padding: '10px 14px' }}>
+              <span style={{ fontSize: 13, color: '#555' }}>Peso total: <strong>{pesoTotal.toLocaleString('es-AR')} kg</strong></span>
+              {badge && <span style={{ fontSize: 11, fontWeight: 700, background: `${badge.color}18`, color: badge.color, padding: '2px 8px', borderRadius: 5 }}>{badge.label}</span>}
+            </div>
+          )}
           <div>
-            <label style={{ fontSize: 12, fontWeight: 600, color: '#555', display: 'block', marginBottom: 6 }}>Cantidad estimada</label>
-            <input type="number" min="1" value={cantidad} onChange={e => setCantidad(e.target.value)} placeholder="Ej: 120 cabezas" style={{ width: '100%', border: '1px solid #E0E0E0', borderRadius: 8, padding: '10px 12px', fontSize: 13, color: '#111', background: '#fff' }} />
+            <label style={lbl}>Descripción</label>
+            <textarea rows={2} value={descripcion} onChange={e => setDescripcion(e.target.value)} placeholder="Detalles del lote…" style={{ ...inp, resize: 'vertical' as const }} />
           </div>
           <div>
-            <label style={{ fontSize: 12, fontWeight: 600, color: '#555', display: 'block', marginBottom: 6 }}>Descripción</label>
-            <textarea rows={2} value={descripcion} onChange={e => setDescripcion(e.target.value)} placeholder="Detalles del lote…" style={{ width: '100%', border: '1px solid #E0E0E0', borderRadius: 8, padding: '10px 12px', fontSize: 13, color: '#111', background: '#fff', resize: 'vertical' }} />
-          </div>
-          <div>
-            <label style={{ fontSize: 12, fontWeight: 600, color: '#555', display: 'block', marginBottom: 6 }}>Origen del lote</label>
+            <label style={lbl}>Origen del lote</label>
             <LocationPicker label="" value={origenLoc} onChange={setOrigenLoc} />
           </div>
           {err && <p style={{ fontSize: 12, color: '#C83030' }}>{err}</p>}
@@ -159,19 +198,53 @@ function AgregarLoteModal({ remateId, onClose, onCreated }: {
 
 // ─── VendidoModal ─────────────────────────────────────────────────────────────
 
-function VendidoModal({ remateId, lote, onClose, onDone }: {
-  remateId: number; lote: RemateLote; onClose: () => void; onDone: () => void;
+function VendidoModal({ remateId, lote, tipoRemate, onClose, onDone }: {
+  remateId: number; lote: RemateLote; tipoRemate: 'feria' | 'en_campo';
+  onClose: () => void; onDone: () => void;
 }) {
-  const [comprador, setComprador]     = useState('');
-  const [destinoLoc, setDestinoLoc]   = useState<LocationValue | null>(null);
-  const [saving, setSaving]           = useState(false);
-  const [err, setErr]                 = useState('');
+  const [comprador, setComprador]         = useState('');
+  const [destinoLoc, setDestinoLoc]       = useState<LocationValue | null>(null);
+  const [saving, setSaving]               = useState(false);
+  const [err, setErr]                     = useState('');
+  const [phase, setPhase]                 = useState<'form' | 'agrupar'>('form');
+  const [viajeId, setViajeId]             = useState<number | null>(null);
+  const [agrupables, setAgrupables]       = useState<RemateLote[]>([]);
+  const [seleccionados, setSeleccionados] = useState<Set<number>>(new Set());
+  const [agrupando, setAgrupando]         = useState(false);
 
   async function handleVendido() {
     if (!destinoLoc) { setErr('El destino del lote es obligatorio'); return; }
     setSaving(true);
     try {
-      await api.put(`/remates/${remateId}/lotes/${lote.id}/vendido`, {
+      const { data } = await api.put(`/remates/${remateId}/lotes/${lote.id}/vendido`, {
+        comprador_nombre: comprador.trim() || null,
+        destino_direccion: destinoLoc.address,
+        destino_lat: destinoLoc.lat,
+        destino_lng: destinoLoc.lng,
+      });
+      setViajeId(data.viaje.id);
+      const otros: RemateLote[] = data.otros_lotes_pendientes || [];
+      const grupables = filtrarAgrupables(otros, lote, tipoRemate);
+      if (grupables.length > 0 && comprador.trim()) {
+        setAgrupables(grupables);
+        setSeleccionados(new Set(grupables.map(l => l.id)));
+        setPhase('agrupar');
+      } else {
+        onDone();
+      }
+    } catch (e: unknown) {
+      const msg = (e as { response?: { data?: { error?: string } } })?.response?.data?.error;
+      setErr(msg || 'Error al marcar como vendido');
+    } finally { setSaving(false); }
+  }
+
+  async function handleAgrupar() {
+    if (!viajeId || !destinoLoc || seleccionados.size === 0) { onDone(); return; }
+    setAgrupando(true);
+    try {
+      await api.post(`/remates/${remateId}/agrupar`, {
+        viaje_id: viajeId,
+        lote_ids: Array.from(seleccionados),
         comprador_nombre: comprador.trim() || null,
         destino_direccion: destinoLoc.address,
         destino_lat: destinoLoc.lat,
@@ -180,47 +253,109 @@ function VendidoModal({ remateId, lote, onClose, onDone }: {
       onDone();
     } catch (e: unknown) {
       const msg = (e as { response?: { data?: { error?: string } } })?.response?.data?.error;
-      setErr(msg || 'Error al marcar como vendido');
-    } finally { setSaving(false); }
+      setErr(msg || 'Error al agrupar lotes');
+    } finally { setAgrupando(false); }
   }
 
+  function toggleLote(id: number) {
+    setSeleccionados(prev => {
+      const s = new Set(prev);
+      s.has(id) ? s.delete(id) : s.add(id);
+      return s;
+    });
+  }
+
+  const inp: React.CSSProperties = { width: '100%', border: '1px solid #E0E0E0', borderRadius: 8, padding: '10px 12px', fontSize: 13, color: '#111', background: '#fff' };
+  const lbl: React.CSSProperties = { fontSize: 12, fontWeight: 600, color: '#555', display: 'block', marginBottom: 6 };
+
   return (
-    <div style={{ position: 'fixed', inset: 0, zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(0,0,0,0.5)', padding: 16 }} onClick={onClose}>
+    <div style={{ position: 'fixed', inset: 0, zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(0,0,0,0.5)', padding: 16 }} onClick={phase === 'form' ? onClose : undefined}>
       <div style={{ background: '#fff', borderRadius: 18, width: '100%', maxWidth: 520, maxHeight: '90vh', overflowY: 'auto', boxShadow: '0 16px 64px rgba(0,0,0,.2)' }} onClick={e => e.stopPropagation()}>
+
+        {/* Header */}
         <div style={{ background: '#1F2B1F', padding: '18px 24px', borderRadius: '18px 18px 0 0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div style={{ fontSize: 14, fontWeight: 700, color: '#fff' }}>Lote vendido</div>
-          <button onClick={onClose} style={{ background: 'rgba(255,255,255,.1)', border: 'none', borderRadius: 6, width: 28, height: 28, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff' }}><X size={14} /></button>
+          <div style={{ fontSize: 14, fontWeight: 700, color: '#fff' }}>
+            {phase === 'form' ? 'Lote vendido' : 'Agrupar en un solo viaje'}
+          </div>
+          {phase === 'form' && (
+            <button onClick={onClose} style={{ background: 'rgba(255,255,255,.1)', border: 'none', borderRadius: 6, width: 28, height: 28, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff' }}><X size={14} /></button>
+          )}
         </div>
-        <div style={{ padding: '20px 24px', display: 'flex', flexDirection: 'column', gap: 16 }}>
-          <div style={{ background: '#F8F8F6', borderRadius: 10, padding: '12px 16px', fontSize: 13, color: '#555' }}>
-            <strong>{lote.tipo_hacienda}</strong>
-            {lote.cantidad_cabezas_estimada && ` · ${lote.cantidad_cabezas_estimada} cab. est.`}
-          </div>
-          <div>
-            <label style={{ fontSize: 12, fontWeight: 600, color: '#555', display: 'block', marginBottom: 6 }}>Nombre del comprador (opcional)</label>
-            <input type="text" value={comprador} onChange={e => setComprador(e.target.value)} placeholder="Ej: Juan Rodríguez" style={{ width: '100%', border: '1px solid #E0E0E0', borderRadius: 8, padding: '10px 12px', fontSize: 13, color: '#111', background: '#fff' }} />
-          </div>
-          <div>
-            <label style={{ fontSize: 12, fontWeight: 600, color: '#555', display: 'block', marginBottom: 6 }}>Destino del traslado *</label>
-            <LocationPicker label="" value={destinoLoc} onChange={setDestinoLoc} error={err.includes('destino') ? err : undefined} />
-          </div>
-          <div style={{ background: 'rgba(224,122,52,.08)', border: '1px solid rgba(224,122,52,.2)', borderRadius: 10, padding: '12px 16px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
-              <Zap size={13} color="#E07A34" />
-              <span style={{ fontSize: 12, fontWeight: 700, color: '#b85e1e' }}>Se crea un viaje automáticamente</span>
+
+        {/* Phase: form */}
+        {phase === 'form' && (
+          <div style={{ padding: '20px 24px', display: 'flex', flexDirection: 'column', gap: 16 }}>
+            <div style={{ background: '#F8F8F6', borderRadius: 10, padding: '12px 16px', fontSize: 13, color: '#555' }}>
+              <strong>{lote.tipo_hacienda}</strong>
+              {lote.cantidad_cabezas_estimada && ` · ${lote.cantidad_cabezas_estimada} cab. est.`}
+              {lote.peso_total_kg && ` · ${lote.peso_total_kg.toLocaleString('es-AR')} kg`}
             </div>
-            <p style={{ margin: 0, fontSize: 12, color: '#b85e1e' }}>
-              Al confirmar, se genera un viaje y se notifica a los {lote.remate_id} transportistas pre-anotados para que confirmen en 30 minutos.
-            </p>
+            <div>
+              <label style={lbl}>Nombre del comprador (opcional)</label>
+              <input type="text" value={comprador} onChange={e => setComprador(e.target.value)} placeholder="Ej: Juan Rodríguez" style={inp} />
+            </div>
+            <div>
+              <label style={lbl}>Destino del traslado *</label>
+              <LocationPicker label="" value={destinoLoc} onChange={setDestinoLoc} error={err.includes('destino') ? err : undefined} />
+            </div>
+            <div style={{ background: 'rgba(224,122,52,.08)', border: '1px solid rgba(224,122,52,.2)', borderRadius: 10, padding: '12px 16px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
+                <Zap size={13} color="#E07A34" />
+                <span style={{ fontSize: 12, fontWeight: 700, color: '#b85e1e' }}>Se crea un viaje automáticamente</span>
+              </div>
+              <p style={{ margin: 0, fontSize: 12, color: '#b85e1e' }}>Al confirmar, los transportistas pre-anotados tienen 30 minutos para confirmar.</p>
+            </div>
+            {err && !err.includes('destino') && <p style={{ fontSize: 12, color: '#C83030' }}>{err}</p>}
+            <div style={{ display: 'flex', gap: 10 }}>
+              <button onClick={onClose} style={{ flex: 1, padding: '10px', border: '1.5px solid #E0E0E0', borderRadius: 9, background: 'transparent', color: '#666', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>Cancelar</button>
+              <button onClick={handleVendido} disabled={saving} style={{ flex: 1, padding: '10px', border: 'none', borderRadius: 9, background: '#8BAF4E', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', opacity: saving ? .7 : 1 }}>
+                {saving ? 'Procesando…' : 'Confirmar venta y crear viaje'}
+              </button>
+            </div>
           </div>
-          {err && !err.includes('destino') && <p style={{ fontSize: 12, color: '#C83030' }}>{err}</p>}
-          <div style={{ display: 'flex', gap: 10 }}>
-            <button onClick={onClose} style={{ flex: 1, padding: '10px', border: '1.5px solid #E0E0E0', borderRadius: 9, background: 'transparent', color: '#666', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>Cancelar</button>
-            <button onClick={handleVendido} disabled={saving} style={{ flex: 1, padding: '10px', border: 'none', borderRadius: 9, background: '#8BAF4E', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', opacity: saving ? .7 : 1 }}>
-              {saving ? 'Procesando…' : 'Confirmar venta y crear viaje'}
-            </button>
+        )}
+
+        {/* Phase: agrupar */}
+        {phase === 'agrupar' && (
+          <div style={{ padding: '20px 24px', display: 'flex', flexDirection: 'column', gap: 16 }}>
+            <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, background: 'rgba(139,175,78,.08)', border: '1px solid rgba(139,175,78,.25)', borderRadius: 10, padding: '12px 16px' }}>
+              <Layers size={16} color="#5a7a2a" style={{ flexShrink: 0, marginTop: 1 }} />
+              <div>
+                <div style={{ fontSize: 13, fontWeight: 700, color: '#3a5a1a', marginBottom: 3 }}>
+                  {comprador} tiene {agrupables.length} lote{agrupables.length !== 1 ? 's' : ''} más disponible{agrupables.length !== 1 ? 's' : ''}
+                </div>
+                <div style={{ fontSize: 12, color: '#5a7a2a' }}>
+                  ¿Querés agruparlos en un solo viaje con el mismo destino?
+                  {tipoRemate === 'en_campo' && ' (mismo origen)'}
+                </div>
+              </div>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {agrupables.map(l => (
+                <label key={l.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 14px', border: `1.5px solid ${seleccionados.has(l.id) ? '#8BAF4E' : '#E0E0E0'}`, borderRadius: 10, cursor: 'pointer', background: seleccionados.has(l.id) ? 'rgba(139,175,78,.06)' : '#fff' }}>
+                  <input type="checkbox" checked={seleccionados.has(l.id)} onChange={() => toggleLote(l.id)} style={{ accentColor: '#8BAF4E', width: 16, height: 16, flexShrink: 0 }} />
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: '#111' }}>
+                      {l.tipo_hacienda || 'Hacienda'}
+                      {l.cantidad_cabezas_estimada && ` · ${l.cantidad_cabezas_estimada} cab.`}
+                    </div>
+                    {l.peso_total_kg && <div style={{ fontSize: 11, color: '#888', marginTop: 1 }}>{l.peso_total_kg.toLocaleString('es-AR')} kg</div>}
+                    {l.origen_direccion && <div style={{ fontSize: 11, color: '#aaa', marginTop: 1 }}>{l.origen_direccion.split(',')[0]}</div>}
+                  </div>
+                </label>
+              ))}
+            </div>
+            {err && <p style={{ fontSize: 12, color: '#C83030' }}>{err}</p>}
+            <div style={{ display: 'flex', gap: 10 }}>
+              <button onClick={onDone} style={{ flex: 1, padding: '10px', border: '1.5px solid #E0E0E0', borderRadius: 9, background: 'transparent', color: '#666', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
+                Viajes separados
+              </button>
+              <button onClick={handleAgrupar} disabled={agrupando || seleccionados.size === 0} style={{ flex: 1, padding: '10px', border: 'none', borderRadius: 9, background: '#8BAF4E', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', opacity: (agrupando || seleccionados.size === 0) ? .6 : 1 }}>
+                {agrupando ? 'Agrupando…' : `Agrupar ${seleccionados.size} lote${seleccionados.size !== 1 ? 's' : ''}`}
+              </button>
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );
@@ -595,6 +730,12 @@ export default function RemateDetallePage() {
                           {lote.cantidad_cabezas_estimada && ` · ${lote.cantidad_cabezas_estimada} cab. est.`}
                         </div>
                         {lote.descripcion && <div style={{ fontSize: 12, color: '#888', marginTop: 2 }}>{lote.descripcion}</div>}
+                        {lote.peso_total_kg && (() => { const b = jaulaBadge(lote.peso_total_kg); return (
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 4 }}>
+                            <span style={{ fontSize: 12, color: '#555' }}>{lote.peso_total_kg.toLocaleString('es-AR')} kg</span>
+                            {b && <span style={{ fontSize: 10, fontWeight: 700, background: `${b.color}18`, color: b.color, padding: '2px 7px', borderRadius: 4 }}>{b.label}</span>}
+                          </div>
+                        ); })()}
                       </div>
                     </div>
 
@@ -668,6 +809,7 @@ export default function RemateDetallePage() {
         <VendidoModal
           remateId={remateId}
           lote={vendidoLote}
+          tipoRemate={remate.tipo}
           onClose={() => setVendidoLote(null)}
           onDone={() => { setVendidoLote(null); setToast({ message: 'Lote vendido — viaje creado y transportistas notificados', type: 'success' }); cargar(); }}
         />

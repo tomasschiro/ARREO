@@ -158,6 +158,8 @@ async function runMigrations() {
     )
   `);
   await pool.query(`ALTER TABLE viajes ADD COLUMN IF NOT EXISTS remate_lote_id INTEGER REFERENCES remate_lotes(id) ON DELETE SET NULL`);
+  await pool.query(`ALTER TABLE remate_lotes ADD COLUMN IF NOT EXISTS peso_promedio_kg DECIMAL(8,2)`);
+  await pool.query(`ALTER TABLE remate_lotes ADD COLUMN IF NOT EXISTS peso_total_kg DECIMAL(10,2)`);
   // Seguimiento en tiempo real
   await pool.query(`ALTER TABLE viajes ADD COLUMN IF NOT EXISTS ubicacion_lat DECIMAL(10,8)`);
   await pool.query(`ALTER TABLE viajes ADD COLUMN IF NOT EXISTS ubicacion_lng DECIMAL(11,8)`);

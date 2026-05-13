@@ -198,7 +198,7 @@ export default function PerfilPage() {
                   </div>
                   <div className="prf-2col" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
                     <div className="form-group">
-                      <label className="form-label">Zona / Provincia</label>
+                      <label className="form-label">Zona de operación</label>
                       <input type="text" value={zona} placeholder="Ej: Entre Ríos"
                         onChange={e => setZona(e.target.value)} className="form-input" />
                     </div>

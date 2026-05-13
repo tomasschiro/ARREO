@@ -3,7 +3,7 @@
 import { useState, useRef } from 'react';
 import Link from 'next/link';
 import api from '@/lib/api';
-import { Truck, Beef, FileText, Camera, Clock, AlertTriangle, Check } from 'lucide-react';
+import { Truck, Beef, FileText, Camera, Clock, AlertTriangle, Check, Eye, EyeOff } from 'lucide-react';
 
 // ─── Logo ─────────────────────────────────────────────────────────────────────
 
@@ -203,7 +203,8 @@ export default function RegisterPage() {
   const [loading,  setLoading]  = useState(false);
 
   // Step 1 — datos personales (todos los roles)
-  const [s1, setS1] = useState({ nombre: '', email: '', password: '', telefono: '', cuit_cuil: '', zona: '', renspa: '' });
+  const [showPwd, setShowPwd] = useState(false);
+  const [s1, setS1] = useState({ nombre: '', email: '', password: '', telefono: '', cuit_cuil: '', renspa: '' });
 
   // Step 2 — datos camión (solo transportistas)
   const [s2, setS2] = useState({ patente: '', marca_camion: '', modelo_camion: '', año_camion: '', capacidad_kg: '' });
@@ -227,7 +228,6 @@ export default function RegisterPage() {
     if (!s1.telefono.trim()) return 'El teléfono es obligatorio';
     if (!s1.cuit_cuil.trim()) return 'El CUIT/CUIL es obligatorio';
     if (!validarCuit(s1.cuit_cuil)) return 'Formato de CUIT/CUIL inválido (ej: 20-12345678-9)';
-    if (!s1.zona.trim()) return 'La zona/provincia es obligatoria';
     if (rol !== 'transportista') {
       if (!s1.renspa.trim()) return 'El RENSPA es obligatorio';
       if (!validarRenspa(s1.renspa)) return 'Formato de RENSPA inválido (ej: 01-1234567-8)';
@@ -286,7 +286,6 @@ export default function RegisterPage() {
         rol,
         telefono: s1.telefono.trim(),
         cuit_cuil: s1.cuit_cuil.trim(),
-        zona: s1.zona.trim(),
       };
       if (rol !== 'transportista') {
         Object.assign(payload, { renspa: s1.renspa.trim() });
@@ -437,7 +436,16 @@ export default function RegisterPage() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div style={GRP}><label style={LBL}>Nombre completo *</label><input style={INP} type="text" value={s1.nombre} onChange={e => setF1('nombre', e.target.value)} placeholder="Juan Pérez"/></div>
               <div style={GRP}><label style={LBL}>Email *</label><input style={INP} type="email" value={s1.email} onChange={e => setF1('email', e.target.value)} placeholder="tu@email.com"/></div>
-              <div style={GRP}><label style={LBL}>Contraseña * (mín. 6 caracteres)</label><input style={INP} type="password" value={s1.password} onChange={e => setF1('password', e.target.value)} placeholder="••••••••"/></div>
+              <div style={GRP}>
+                <label style={LBL}>Contraseña * (mín. 6 caracteres)</label>
+                <div style={{ position: 'relative' }}>
+                  <input style={{ ...INP, paddingRight: 40 }} type={showPwd ? 'text' : 'password'} value={s1.password} onChange={e => setF1('password', e.target.value)} placeholder="••••••••"/>
+                  <button type="button" onClick={() => setShowPwd(p => !p)}
+                    style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#aaa', display: 'flex', alignItems: 'center' }}>
+                    {showPwd ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
+                </div>
+              </div>
               <div className="reg-2col" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                 <div style={GRP}><label style={LBL}>Teléfono *</label><input style={INP} type="tel" value={s1.telefono} onChange={e => setF1('telefono', e.target.value)} placeholder="351 4567890"/></div>
                 <div style={GRP}>
@@ -445,7 +453,6 @@ export default function RegisterPage() {
                   <input style={INP} type="text" value={s1.cuit_cuil} onChange={e => setF1('cuit_cuil', formatCuit(e.target.value))} placeholder="20-12345678-9" maxLength={13}/>
                 </div>
               </div>
-              <div style={GRP}><label style={LBL}>Provincia / Zona de operación *</label><input style={INP} type="text" value={s1.zona} onChange={e => setF1('zona', e.target.value)} placeholder="Ej: Córdoba, Corrientes…"/></div>
               {rol !== 'transportista' && (
                 <div style={GRP}>
                   <label style={LBL}>
