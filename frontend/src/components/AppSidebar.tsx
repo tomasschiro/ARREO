@@ -85,6 +85,15 @@ function ShieldIcon() {
     </svg>
   );
 }
+function HammerIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M15 12l-8.5 8.5a2.121 2.121 0 0 1-3-3L12 9"/>
+      <path d="M17.64 15L22 10.64"/>
+      <path d="M20.91 11.7l-1.25-1.25c-.6-.6-.93-1.4-.93-2.25v-.86L16.01 4.6a5.56 5.56 0 0 0-3.94-1.64H9l.92.82A6.18 6.18 0 0 1 12 8.4v1.56l2 2h2.47l2.26 1.91"/>
+    </svg>
+  );
+}
 function HamburgerIcon() {
   return (
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
@@ -105,11 +114,20 @@ function menuFor(rol: string, noLeidos: number): MenuItem[] {
     { href: '/dashboard',  icon: <DashboardIcon />, label: 'Dashboard' },
     { href: '/viajes',     icon: <MapIcon />,       label: 'Viajes disponibles' },
     { href: '/mis-viajes', icon: <TruckIcon />,     label: 'Mis viajes' },
+    { href: '/remates',    icon: <HammerIcon />,    label: 'Remates disponibles' },
     { href: '/mensajes',   icon: <MailIcon />,      label: 'Mensajes', badge: noLeidos },
     { href: '/perfil',     icon: <UserIcon />,      label: 'Mi perfil' },
   ];
+  if (rol === 'consignataria') return [
+    { href: '/dashboard',        icon: <ListIcon />,    label: 'Mis viajes' },
+    { href: '/remates',          icon: <HammerIcon />,  label: 'Remates' },
+    { href: '/disponibilidades', icon: <TruckIcon />,   label: 'Buscar camiones' },
+    { href: '/mensajes',         icon: <MailIcon />,    label: 'Mensajes', badge: noLeidos },
+    { href: '/perfil',           icon: <UserIcon />,    label: 'Mi perfil' },
+  ];
   return [
     { href: '/dashboard',        icon: <ListIcon />,  label: 'Mis viajes' },
+    { href: '/remates',          icon: <HammerIcon />, label: 'Remates en mi zona' },
     { href: '/disponibilidades', icon: <TruckIcon />, label: 'Buscar camiones' },
     { href: '/mensajes',         icon: <MailIcon />,  label: 'Mensajes', badge: noLeidos },
     { href: '/perfil',           icon: <UserIcon />,  label: 'Mi perfil' },

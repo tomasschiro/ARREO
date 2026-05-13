@@ -75,6 +75,7 @@ interface Aplicacion {
   dte_numero?: string;
   guia_provincial_numero?: string;
   documentacion_cargada?: boolean;
+  remate_lote_id?: number;
 }
 
 interface MiDisponibilidad {
@@ -417,7 +418,7 @@ export default function MisViajesPage() {
 
   const [aplicaciones, setAplicaciones] = useState<Aplicacion[]>([]);
   const [misDisps,     setMisDisps]     = useState<MiDisponibilidad[]>([]);
-  const [mainTab,      setMainTab]      = useState<'viajes' | 'disponibilidades'>('viajes');
+  const [mainTab,      setMainTab]      = useState<'viajes' | 'remates' | 'disponibilidades'>('viajes');
   const [tripFilter,   setTripFilter]   = useState<'activos' | 'completados'>('activos');
   const [editando,     setEditando]     = useState<MiDisponibilidad | null>(null);
   const [expandido,    setExpandido]    = useState<number | null>(null);
@@ -456,7 +457,7 @@ export default function MisViajesPage() {
 
   const ini = (user.nombre ?? '').split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase();
 
-  const TAB_BTN = (id: 'viajes' | 'disponibilidades', label: string) => (
+  const TAB_BTN = (id: 'viajes' | 'remates' | 'disponibilidades', label: string) => (
     <button key={id} onClick={() => setMainTab(id)} style={{ fontFamily: 'inherit', fontSize: 13, fontWeight: 600, cursor: 'pointer', padding: '11px 20px', border: 'none', background: 'transparent', color: mainTab === id ? '#111' : '#aaa', borderBottom: mainTab === id ? '2.5px solid #1F2B1F' : '2.5px solid transparent', marginBottom: -1, transition: 'all .15s' }}>
       {label}
     </button>
@@ -503,6 +504,7 @@ export default function MisViajesPage() {
         {/* Main tabs */}
         <div className="mv-tabs" style={{ background: '#fff', borderBottom: '1px solid #F0F0F0', padding: '0 28px', display: 'flex', gap: 0, flexShrink: 0 }}>
           {TAB_BTN('viajes', 'Mis viajes')}
+          {TAB_BTN('remates', 'Viajes de remates')}
           {TAB_BTN('disponibilidades', 'Mis disponibilidades')}
         </div>
 
@@ -549,6 +551,47 @@ export default function MisViajesPage() {
             </div>
           </div>
         )}
+
+        {/* ── TAB: Viajes de remates ── */}
+        {mainTab === 'remates' && (() => {
+          const remateAplicaciones = aceptadas.filter(a => a.remate_lote_id != null);
+          return (
+            <div className="mv-content" style={{ flex: 1, overflowY: 'auto', background: '#F2F2F0', padding: '16px 28px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+              {remateAplicaciones.length === 0 ? (
+                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: 280, textAlign: 'center' }}>
+                  <div style={{ width: 54, height: 54, borderRadius: '50%', background: '#EAEAE8', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 14 }}>
+                    <Icon name="truck" size={26} color="#ccc"/>
+                  </div>
+                  <div style={{ fontSize: 13, fontWeight: 600, color: '#888', marginBottom: 5 }}>Sin viajes de remates todavía</div>
+                  <div style={{ fontSize: 11, color: '#bbb', marginBottom: 18 }}>Los viajes generados desde remates aparecerán acá</div>
+                  <a href="/remates" style={{ display: 'inline-block', background: '#E07A34', color: '#fff', borderRadius: 8, padding: '9px 20px', fontSize: 12, fontWeight: 600, textDecoration: 'none' }}>
+                    Ver remates disponibles
+                  </a>
+                </div>
+              ) : remateAplicaciones.map(a => (
+                <div key={a.id} style={{ background: '#fff', borderRadius: 14, padding: '16px 20px', boxShadow: '0 2px 12px rgba(0,0,0,.06)' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 10 }}>
+                    <RouteInline origin={a.origen.split(',')[0]} destination={a.destino.split(',')[0]}/>
+                    <span style={{ fontSize: 9, fontWeight: 700, background: 'rgba(224,122,52,.12)', color: '#b85e1e', padding: '2px 7px', borderRadius: 4, flexShrink: 0, marginTop: 2 }}>
+                      REMATE
+                    </span>
+                  </div>
+                  <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 12 }}>
+                    <Chip icon="calendar" label={fmtFecha(a.fecha_salida)} color="#555"/>
+                    <Chip icon="cow"      label={a.tipo_hacienda}          color="#555"/>
+                    <Chip                 label={`${a.cantidad_cabezas} cab.`} color="#555"/>
+                    {a.peso_total_kg && <Chip icon="weight" label={`${Number(a.peso_total_kg).toLocaleString('es-AR')} kg`} color="#555"/>}
+                  </div>
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    <button onClick={() => setDetail(a)} style={{ flex: 1, background: 'transparent', border: '1.5px solid #E0E0E0', color: '#666', borderRadius: 9, padding: '9px', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
+                      Ver detalle
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          );
+        })()}
 
         {/* ── TAB: Mis disponibilidades ── */}
         {mainTab === 'disponibilidades' && (

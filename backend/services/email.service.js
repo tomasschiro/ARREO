@@ -376,6 +376,109 @@ function emailAdminNuevoProductor(adminEmail, nombre, email, cuit, rol) {
   return sendEmail(adminEmail, `🔔 Nuevo ${rol} requiere verificación`, html);
 }
 
+// ─── Remates: email al publicar (para transportistas de la zona) ─────────────
+
+function emailRematePublicado(transportistaEmail, transportistaNombre, remate) {
+  const filas = [
+    ['Remate', remate.nombre],
+    ['Tipo', remate.tipo === 'feria' ? 'Feria' : 'En campo'],
+    ['Fecha', fmtFecha(remate.fecha)],
+    ['Lugar', remate.lugar_direccion || remate.zona || '—'],
+  ];
+  if (remate.zona) filas.push(['Zona', remate.zona]);
+
+  const html = layout(
+    h1('🐄 Nuevo remate en tu zona') +
+    p(`Hola <strong>${transportistaNombre}</strong>, hay un nuevo remate publicado que coincide con tu zona de operación.`) +
+    infoBox(filas) +
+    p('Si querés participar, anotate en el remate para recibir notificaciones cuando se vendan lotes.', 'muted') +
+    btn(`${FRONTEND_URL}/remates/${remate.id}`, 'Ver remate y anotarme')
+  );
+  return sendEmail(transportistaEmail, `🐄 Nuevo remate en tu zona — ${remate.nombre}`, html);
+}
+
+// ─── Remates: lote vendido (notificar a pre-anotados) ────────────────────────
+
+function emailRemateLoteVendido(transportistaEmail, transportistaNombre, remate, lote) {
+  const filas = [
+    ['Remate', remate.nombre],
+    ['Fecha', fmtFecha(remate.fecha)],
+    ['Hacienda', lote.tipo_hacienda || '—'],
+    ['Origen', lote.origen_direccion || remate.lugar_direccion || '—'],
+    ['Destino', lote.destino_direccion || '—'],
+  ];
+  if (lote.cantidad_cabezas_estimada) filas.push(['Cabezas aprox.', String(lote.cantidad_cabezas_estimada)]);
+  if (lote.comprador_nombre) filas.push(['Comprador', lote.comprador_nombre]);
+
+  const html = layout(
+    h1('⚡ Hay un viaje disponible — confirmás en 30 minutos?') +
+    p(`Hola <strong>${transportistaNombre}</strong>, se vendió un lote en el remate en el que estás anotado.`) +
+    infoBox(filas) +
+    p('Tenés <strong>30 minutos</strong> para confirmar antes de que el viaje se abra a toda la zona. Entrá ahora y aplicá.', 'muted') +
+    btn(`${FRONTEND_URL}/remates/${remate.id}`, 'Confirmar disponibilidad')
+  );
+  return sendEmail(transportistaEmail, `⚡ Viaje disponible en remate — ${remate.nombre}`, html);
+}
+
+// ─── Remates: lote abierto a toda la zona (30 min sin confirmación) ───────────
+
+function emailRemateLoteAbiertoZona(transportistaEmail, transportistaNombre, remate, lote) {
+  const filas = [
+    ['Remate', remate.nombre],
+    ['Fecha', fmtFecha(remate.fecha)],
+    ['Hacienda', lote.tipo_hacienda || '—'],
+    ['Origen', lote.origen_direccion || remate.lugar_direccion || '—'],
+    ['Destino', lote.destino_direccion || '—'],
+  ];
+  if (lote.cantidad_cabezas_estimada) filas.push(['Cabezas aprox.', String(lote.cantidad_cabezas_estimada)]);
+
+  const html = layout(
+    h1('🚛 Viaje disponible en tu zona') +
+    p(`Hola <strong>${transportistaNombre}</strong>, hay un viaje disponible desde un remate ganadero cercano a tu zona.`) +
+    infoBox(filas) +
+    p('El viaje está abierto para transportistas de la zona. Aplicá ahora antes de que lo tome otro.', 'muted') +
+    btn(`${FRONTEND_URL}/remates/${remate.id}`, 'Ver detalle y aplicar')
+  );
+  return sendEmail(transportistaEmail, `🚛 Viaje de remate disponible en tu zona`, html);
+}
+
+// ─── Remates: alerta 1 hora antes del plazo (para consignataria) ─────────────
+
+function emailRemateAlertaPlazoCercano(consignatariaEmail, consignatariaNombre, remate) {
+  const filas = [
+    ['Remate', remate.nombre],
+    ['Fecha remate', fmtFecha(remate.fecha)],
+    ['Plazo vence', new Date(remate.plazo_coordinacion).toLocaleString('es-AR')],
+    ['Lugar', remate.lugar_direccion || '—'],
+  ];
+
+  const html = layout(
+    h1('🔴 Queda 1 hora para el cierre del remate') +
+    p(`Hola <strong>${consignatariaNombre}</strong>, el plazo de coordinación de tu remate vence en <strong>menos de 1 hora</strong>.`) +
+    infoBox(filas) +
+    p('Entrá al panel de gestión para asignar transportistas a los lotes que aún estén pendientes.', 'muted') +
+    btn(`${FRONTEND_URL}/remates/${remate.id}`, 'Gestionar remate urgente')
+  );
+  return sendEmail(consignatariaEmail, `🔴 Cierre en 1 hora — ${remate.nombre}`, html);
+}
+
+// ─── Remates: cierre del remate ───────────────────────────────────────────────
+
+function emailRemateCerrado(email, nombre, remate) {
+  const html = layout(
+    h1('Remate cerrado') +
+    p(`Hola <strong>${nombre}</strong>, el remate <strong>${remate.nombre}</strong> fue cerrado.`) +
+    infoBox([
+      ['Remate', remate.nombre],
+      ['Fecha', fmtFecha(remate.fecha)],
+      ['Estado', 'Cerrado'],
+    ]) +
+    p('Si tenés viajes asignados desde este remate, podés seguirlos en la sección Mis viajes.', 'muted') +
+    btn(`${FRONTEND_URL}/mis-viajes`, 'Ver mis viajes')
+  );
+  return sendEmail(email, `Remate cerrado — ${remate.nombre}`, html);
+}
+
 // ─── Cron: recordatorio 24hs antes del viaje ─────────────────────────────────
 
 function iniciarReminderViajes(pool) {
@@ -430,4 +533,9 @@ module.exports = {
   emailProductorDocFaltante24h,
   emailTransportistaDocPendiente24h,
   iniciarReminderViajes,
+  emailRematePublicado,
+  emailRemateLoteVendido,
+  emailRemateLoteAbiertoZona,
+  emailRemateAlertaPlazoCercano,
+  emailRemateCerrado,
 };

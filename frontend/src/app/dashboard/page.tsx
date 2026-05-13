@@ -8,7 +8,7 @@ import AppSidebar from '@/components/AppSidebar';
 import StarRating from '@/components/StarRating';
 import TransportistaPerfilModal from '@/components/TransportistaPerfilModal';
 import api from '@/lib/api';
-import { Check, X, Users, FileText, Truck, MapPin, Scale, Calendar, AlertTriangle } from 'lucide-react';
+import { Check, X, Users, FileText, Truck, MapPin, Scale, Calendar, AlertTriangle, Gavel } from 'lucide-react';
 
 // ─── Shared primitives (UI Kit style) ────────────────────────────────────────
 
@@ -89,6 +89,13 @@ interface Viaje {
   tipo_jaula?: string; estado: string; publicado_por: string; zona_publicante?: string;
   usuario_id: number; total_aplicaciones?: number;
   documentacion_cargada?: boolean;
+}
+
+interface RemateResumen {
+  id: number; nombre: string; tipo: string; fecha: string;
+  lugar_direccion?: string; zona?: string; estado: string;
+  total_lotes?: number; total_transportistas?: number;
+  plazo_coordinacion: string;
 }
 
 interface Aplicacion {
@@ -203,12 +210,24 @@ function TransportistaDashboard({ userName, patente }: { userName: string; paten
   const [aplicaciones, setAplicaciones] = useState<Aplicacion[]>([]);
   const [viajes,       setViajes]       = useState<Viaje[]>([]);
   const [misDisps,     setMisDisps]     = useState<MiDisponibilidad[]>([]);
+  const [remates,      setRemates]      = useState<RemateResumen[]>([]);
 
   useEffect(() => {
-    Promise.all([api.get('/mis-aplicaciones'), api.get('/viajes'), api.get('/mis-disponibilidades')])
-      .then(([a, v, d]) => { setAplicaciones(a.data.aplicaciones); setViajes(v.data.viajes); setMisDisps(d.data.disponibilidades); })
+    const zonaParam = user?.zona ? `?zona=${encodeURIComponent(user.zona)}` : '';
+    Promise.all([
+      api.get('/mis-aplicaciones'),
+      api.get('/viajes'),
+      api.get('/mis-disponibilidades'),
+      api.get(`/remates${zonaParam}`),
+    ])
+      .then(([a, v, d, r]) => {
+        setAplicaciones(a.data.aplicaciones);
+        setViajes(v.data.viajes);
+        setMisDisps(d.data.disponibilidades);
+        setRemates(r.data.remates.slice(0, 3));
+      })
       .catch(() => {});
-  }, []);
+  }, [user?.zona]);
 
   const today = new Date(); today.setHours(0, 0, 0, 0);
   const aceptadas   = aplicaciones.filter(a => a.estado === 'aceptada');
@@ -370,6 +389,34 @@ function TransportistaDashboard({ userName, patente }: { userName: string; paten
 
           </div>
         </div>
+
+        {/* Remates próximos */}
+        {remates.length > 0 && (
+          <div style={{ background: '#fff', borderRadius: 16, padding: '18px 20px', boxShadow: '0 2px 12px rgba(0,0,0,.05)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+                <Gavel size={16} color="#E07A34" />
+                <span style={{ fontSize: 14, fontWeight: 700, color: '#111' }}>Remates próximos en tu zona</span>
+              </div>
+              <Link href="/remates" style={{ color: '#E07A34', fontSize: 12, fontWeight: 600, textDecoration: 'none' }}>Ver todos →</Link>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {remates.map(r => (
+                <div key={r.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 0', borderBottom: '1px solid #F5F5F5' }}>
+                  <div style={{ minWidth: 0, flex: 1 }}>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: '#111', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.nombre}</div>
+                    <div style={{ display: 'flex', gap: 8, marginTop: 3, fontSize: 11, color: '#888' }}>
+                      <span>{new Date(r.fecha).toLocaleDateString('es-AR', { day: 'numeric', month: 'short' })}</span>
+                      {(r.lugar_direccion || r.zona) && <span>· {(r.lugar_direccion || r.zona || '').split(',')[0]}</span>}
+                    </div>
+                  </div>
+                  <Link href={`/remates/${r.id}`} style={{ background: '#E07A34', color: '#fff', borderRadius: 7, padding: '5px 12px', fontSize: 11, fontWeight: 600, textDecoration: 'none', flexShrink: 0 }}>Ver</Link>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
       </div>
     </div>
   );
@@ -390,8 +437,10 @@ const APLIC: Record<string, { label: string; cls: string }> = {
 };
 
 function ProductorDashboard({ userId, userName }: { userId: number; userName: string }) {
+  const { user } = useAuth();
   const [misViajes,        setMisViajes]        = useState<Viaje[]>([]);
   const [disponibilidades, setDisponibilidades] = useState<MiDisponibilidad[]>([]);
+  const [rematesMiZona,    setRematesMiZona]    = useState<RemateResumen[]>([]);
   const [viajeExpandido,   setViajeExpandido]   = useState<number | null>(null);
   const [viajeDetalle,     setViajeDetalle]     = useState<Record<number, Aplicacion[]>>({});
   const [loadingDetalle,   setLoadingDetalle]   = useState<number | null>(null);
@@ -401,10 +450,16 @@ function ProductorDashboard({ userId, userName }: { userId: number; userName: st
   const [toast,            setToast]            = useState<{ message: string; type: 'success' | 'error' } | null>(null);
 
   const loadData = useCallback(async () => {
-    const [v, d] = await Promise.all([api.get('/mis-viajes'), api.get('/disponibilidades')]);
+    const zonaParam = user?.zona ? `?zona=${encodeURIComponent(user.zona)}` : '';
+    const [v, d, r] = await Promise.all([
+      api.get('/mis-viajes'),
+      api.get('/disponibilidades'),
+      api.get(`/remates${zonaParam}`),
+    ]);
     setMisViajes(v.data.viajes);
     setDisponibilidades(d.data.disponibilidades);
-  }, []);
+    setRematesMiZona(r.data.remates.slice(0, 3));
+  }, [user?.zona]);
 
   useEffect(() => { loadData(); }, [loadData]);
 
@@ -604,6 +659,40 @@ function ProductorDashboard({ userId, userName }: { userId: number; userName: st
             </div>
           )}
         </section>
+
+        {/* Remates en mi zona */}
+        {rematesMiZona.length > 0 && (
+          <section>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <Gavel size={16} color="#E07A34" />
+                <h3 style={{ fontSize: 15, fontWeight: 700, color: '#111' }}>Remates en tu zona</h3>
+              </div>
+              <Link href="/remates" style={{ color: '#E07A34', fontSize: 12, fontWeight: 600, textDecoration: 'none' }}>Ver todos →</Link>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 12 }}>
+              {rematesMiZona.map(r => (
+                <div key={r.id} style={{ background: '#fff', borderRadius: 14, padding: '16px 18px', boxShadow: '0 2px 12px rgba(0,0,0,.05)' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
+                    <span style={{ fontSize: 10, fontWeight: 700, background: r.tipo === 'feria' ? 'rgba(139,175,78,.15)' : 'rgba(224,122,52,.12)', color: r.tipo === 'feria' ? '#5a7a2a' : '#b85e1e', padding: '2px 7px', borderRadius: 4 }}>
+                      {r.tipo === 'feria' ? 'Feria' : 'En campo'}
+                    </span>
+                    <span style={{ fontSize: 11, color: '#888' }}>{new Date(r.fecha).toLocaleDateString('es-AR', { day: 'numeric', month: 'short' })}</span>
+                  </div>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: '#111', marginBottom: 4, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.nombre}</div>
+                  {(r.lugar_direccion || r.zona) && (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, color: '#888', marginBottom: 12 }}>
+                      <MapPin size={12} /> {(r.lugar_direccion || r.zona || '').split(',')[0]}
+                    </div>
+                  )}
+                  <Link href={`/remates/${r.id}`} style={{ display: 'block', textAlign: 'center', padding: '8px', border: '1.5px solid #E0E0E0', borderRadius: 8, color: '#555', fontSize: 12, fontWeight: 600, textDecoration: 'none' }}>
+                    Ver detalle
+                  </Link>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
 
       </div>
 

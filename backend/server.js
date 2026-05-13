@@ -16,6 +16,7 @@ const authMiddleware        = require('./middleware/auth');
 const adminAuth             = require('./middleware/adminAuth');
 const createTrackingRouter  = require('./routes/tracking');
 const { iniciarReminderViajes } = require('./services/email.service');
+const { router: rematesRouter, iniciarRematesCron } = require('./routes/remates');
 const pool                  = require('./database/connect');
 
 const app = express();
@@ -48,6 +49,7 @@ app.use('/api/disponibilidades', dispRouter);
 app.use('/api/mensajes',        mensajesRouter);
 app.use('/api/transportistas',  transportistasRouter);
 app.use('/api/reseñas',         reseñasRouter);
+app.use('/api/remates',         rematesRouter);
 app.use('/api/admin',           authMiddleware, adminAuth, adminRouter);
 
 app.get('/api/mis-viajes',           authMiddleware, misViajes);
@@ -93,6 +95,57 @@ async function runMigrations() {
   await pool.query(`ALTER TABLE viajes ADD COLUMN IF NOT EXISTS dte_numero VARCHAR(50)`);
   await pool.query(`ALTER TABLE viajes ADD COLUMN IF NOT EXISTS guia_provincial_numero VARCHAR(50)`);
   await pool.query(`ALTER TABLE viajes ADD COLUMN IF NOT EXISTS documentacion_cargada BOOLEAN DEFAULT false`);
+  // Remates
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS remates (
+      id SERIAL PRIMARY KEY,
+      nombre VARCHAR(200) NOT NULL,
+      tipo VARCHAR(20) NOT NULL DEFAULT 'feria',
+      fecha DATE NOT NULL,
+      lugar_direccion TEXT,
+      lugar_lat DECIMAL(10,8),
+      lugar_lng DECIMAL(11,8),
+      zona VARCHAR(100),
+      descripcion TEXT,
+      plazo_coordinacion TIMESTAMPTZ NOT NULL,
+      estado VARCHAR(20) NOT NULL DEFAULT 'borrador',
+      alerta_1h_enviada BOOLEAN DEFAULT false,
+      consignataria_id INTEGER NOT NULL REFERENCES usuarios(id) ON DELETE CASCADE,
+      created_at TIMESTAMPTZ DEFAULT NOW()
+    )
+  `);
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS remate_lotes (
+      id SERIAL PRIMARY KEY,
+      remate_id INTEGER NOT NULL REFERENCES remates(id) ON DELETE CASCADE,
+      descripcion TEXT,
+      tipo_hacienda VARCHAR(50),
+      cantidad_cabezas_estimada INTEGER,
+      origen_direccion TEXT,
+      origen_lat DECIMAL(10,8),
+      origen_lng DECIMAL(11,8),
+      estado VARCHAR(20) NOT NULL DEFAULT 'pendiente',
+      comprador_nombre VARCHAR(200),
+      destino_direccion TEXT,
+      destino_lat DECIMAL(10,8),
+      destino_lng DECIMAL(11,8),
+      transportista_asignado_id INTEGER REFERENCES usuarios(id) ON DELETE SET NULL,
+      viaje_id INTEGER REFERENCES viajes(id) ON DELETE SET NULL,
+      created_at TIMESTAMPTZ DEFAULT NOW()
+    )
+  `);
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS remate_transportistas (
+      id SERIAL PRIMARY KEY,
+      remate_id INTEGER NOT NULL REFERENCES remates(id) ON DELETE CASCADE,
+      transportista_id INTEGER NOT NULL REFERENCES usuarios(id) ON DELETE CASCADE,
+      tipo_remolque VARCHAR(50),
+      estado VARCHAR(20) NOT NULL DEFAULT 'pre-anotado',
+      created_at TIMESTAMPTZ DEFAULT NOW(),
+      UNIQUE(remate_id, transportista_id)
+    )
+  `);
+  await pool.query(`ALTER TABLE viajes ADD COLUMN IF NOT EXISTS remate_lote_id INTEGER REFERENCES remate_lotes(id) ON DELETE SET NULL`);
   // Seguimiento en tiempo real
   await pool.query(`ALTER TABLE viajes ADD COLUMN IF NOT EXISTS ubicacion_lat DECIMAL(10,8)`);
   await pool.query(`ALTER TABLE viajes ADD COLUMN IF NOT EXISTS ubicacion_lng DECIMAL(11,8)`);
@@ -114,4 +167,5 @@ httpServer.listen(PORT, () => {
   console.log(`Servidor corriendo en http://localhost:${PORT}`);
   runMigrations().catch(e => console.error('[migration]', e.message));
   iniciarReminderViajes(pool);
+  iniciarRematesCron(pool);
 });

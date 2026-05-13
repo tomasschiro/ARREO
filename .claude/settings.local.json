@@ -7,7 +7,18 @@
       "Bash(npx tsc *)",
       "Bash(npm install *)",
       "Bash(Get-ChildItem -Path \"c:\\\\Users\\\\Equipo\\\\hacienda-rutas\" -Force)",
-      "Bash(Select-Object Name, FullName)"
+      "Bash(Select-Object Name, FullName)",
+      "Bash(mkdir -p \"c:/Users/Equipo/hacienda-rutas/frontend/src/app/remates/crear\" && mkdir -p \"c:/Users/Equipo/hacienda-rutas/frontend/src/app/remates/[id]\")",
+      "Bash(node --check routes/remates.js)",
+      "Bash(node --check services/email.service.js)",
+      "Bash(node --check server.js)",
+      "Bash(node -e \"const pool = require\\('./database/connect'\\); pool.query\\('SELECT conname FROM pg_constraint WHERE conname LIKE \\\\'%aplicaciones%\\\\''\\).then\\(r => console.log\\(r.rows\\)\\).catch\\(e => console.log\\('DB not reachable:', e.message\\)\\).finally\\(\\(\\) => pool.end\\(\\)\\)\")",
+      "Bash(node --check backend/routes/remates.js)",
+      "Bash(node --check backend/services/email.service.js)",
+      "Bash(node --check backend/server.js)"
+    ],
+    "additionalDirectories": [
+      "c:\\Users\\Equipo\\hacienda-rutas\\frontend\\src\\app\\remates"
     ]
   }
 }
