@@ -22,10 +22,22 @@ const pool                  = require('./database/connect');
 const app = express();
 const httpServer = http.createServer(app);
 
-const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+const allowedOrigins = [
+  'http://localhost:3000',
+  'https://arreo.vercel.app',
+  process.env.FRONTEND_URL,
+].filter(Boolean);
+
+function corsOrigin(origin, callback) {
+  if (!origin || allowedOrigins.includes(origin)) {
+    callback(null, true);
+  } else {
+    callback(new Error('Not allowed by CORS'));
+  }
+}
 
 const io = new Server(httpServer, {
-  cors: { origin: frontendUrl, methods: ['GET', 'POST'] },
+  cors: { origin: corsOrigin, methods: ['GET', 'POST'] },
 });
 
 io.on('connection', (socket) => {
@@ -37,7 +49,7 @@ io.on('connection', (socket) => {
   });
 });
 
-app.use(cors({ origin: frontendUrl }));
+app.use(cors({ origin: corsOrigin, credentials: true }));
 app.use(bodyParser.json({ limit: '50mb' }));
 
 app.get('/health', (_req, res) => res.json({ status: 'ok' }));

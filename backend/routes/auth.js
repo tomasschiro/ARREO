@@ -129,6 +129,8 @@ router.post('/register', async (req, res) => {
 router.post('/login', async (req, res) => {
   const { email, password } = req.body;
 
+  console.log('[login] intento →', email, '| origin:', req.headers.origin);
+
   if (!email || !password) {
     return res.status(400).json({ error: 'email y password son obligatorios' });
   }
@@ -137,9 +139,13 @@ router.post('/login', async (req, res) => {
     const { rows } = await pool.query('SELECT * FROM usuarios WHERE email = $1', [email]);
     const usuario = rows[0];
 
+    console.log('[login] usuario encontrado:', !!usuario, '| estado:', usuario?.estado);
+
     if (!usuario) return res.status(401).json({ error: 'Credenciales incorrectas' });
 
     const passwordOk = await bcrypt.compare(password, usuario.password_hash);
+    console.log('[login] password ok:', passwordOk);
+
     if (!passwordOk) return res.status(401).json({ error: 'Credenciales incorrectas' });
 
     const token = jwt.sign(
@@ -151,7 +157,7 @@ router.post('/login', async (req, res) => {
     const { password_hash, foto_dni_frente, foto_dni_dorso, foto_licencia, foto_camion, ...datosPublicos } = usuario;
     res.json({ usuario: datosPublicos, token });
   } catch (err) {
-    console.error(err);
+    console.error('[login] error:', err.message);
     res.status(500).json({ error: 'Error interno del servidor' });
   }
 });
