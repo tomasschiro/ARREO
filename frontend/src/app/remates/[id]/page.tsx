@@ -5,6 +5,8 @@ import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import { useAuth } from '@/context/AuthContext';
+
+const MapView = dynamic(() => import('@/components/MapViewClient'), { ssr: false });
 import AppSidebar from '@/components/AppSidebar';
 import StarRating from '@/components/StarRating';
 import api from '@/lib/api';
@@ -633,8 +635,25 @@ export default function RemateDetallePage() {
 
           <div className="rm-panels" style={{ display: 'flex', gap: 16, alignItems: 'flex-start' }}>
 
-            {/* Panel izquierdo — Transportistas */}
+            {/* Panel izquierdo — Mapa + Transportistas */}
             <div className="rm-panel-left" style={{ width: 320, flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 12 }}>
+
+              {/* Mapa del lugar */}
+              {remate.lugar_lat && remate.lugar_lng && (
+                <div style={{ background: '#fff', borderRadius: 16, overflow: 'hidden', boxShadow: '0 2px 12px rgba(0,0,0,.05)' }}>
+                  <div style={{ background: '#1F2B1F', padding: '12px 18px', display: 'flex', alignItems: 'center', gap: 7 }}>
+                    <MapPin size={14} color="#BDD18A" />
+                    <span style={{ fontSize: 13, fontWeight: 700, color: '#fff' }}>Ubicación del remate</span>
+                  </div>
+                  <MapView origenLat={remate.lugar_lat} origenLng={remate.lugar_lng} height="180px" />
+                  {remate.lugar_direccion && (
+                    <div style={{ padding: '10px 16px', fontSize: 11, color: '#888', borderTop: '1px solid #F0F0F0' }}>
+                      {remate.lugar_direccion.split(',').slice(0, 3).join(', ')}
+                    </div>
+                  )}
+                </div>
+              )}
+
               <div style={{ background: '#fff', borderRadius: 16, overflow: 'hidden', boxShadow: '0 2px 12px rgba(0,0,0,.05)' }}>
                 <div style={{ background: '#1F2B1F', padding: '14px 18px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>

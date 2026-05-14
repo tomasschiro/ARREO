@@ -12,45 +12,46 @@ export interface LocationValue {
   address: string;
 }
 
-interface NomResult {
-  lat: string;
-  lon: string;
-  display_name: string;
+interface MbFeature {
+  geometry: { coordinates: [number, number] }; // [lng, lat]
+  place_name: string;
+  text: string;
 }
 
 const DEFAULT_LAT = -31.7;
 const DEFAULT_LNG = -60.5;
 
-const _lpCache = new Map<string, NomResult[]>();
+const _cache = new Map<string, MbFeature[]>();
 
-async function fetchNominatim(q: string): Promise<NomResult[]> {
+const TOKEN = () => process.env.NEXT_PUBLIC_MAPTILER_KEY ?? '';
+
+async function geocodeForward(q: string): Promise<MbFeature[]> {
   const key = q.toLowerCase().trim();
-  const hit = _lpCache.get(key);
+  const hit = _cache.get(key);
   if (hit) return hit;
   try {
-    const res = await fetch(
-      `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=5&countrycodes=ar&addressdetails=0`,
-      { headers: { 'Accept-Language': 'es' } }
-    );
-    const data: NomResult[] = await res.json();
-    if (_lpCache.size >= 20) { const k = _lpCache.keys().next().value; if (k) _lpCache.delete(k); }
-    _lpCache.set(key, data);
-    return data;
+    const url = `https://api.maptiler.com/geocoding/${encodeURIComponent(q)}.json`
+      + `?key=${TOKEN()}&country=ar&limit=5&language=es&types=place,locality,neighbourhood,address`;
+    const data: { features: MbFeature[] } = await (await fetch(url)).json();
+    const features = data.features ?? [];
+    if (_cache.size >= 30) { const k = _cache.keys().next().value; if (k) _cache.delete(k); }
+    _cache.set(key, features);
+    return features;
   } catch { return []; }
 }
 
-async function reverseGeocode(lat: number, lng: number): Promise<string> {
-  const res = await fetch(
-    `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`,
-    { headers: { 'Accept-Language': 'es' } }
-  );
-  const data = await res.json();
-  return data.display_name ?? `${lat.toFixed(5)}, ${lng.toFixed(5)}`;
+async function geocodeReverse(lat: number, lng: number): Promise<string> {
+  try {
+    const url = `https://api.maptiler.com/geocoding/${lng},${lat}.json`
+      + `?key=${TOKEN()}&language=es&limit=1`;
+    const data: { features: MbFeature[] } = await (await fetch(url)).json();
+    return data.features[0]?.place_name ?? `${lat.toFixed(5)}, ${lng.toFixed(5)}`;
+  } catch { return `${lat.toFixed(5)}, ${lng.toFixed(5)}`; }
 }
 
-function parseName(dn: string) {
-  const parts = dn.split(', ').filter(p => p !== 'Argentina');
-  return { main: parts[0] ?? dn, sub: parts.slice(1).join(', ') };
+function parseName(f: MbFeature) {
+  const parts = f.place_name.split(', ').filter(p => p !== 'Argentina');
+  return { main: parts[0] ?? f.place_name, sub: parts.slice(1).join(', ') };
 }
 
 export default function LocationPicker({
@@ -64,12 +65,12 @@ export default function LocationPicker({
   onChange: (v: LocationValue) => void;
   error?: string;
 }) {
-  const [query, setQuery] = useState(value?.address ?? '');
-  const [results, setResults] = useState<NomResult[]>([]);
-  const [status, setStatus] = useState<'idle' | 'searching' | 'done'>('idle');
+  const [query,      setQuery]      = useState(value?.address ?? '');
+  const [results,    setResults]    = useState<MbFeature[]>([]);
+  const [status,     setStatus]     = useState<'idle' | 'searching' | 'done'>('idle');
   const [gpsLoading, setGpsLoading] = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const inputRef    = useRef<HTMLInputElement>(null);
 
   useEffect(() => { if (value?.address) setQuery(value.address); }, [value?.address]);
 
@@ -82,28 +83,28 @@ export default function LocationPicker({
     if (q.length < 2) { setResults([]); setStatus('idle'); return; }
 
     const key = q.toLowerCase().trim();
-    const cached = _lpCache.get(key);
+    const cached = _cache.get(key);
     if (cached) { setResults(cached); setStatus('done'); return; }
 
     setStatus('searching');
     debounceRef.current = setTimeout(async () => {
-      const data = await fetchNominatim(q);
+      const data = await geocodeForward(q);
       setResults(data);
       setStatus('done');
-    }, 100);
+    }, 300);
   }
 
-  function selectResult(r: NomResult) {
-    const v = { lat: parseFloat(r.lat), lng: parseFloat(r.lon), address: r.display_name };
+  function selectResult(f: MbFeature) {
+    const v: LocationValue = { lat: f.geometry.coordinates[1], lng: f.geometry.coordinates[0], address: f.place_name };
     onChange(v);
-    setQuery(r.display_name);
+    setQuery(f.place_name);
     setResults([]);
     setStatus('idle');
     inputRef.current?.blur();
   }
 
   const handleMapChange = useCallback(async (lat: number, lng: number) => {
-    const address = await reverseGeocode(lat, lng);
+    const address = await geocodeReverse(lat, lng);
     onChange({ lat, lng, address });
     setQuery(address);
   }, [onChange]);
@@ -116,7 +117,7 @@ export default function LocationPicker({
         await handleMapChange(coords.latitude, coords.longitude);
         setGpsLoading(false);
       },
-      () => setGpsLoading(false)
+      () => setGpsLoading(false),
     );
   }
 
@@ -159,12 +160,14 @@ export default function LocationPicker({
         )}
         {status === 'done' && (
           <ul className="lp-sug-ul">
-            {results.length > 0 ? results.map((r, i) => {
-              const { main, sub } = parseName(r.display_name);
+            {results.length > 0 ? results.map((f, i) => {
+              const { main, sub } = parseName(f);
               return (
                 <li key={i}>
-                  <button type="button" className="lp-sug-btn" onClick={() => selectResult(r)}>
-                    <div className="lp-sug-main" style={{ display: 'flex', alignItems: 'center', gap: 4 }}><MapPin size={12} /> {main}</div>
+                  <button type="button" className="lp-sug-btn" onClick={() => selectResult(f)}>
+                    <div className="lp-sug-main" style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                      <MapPin size={12} /> {main}
+                    </div>
                     {sub && <div className="lp-sug-sub">{sub}</div>}
                   </button>
                 </li>
@@ -194,7 +197,9 @@ export default function LocationPicker({
       </div>
 
       {value && (
-        <p className="text-xs text-gray-400 truncate" style={{ display: 'flex', alignItems: 'center', gap: 4 }}><MapPin size={12} /> {value.address}</p>
+        <p className="text-xs text-gray-400 truncate" style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+          <MapPin size={12} /> {value.address}
+        </p>
       )}
       {error && <p className="text-xs text-red-500">{error}</p>}
     </div>

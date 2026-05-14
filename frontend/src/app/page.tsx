@@ -371,12 +371,11 @@ export default function LandingPage() {
     const hit = _nomCache.get(key);
     if (hit) return hit;
     try {
-      const res = await fetch(
-        `https://nominatim.openstreetmap.org/search?format=json&limit=5&countrycodes=ar&addressdetails=0&q=${encodeURIComponent(q)}`,
-        { headers: { 'Accept-Language': 'es' } }
-      );
-      const data: { display_name: string; lat: string; lon: string }[] = await res.json();
-      const result = data.map(d => ({ label: d.display_name, lat: +d.lat, lng: +d.lon }));
+      const token = process.env.NEXT_PUBLIC_MAPTILER_KEY ?? '';
+      const url = `https://api.maptiler.com/geocoding/${encodeURIComponent(q)}.json`
+        + `?key=${token}&country=ar&limit=5&language=es&types=place,locality,neighbourhood,address`;
+      const data: { features: { place_name: string; geometry: { coordinates: [number, number] } }[] } = await (await fetch(url)).json();
+      const result = (data.features ?? []).map(f => ({ label: f.place_name, lat: f.geometry.coordinates[1], lng: f.geometry.coordinates[0] }));
       if (_nomCache.size >= 20) { const k = _nomCache.keys().next().value; if (k) _nomCache.delete(k); }
       _nomCache.set(key, result);
       return result;
@@ -411,9 +410,11 @@ export default function LandingPage() {
 
   async function reverseGeocodeWidget(lat: number, lng: number): Promise<string> {
     try {
-      const res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`, { headers: { 'Accept-Language': 'es' } });
-      const data = await res.json();
-      return data.display_name ?? `${lat.toFixed(5)}, ${lng.toFixed(5)}`;
+      const token = process.env.NEXT_PUBLIC_MAPTILER_KEY ?? '';
+      const data: { features: { place_name: string }[] } = await (await fetch(
+        `https://api.maptiler.com/geocoding/${lng},${lat}.json?key=${token}&language=es&limit=1`
+      )).json();
+      return data.features[0]?.place_name ?? `${lat.toFixed(5)}, ${lng.toFixed(5)}`;
     } catch { return `${lat.toFixed(5)}, ${lng.toFixed(5)}`; }
   }
 

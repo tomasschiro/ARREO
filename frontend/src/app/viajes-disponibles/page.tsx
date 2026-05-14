@@ -25,19 +25,18 @@ const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api';
 
 const _vdCache = new Map<string, VDSug[]>();
 
-async function fetchVDNominatim(q: string): Promise<VDSug[]> {
+async function fetchVDGeocoding(q: string): Promise<VDSug[]> {
   const key = q.toLowerCase().trim();
   const hit = _vdCache.get(key);
   if (hit) return hit;
   try {
-    const res = await fetch(
-      `https://nominatim.openstreetmap.org/search?format=json&limit=5&countrycodes=ar&addressdetails=0&q=${encodeURIComponent(q)}`,
-      { headers: { 'Accept-Language': 'es' } }
-    );
-    const data: { display_name: string; lat: string; lon: string }[] = await res.json();
-    const result = data.map(d => {
-      const parts = d.display_name.split(', ').filter(p => p !== 'Argentina');
-      return { label: d.display_name, main: parts[0] ?? d.display_name, sub: parts.slice(1).join(', '), lat: +d.lat, lng: +d.lon };
+    const token = process.env.NEXT_PUBLIC_MAPTILER_KEY ?? '';
+    const url = `https://api.maptiler.com/geocoding/${encodeURIComponent(q)}.json`
+      + `?key=${token}&country=ar&limit=5&language=es&types=place,locality,neighbourhood,address`;
+    const data: { features: { place_name: string; geometry: { coordinates: [number, number] } }[] } = await (await fetch(url)).json();
+    const result = (data.features ?? []).map(f => {
+      const parts = f.place_name.split(', ').filter(p => p !== 'Argentina');
+      return { label: f.place_name, main: parts[0] ?? f.place_name, sub: parts.slice(1).join(', '), lat: f.geometry.coordinates[1], lng: f.geometry.coordinates[0] };
     });
     if (_vdCache.size >= 20) { const k = _vdCache.keys().next().value; if (k) _vdCache.delete(k); }
     _vdCache.set(key, result);
@@ -231,7 +230,7 @@ function ViajesContent() {
     setOrigenStatus('searching');
     if (origenTimer.current) clearTimeout(origenTimer.current);
     origenTimer.current = setTimeout(async () => {
-      const sugs = await fetchVDNominatim(val);
+      const sugs = await fetchVDGeocoding(val);
       setOrigenSugs(sugs); setOrigenStatus('done');
     }, 100);
   }
@@ -244,17 +243,20 @@ function ViajesContent() {
     setDestinoStatus('searching');
     if (destinoTimer.current) clearTimeout(destinoTimer.current);
     destinoTimer.current = setTimeout(async () => {
-      const sugs = await fetchVDNominatim(val);
+      const sugs = await fetchVDGeocoding(val);
       setDestinoSugs(sugs); setDestinoStatus('done');
     }, 100);
   }
 
   async function reverseGeocodeVD(lat: number, lng: number): Promise<string> {
     try {
-      const res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`, { headers: { 'Accept-Language': 'es' } });
-      const data = await res.json();
-      const parts = (data.display_name ?? '').split(', ').filter((p: string) => p !== 'Argentina');
-      return parts[0] ?? data.display_name ?? `${lat.toFixed(5)}, ${lng.toFixed(5)}`;
+      const token = process.env.NEXT_PUBLIC_MAPTILER_KEY ?? '';
+      const data: { features: { place_name: string }[] } = await (await fetch(
+        `https://api.maptiler.com/geocoding/${lng},${lat}.json?key=${token}&language=es&limit=1`
+      )).json();
+      const name = data.features[0]?.place_name ?? '';
+      const parts = name.split(', ').filter(p => p !== 'Argentina');
+      return parts[0] ?? name ?? `${lat.toFixed(5)}, ${lng.toFixed(5)}`;
     } catch { return `${lat.toFixed(5)}, ${lng.toFixed(5)}`; }
   }
 

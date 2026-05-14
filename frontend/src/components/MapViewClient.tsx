@@ -1,62 +1,88 @@
 'use client';
 
-import { useEffect } from 'react';
-import { MapContainer, TileLayer, Marker, Polyline, useMap } from 'react-leaflet';
-import L from 'leaflet';
-
-// Fix Leaflet default icon
-delete (L.Icon.Default.prototype as any)._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png',
-  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png',
-  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
-});
-
-const greenIcon = new L.Icon({
-  iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png',
-  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
-  iconSize: [25, 41], iconAnchor: [12, 41],
-});
-
-const redIcon = new L.Icon({
-  iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
-  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
-  iconSize: [25, 41], iconAnchor: [12, 41],
-});
-
-function FitBounds({ origen, destino }: { origen: [number, number]; destino: [number, number] }) {
-  const map = useMap();
-  useEffect(() => {
-    map.fitBounds([origen, destino], { padding: [40, 40] });
-  }, [map, origen, destino]);
-  return null;
-}
+import { useEffect, useRef } from 'react';
+import maplibregl from 'maplibre-gl';
 
 interface Props {
   origenLat: number;
   origenLng: number;
-  destinoLat: number;
-  destinoLng: number;
+  destinoLat?: number;
+  destinoLng?: number;
+  height?: string;
 }
 
-export default function MapViewClient({ origenLat, origenLng, destinoLat, destinoLng }: Props) {
-  const origen: [number, number] = [origenLat, origenLng];
-  const destino: [number, number] = [destinoLat, destinoLng];
-  const center: [number, number] = [
-    (origenLat + destinoLat) / 2,
-    (origenLng + destinoLng) / 2,
-  ];
+function dotMarker(color: string): HTMLDivElement {
+  const el = document.createElement('div');
+  el.style.cssText = `width:16px;height:16px;background:${color};border:3px solid white;border-radius:50%;box-shadow:0 2px 8px ${color}99`;
+  return el;
+}
 
-  return (
-    <MapContainer center={center} zoom={6} style={{ height: '320px', width: '100%' }} scrollWheelZoom={false}>
-      <TileLayer
-        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-      />
-      <Marker position={origen} icon={greenIcon} />
-      <Marker position={destino} icon={redIcon} />
-      <Polyline positions={[origen, destino]} color="#8BAF4E" dashArray="8 6" weight={2} />
-      <FitBounds origen={origen} destino={destino} />
-    </MapContainer>
-  );
+export default function MapViewClient({
+  origenLat, origenLng,
+  destinoLat, destinoLng,
+  height = '320px',
+}: Props) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const hasDestino   = destinoLat != null && destinoLng != null;
+
+  useEffect(() => {
+    if (!containerRef.current) return;
+    const key = process.env.NEXT_PUBLIC_MAPTILER_KEY ?? '';
+
+    const center: [number, number] = hasDestino
+      ? [(origenLng + destinoLng!) / 2, (origenLat + destinoLat!) / 2]
+      : [origenLng, origenLat];
+
+    const map = new maplibregl.Map({
+      container: containerRef.current,
+      style: `https://api.maptiler.com/maps/backdrop-dark/style.json?key=${key}`,
+      center,
+      zoom: hasDestino ? 6 : 12,
+      scrollZoom: false,
+    });
+
+    map.on('load', () => {
+      if (hasDestino) {
+        map.addSource('route', {
+          type: 'geojson',
+          data: {
+            type: 'Feature',
+            properties: {},
+            geometry: {
+              type: 'LineString',
+              coordinates: [
+                [origenLng, origenLat],
+                [destinoLng!, destinoLat!],
+              ],
+            },
+          },
+        });
+        map.addLayer({
+          id: 'route',
+          type: 'line',
+          source: 'route',
+          paint: { 'line-color': '#8BAF4E', 'line-width': 2, 'line-dasharray': [2, 2] },
+        });
+
+        const bounds = new maplibregl.LngLatBounds();
+        bounds.extend([origenLng, origenLat]);
+        bounds.extend([destinoLng!, destinoLat!]);
+        map.fitBounds(bounds, { padding: 60 });
+      }
+    });
+
+    new maplibregl.Marker({ element: dotMarker('#8BAF4E') })
+      .setLngLat([origenLng, origenLat])
+      .addTo(map);
+
+    if (hasDestino) {
+      new maplibregl.Marker({ element: dotMarker('#E07A34') })
+        .setLngLat([destinoLng!, destinoLat!])
+        .addTo(map);
+    }
+
+    return () => { map.remove(); };
+  }, [origenLat, origenLng, destinoLat, destinoLng, hasDestino]);
+
+  return <div ref={containerRef} style={{ height, width: '100%' }} />;
 }
