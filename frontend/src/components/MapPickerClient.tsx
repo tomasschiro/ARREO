@@ -35,7 +35,7 @@ export default function MapPickerClient({ lat, lng, onChange }: MapPickerClientP
 
     const map = new maplibregl.Map({
       container: containerRef.current,
-      style: `https://api.maptiler.com/maps/streets-v2-dark/style.json?key=${key}`,
+      style: `https://api.maptiler.com/maps/hybrid/style.json?key=${key}`,
       center: [initLngRef.current, initLatRef.current],
       zoom: 13,
       scrollZoom: false,
