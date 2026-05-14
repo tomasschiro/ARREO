@@ -57,7 +57,7 @@ export default function MapViewClient({
 
     const map = new maplibregl.Map({
       container: containerRef.current,
-      style: `https://api.maptiler.com/maps/hybrid/style.json?key=${key}`,
+      style: `https://api.maptiler.com/maps/streets-v2/style.json?key=${key}`,
       center,
       zoom: hasDestino ? 6 : 12,
       scrollZoom: false,
